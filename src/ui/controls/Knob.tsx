@@ -49,6 +49,7 @@ export function Knob({
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
+      e.stopPropagation(); // Prevent React Flow from capturing the event
       setIsDragging(true);
       dragStartY.current = e.clientY;
       dragStartValue.current = value;
@@ -100,7 +101,7 @@ export function Knob({
       <span className="text-[10px] text-gray-400 uppercase">{label}</span>
       <div
         ref={knobRef}
-        className={`w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 cursor-pointer select-none relative ${
+        className={`nodrag w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 cursor-pointer select-none relative ${
           isDragging ? 'border-cyan-400' : 'hover:border-gray-500'
         }`}
         onMouseDown={handleMouseDown}
