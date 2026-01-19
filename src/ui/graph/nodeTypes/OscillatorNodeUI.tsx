@@ -61,6 +61,24 @@ export const OscillatorNodeUI = memo(({ id, data, selected }: NodeProps<Oscillat
         />
       </div>
 
+      {/* Modulation input handles (top) */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="freq_mod"
+        className="!bg-yellow-400 !w-2 !h-2 !-top-1"
+        style={{ left: '30%' }}
+        title="Frequency Mod"
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="detune_mod"
+        className="!bg-yellow-400 !w-2 !h-2 !-top-1"
+        style={{ left: '70%' }}
+        title="Detune Mod"
+      />
+
       {/* Output handle */}
       <Handle
         type="source"

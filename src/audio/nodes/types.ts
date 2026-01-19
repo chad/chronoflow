@@ -12,6 +12,7 @@ export interface SynthNode {
   type: string;
   getOutputNode(): AudioNode | null;
   getInputNode(): AudioNode | null;
+  getModulationTarget(paramName: string): AudioParam | null;
   connect(destination: AudioNode | SynthNode): void;
   disconnect(): void;
   setParam(name: string, value: number | string): void;

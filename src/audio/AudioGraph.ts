@@ -92,6 +92,10 @@ class AudioGraph {
     }
   }
 
+  private isModulationPort(port: string): boolean {
+    return port.endsWith('_mod');
+  }
+
   connect(fromId: string, fromPort: string, toId: string, toPort: string): boolean {
     const fromNode = this.nodes.get(fromId);
     const toNode = this.nodes.get(toId);
@@ -102,14 +106,28 @@ class AudioGraph {
     }
 
     const output = fromNode.getOutputNode();
-    const input = toNode.getInputNode();
-
-    if (!output || !input) {
-      console.error(`AudioGraph: Cannot connect - missing output/input`);
+    if (!output) {
+      console.error(`AudioGraph: Cannot connect - missing output`);
       return false;
     }
 
-    output.connect(input);
+    // Check if this is a modulation connection
+    if (this.isModulationPort(toPort)) {
+      const modTarget = toNode.getModulationTarget(toPort);
+      if (!modTarget) {
+        console.error(`AudioGraph: Cannot connect - modulation target not found: ${toPort}`);
+        return false;
+      }
+      output.connect(modTarget);
+    } else {
+      // Regular audio connection
+      const input = toNode.getInputNode();
+      if (!input) {
+        console.error(`AudioGraph: Cannot connect - missing input`);
+        return false;
+      }
+      output.connect(input);
+    }
 
     this.connections.push({ fromId, fromPort, toId, toPort });
     return true;
@@ -124,10 +142,21 @@ class AudioGraph {
     }
 
     const output = fromNode.getOutputNode();
-    const input = toNode.getInputNode();
+    if (!output) {
+      return false;
+    }
 
-    if (output && input) {
-      output.disconnect(input);
+    // Check if this is a modulation connection
+    if (this.isModulationPort(toPort)) {
+      const modTarget = toNode.getModulationTarget(toPort);
+      if (modTarget) {
+        output.disconnect(modTarget);
+      }
+    } else {
+      const input = toNode.getInputNode();
+      if (input) {
+        output.disconnect(input);
+      }
     }
 
     this.connections = this.connections.filter(

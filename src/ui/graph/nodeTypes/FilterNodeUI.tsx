@@ -59,7 +59,25 @@ export const FilterNodeUI = memo(({ id, data, selected }: NodeProps<FilterNode>)
         />
       </div>
 
-      {/* Input handle */}
+      {/* Modulation input handles (top) */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="cutoff_mod"
+        className="!bg-yellow-400 !w-2 !h-2 !-top-1"
+        style={{ left: '30%' }}
+        title="Cutoff Mod"
+      />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="resonance_mod"
+        className="!bg-yellow-400 !w-2 !h-2 !-top-1"
+        style={{ left: '70%' }}
+        title="Resonance Mod"
+      />
+
+      {/* Audio input handle */}
       <Handle
         type="target"
         position={Position.Left}

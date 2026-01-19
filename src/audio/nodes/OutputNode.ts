@@ -47,6 +47,10 @@ export class SynthOutputNode implements SynthNode {
     return this.analyser;
   }
 
+  getModulationTarget(_paramName: string): AudioParam | null {
+    return null; // Output doesn't have modulation inputs
+  }
+
   connect(): void {
     // Output node is always connected to destination
   }

@@ -37,6 +37,15 @@ export class SynthVCANode implements SynthNode {
     return this.gainNode.gain;
   }
 
+  getModulationTarget(paramName: string): AudioParam | null {
+    switch (paramName) {
+      case 'gain_mod':
+        return this.gainNode.gain;
+      default:
+        return null;
+    }
+  }
+
   connect(destination: AudioNode | SynthNode): void {
     if ('getInputNode' in destination) {
       const input = destination.getInputNode();

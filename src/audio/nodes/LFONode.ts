@@ -69,6 +69,10 @@ export class SynthLFONode implements SynthNode {
     return null; // LFO has no audio input
   }
 
+  getModulationTarget(_paramName: string): AudioParam | null {
+    return null; // LFO doesn't have modulation inputs
+  }
+
   // Connect LFO to an AudioParam for modulation
   connectToParam(param: AudioParam): void {
     this.depthGain.connect(param);

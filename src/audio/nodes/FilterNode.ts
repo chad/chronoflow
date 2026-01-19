@@ -47,6 +47,17 @@ export class SynthFilterNode implements SynthNode {
     return this.filter.Q;
   }
 
+  getModulationTarget(paramName: string): AudioParam | null {
+    switch (paramName) {
+      case 'cutoff_mod':
+        return this.filter.frequency;
+      case 'resonance_mod':
+        return this.filter.Q;
+      default:
+        return null;
+    }
+  }
+
   connect(destination: AudioNode | SynthNode): void {
     if ('getInputNode' in destination) {
       const input = destination.getInputNode();

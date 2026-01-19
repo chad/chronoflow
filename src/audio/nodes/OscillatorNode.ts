@@ -78,6 +78,17 @@ export class SynthOscillatorNode implements SynthNode {
     return this.oscillator?.detune ?? null;
   }
 
+  getModulationTarget(paramName: string): AudioParam | null {
+    switch (paramName) {
+      case 'freq_mod':
+        return this.oscillator?.frequency ?? null;
+      case 'detune_mod':
+        return this.oscillator?.detune ?? null;
+      default:
+        return null;
+    }
+  }
+
   connect(destination: AudioNode | SynthNode): void {
     if ('getInputNode' in destination) {
       const input = destination.getInputNode();
