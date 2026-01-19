@@ -1,4 +1,4 @@
-// AudioGraph - manages audio node instances and connections
+// AudioGraph - manages audio node instances and connections with polyphony support
 
 import { audioEngine } from './AudioEngine';
 import type { SynthNode } from './nodes';
@@ -12,8 +12,16 @@ import {
   SynthReverbNode,
   SynthOutputNode,
 } from './nodes';
+import { VoiceAllocator } from './VoiceAllocator';
+import type { PatchNode, PatchConnection } from '../patch/types';
 
 export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'output';
+
+// Node types that are per-voice (duplicated for polyphony)
+const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr'];
+
+// Node types that are global (shared across all voices)
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'delay', 'reverb', 'output'];
 
 interface Connection {
   fromId: string;
@@ -26,6 +34,9 @@ class AudioGraph {
   private nodes: Map<string, SynthNode> = new Map();
   private connections: Connection[] = [];
   private outputNode: SynthOutputNode | null = null;
+  private voiceAllocator: VoiceAllocator | null = null;
+  private polyphonyEnabled = true;
+  private maxVoices = 8;
 
   async init(): Promise<void> {
     const context = await audioEngine.init();
@@ -34,6 +45,9 @@ class AudioGraph {
     // Create the output node
     this.outputNode = new SynthOutputNode(context, 'output', destination);
     this.nodes.set('output', this.outputNode);
+
+    // Create voice allocator
+    this.voiceAllocator = new VoiceAllocator({ maxVoices: this.maxVoices });
   }
 
   getContext(): AudioContext | null {
@@ -42,6 +56,29 @@ class AudioGraph {
 
   getOutputNode(): SynthOutputNode | null {
     return this.outputNode;
+  }
+
+  getVoiceAllocator(): VoiceAllocator | null {
+    return this.voiceAllocator;
+  }
+
+  isPolyphonyEnabled(): boolean {
+    return this.polyphonyEnabled;
+  }
+
+  setPolyphonyEnabled(enabled: boolean): void {
+    this.polyphonyEnabled = enabled;
+  }
+
+  setMaxVoices(count: number): void {
+    this.maxVoices = count;
+    if (this.voiceAllocator) {
+      this.voiceAllocator.setMaxVoices(count);
+    }
+  }
+
+  private isVoiceNodeType(type: NodeType): boolean {
+    return VOICE_NODE_TYPES.includes(type);
   }
 
   createNode(type: NodeType, id: string, params?: Record<string, unknown>): SynthNode | null {
@@ -180,9 +217,15 @@ class AudioGraph {
   }
 
   setNodeParam(nodeId: string, param: string, value: number | string): void {
+    // Update the global node (for UI display)
     const node = this.nodes.get(nodeId);
     if (node) {
       node.setParam(param, value);
+    }
+
+    // Also update all voice instances if this is a voice node
+    if (this.voiceAllocator && node && this.isVoiceNodeType(node.type as NodeType)) {
+      this.voiceAllocator.updateParam(nodeId, param, value);
     }
   }
 
@@ -214,6 +257,79 @@ class AudioGraph {
     }
   }
 
+  // === POLYPHONIC NOTE HANDLING ===
+
+  // Note on with polyphony
+  noteOn(note: number, velocity: number): void {
+    if (this.polyphonyEnabled && this.voiceAllocator) {
+      this.voiceAllocator.noteOn(note, velocity);
+    } else {
+      // Mono mode: update all oscillators and trigger ADSRs
+      this.monoNoteOn(note, velocity);
+    }
+  }
+
+  // Note off with polyphony
+  noteOff(note: number): void {
+    if (this.polyphonyEnabled && this.voiceAllocator) {
+      this.voiceAllocator.noteOff(note);
+    } else {
+      this.monoNoteOff();
+    }
+  }
+
+  // Mono mode note on (original behavior)
+  private monoNoteOn(note: number, velocity: number): void {
+    const frequency = 440 * Math.pow(2, (note - 69) / 12);
+    const normalizedVelocity = velocity / 127;
+
+    // Update all oscillators
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthOscillatorNode) {
+        node.setParam('frequency', frequency);
+      }
+    });
+
+    // Trigger all ADSRs
+    this.triggerAllADSRs(normalizedVelocity);
+
+    // If no ADSR, set VCA gain directly
+    const hasADSR = Array.from(this.nodes.values()).some((n) => n instanceof SynthADSRNode);
+    if (!hasADSR) {
+      this.nodes.forEach((node) => {
+        if (node instanceof SynthVCANode) {
+          node.setParam('gain', 0.1 + normalizedVelocity * 0.9);
+        }
+      });
+    }
+  }
+
+  // Mono mode note off
+  private monoNoteOff(): void {
+    this.releaseAllADSRs();
+
+    const hasADSR = Array.from(this.nodes.values()).some((n) => n instanceof SynthADSRNode);
+    if (!hasADSR) {
+      this.nodes.forEach((node) => {
+        if (node instanceof SynthVCANode) {
+          node.setParam('gain', 0);
+        }
+      });
+    }
+  }
+
+  // Get active voice count
+  getActiveVoiceCount(): number {
+    return this.voiceAllocator?.getActiveVoiceCount() ?? 0;
+  }
+
+  // Panic - stop all voices immediately
+  panic(): void {
+    this.voiceAllocator?.panic();
+  }
+
+  // === LEGACY ADSR METHODS (for mono mode compatibility) ===
+
   triggerADSR(id: string, velocity: number = 1): void {
     const node = this.nodes.get(id);
     if (node instanceof SynthADSRNode) {
@@ -228,7 +344,6 @@ class AudioGraph {
     }
   }
 
-  // Trigger all ADSRs (for note on)
   triggerAllADSRs(velocity: number = 1): void {
     this.nodes.forEach((node) => {
       if (node instanceof SynthADSRNode) {
@@ -237,13 +352,67 @@ class AudioGraph {
     });
   }
 
-  // Release all ADSRs (for note off)
   releaseAllADSRs(): void {
     this.nodes.forEach((node) => {
       if (node instanceof SynthADSRNode) {
         node.release();
       }
     });
+  }
+
+  // === REBUILD VOICES ===
+
+  // Rebuild voice allocator when patch changes
+  rebuildVoices(patchNodes: PatchNode[], patchConnections: PatchConnection[]): void {
+    if (!this.voiceAllocator) return;
+
+    // Initialize voice allocator with the patch
+    this.voiceAllocator.initialize(patchNodes, patchConnections);
+
+    // Find where voices should connect to (first effect or output)
+    const voiceOutput = this.voiceAllocator.getOutputNode();
+
+    // Find the first node in the effects chain that receives from voice nodes
+    // This is the first delay, reverb, or output that a VCA/filter connects to
+    const effectsEntryNode = this.findEffectsEntryNode(patchNodes, patchConnections);
+
+    if (effectsEntryNode) {
+      const entryNode = this.nodes.get(effectsEntryNode);
+      if (entryNode) {
+        const input = entryNode.getInputNode();
+        if (input) {
+          voiceOutput.connect(input);
+        }
+      }
+    } else if (this.outputNode) {
+      // No effects, connect directly to output
+      const outputInput = this.outputNode.getInputNode();
+      if (outputInput) {
+        voiceOutput.connect(outputInput);
+      }
+    }
+  }
+
+  // Find the first effects node that should receive voice output
+  private findEffectsEntryNode(
+    patchNodes: PatchNode[],
+    connections: PatchConnection[]
+  ): string | null {
+    // Find connections from voice nodes to global nodes
+    const voiceNodeIds = new Set(
+      patchNodes.filter((n) => VOICE_NODE_TYPES.includes(n.type as NodeType)).map((n) => n.id)
+    );
+
+    for (const conn of connections) {
+      if (voiceNodeIds.has(conn.from.nodeId)) {
+        const toNode = patchNodes.find((n) => n.id === conn.to.nodeId);
+        if (toNode && GLOBAL_NODE_TYPES.includes(toNode.type as NodeType)) {
+          return conn.to.nodeId;
+        }
+      }
+    }
+
+    return 'output';
   }
 
   // Start all oscillators and LFOs
@@ -278,6 +447,8 @@ class AudioGraph {
 
   clear(): void {
     this.stopAll();
+    this.voiceAllocator?.dispose();
+
     this.nodes.forEach((node, id) => {
       if (id !== 'output') {
         node.dispose();
@@ -289,6 +460,9 @@ class AudioGraph {
     if (this.outputNode) {
       this.nodes.set('output', this.outputNode);
     }
+
+    // Recreate voice allocator
+    this.voiceAllocator = new VoiceAllocator({ maxVoices: this.maxVoices });
   }
 }
 

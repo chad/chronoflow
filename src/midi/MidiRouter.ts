@@ -9,11 +9,6 @@ const NOTE_OFF = 0x80;
 const NOTE_ON = 0x90;
 const CONTROL_CHANGE = 0xb0;
 
-// MIDI note to frequency conversion
-function midiNoteToFrequency(note: number): number {
-  return 440 * Math.pow(2, (note - 69) / 12);
-}
-
 interface CCMapping {
   nodeId: string;
   param: string;
@@ -61,49 +56,20 @@ class MidiRouter {
     }
 
     this.currentNote = note;
-    const frequency = midiNoteToFrequency(note);
-    const normalizedVelocity = velocity / 127;
 
-    // Update all oscillator frequencies in the patch
-    const patch = usePatchStore.getState().patch;
-    const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
-
-    patch.nodes.forEach((node) => {
-      if (node.type === 'oscillator') {
-        usePatchStore.getState().updateNodeParam(node.id, 'frequency', frequency);
-      }
-      // Only control VCA directly if there's no ADSR (ADSR handles it otherwise)
-      if (node.type === 'vca' && !hasADSR) {
-        const gain = 0.1 + normalizedVelocity * 0.9;
-        usePatchStore.getState().updateNodeParam(node.id, 'gain', gain);
-      }
-    });
-
-    // Trigger all ADSRs with velocity
-    audioGraph.triggerAllADSRs(normalizedVelocity);
+    // Use polyphonic voice allocation
+    audioGraph.noteOn(note, velocity);
 
     // Forward to MIDI output if selected (for GarageBand, etc.)
     midiEngine.noteOn(channel, note, velocity);
   }
 
   private handleNoteOff(channel: number, note: number): void {
+    // Use polyphonic voice release
+    audioGraph.noteOff(note);
+
     if (this.currentNote === note) {
       this.currentNote = null;
-
-      const patch = usePatchStore.getState().patch;
-      const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
-
-      // Only set VCAs to zero directly if there's no ADSR
-      if (!hasADSR) {
-        patch.nodes.forEach((node) => {
-          if (node.type === 'vca') {
-            usePatchStore.getState().updateNodeParam(node.id, 'gain', 0);
-          }
-        });
-      }
-
-      // Release all ADSRs
-      audioGraph.releaseAllADSRs();
     }
 
     // Forward to MIDI output

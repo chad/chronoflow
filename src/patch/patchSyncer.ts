@@ -60,6 +60,13 @@ class PatchSyncer {
     modifiedNodes.forEach((n) => this.updateAudioNode(n));
     addedConnections.forEach((c) => this.addAudioConnection(c));
 
+    // Rebuild polyphonic voices if structure changed
+    const structureChanged = addedNodes.length > 0 || removedNodes.length > 0 ||
+                            addedConnections.length > 0 || removedConnections.length > 0;
+    if (structureChanged) {
+      audioGraph.rebuildVoices(patch.nodes, patch.connections);
+    }
+
     this.previousPatch = JSON.parse(JSON.stringify(patch));
   }
 

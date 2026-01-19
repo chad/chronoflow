@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { usePatchStore } from '../../patch/patchStore';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { audioGraph } from '../../audio/AudioGraph';
 
 // Map computer keyboard to MIDI notes (starting at C3 = 48)
@@ -25,10 +24,6 @@ const KEY_TO_NOTE: Record<string, number> = {
   ';': 64, // E4
 };
 
-function midiNoteToFrequency(note: number): number {
-  return 440 * Math.pow(2, (note - 69) / 12);
-}
-
 function noteToName(note: number): string {
   const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const octave = Math.floor(note / 12) - 1;
@@ -36,59 +31,38 @@ function noteToName(note: number): string {
 }
 
 export function KeyboardInput() {
-  const [activeNote, setActiveNote] = useState<number | null>(null);
-  const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
-  const patch = usePatchStore((state) => state.patch);
+  const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
+  const activeNotesRef = useRef<Set<number>>(new Set());
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.repeat) return;
+
+    const note = KEY_TO_NOTE[e.key.toLowerCase()];
+    if (note !== undefined && !activeNotesRef.current.has(note)) {
+      e.preventDefault();
+
+      // Add to active notes
+      activeNotesRef.current.add(note);
+      setActiveNotes(new Set(activeNotesRef.current));
+
+      // Trigger note with default velocity (100 out of 127)
+      audioGraph.noteOn(note, 100);
+    }
+  }, []);
+
+  const handleKeyUp = useCallback((e: KeyboardEvent) => {
+    const note = KEY_TO_NOTE[e.key.toLowerCase()];
+    if (note !== undefined && activeNotesRef.current.has(note)) {
+      // Remove from active notes
+      activeNotesRef.current.delete(note);
+      setActiveNotes(new Set(activeNotesRef.current));
+
+      // Release note
+      audioGraph.noteOff(note);
+    }
+  }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat) return;
-
-      const note = KEY_TO_NOTE[e.key.toLowerCase()];
-      if (note !== undefined) {
-        e.preventDefault();
-        setActiveNote(note);
-
-        const frequency = midiNoteToFrequency(note);
-        const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
-
-        // Update all oscillators
-        patch.nodes.forEach((node) => {
-          if (node.type === 'oscillator') {
-            updateNodeParam(node.id, 'frequency', frequency);
-          }
-          // Only control VCA directly if there's no ADSR
-          if (node.type === 'vca' && !hasADSR) {
-            updateNodeParam(node.id, 'gain', 0.5);
-          }
-        });
-
-        // Trigger all ADSRs
-        audioGraph.triggerAllADSRs(0.8);
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const note = KEY_TO_NOTE[e.key.toLowerCase()];
-      if (note !== undefined && note === activeNote) {
-        setActiveNote(null);
-
-        const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
-
-        // Only set VCAs to zero directly if there's no ADSR
-        if (!hasADSR) {
-          patch.nodes.forEach((node) => {
-            if (node.type === 'vca') {
-              updateNodeParam(node.id, 'gain', 0);
-            }
-          });
-        }
-
-        // Release all ADSRs
-        audioGraph.releaseAllADSRs();
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
@@ -96,22 +70,32 @@ export function KeyboardInput() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [activeNote, patch.nodes, updateNodeParam]);
+  }, [handleKeyDown, handleKeyUp]);
+
+  const activeNotesList = Array.from(activeNotes);
+  const voiceCount = audioGraph.getActiveVoiceCount();
 
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-lg p-3">
       <h3 className="text-sm font-bold text-gray-300 mb-2">Keyboard</h3>
-      <p className="text-xs text-gray-400 mb-2">Use A-L keys to play</p>
+      <p className="text-xs text-gray-400 mb-2">Use A-L keys to play (polyphonic)</p>
       <div className="flex items-center gap-2">
         <div
           className={`w-3 h-3 rounded-full transition-colors ${
-            activeNote ? 'bg-green-400' : 'bg-gray-600'
+            activeNotes.size > 0 ? 'bg-green-400' : 'bg-gray-600'
           }`}
         />
         <span className="text-xs text-gray-300">
-          {activeNote ? noteToName(activeNote) : 'Ready'}
+          {activeNotes.size > 0
+            ? activeNotesList.map(noteToName).join(', ')
+            : 'Ready'}
         </span>
       </div>
+      {voiceCount > 0 && (
+        <div className="text-xs text-gray-500 mt-1">
+          Voices: {voiceCount}
+        </div>
+      )}
     </div>
   );
 }
