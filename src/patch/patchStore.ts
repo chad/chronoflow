@@ -41,6 +41,9 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   filter: { mode: 'lowpass', cutoff: 2000, resonance: 1 },
   vca: { gain: 0.5 },
   lfo: { rate: 1, depth: 100, waveform: 'sine' },
+  adsr: { attack: 0.01, decay: 0.1, sustain: 0.7, release: 0.3 },
+  delay: { time: 0.3, feedback: 0.4, mix: 0.5 },
+  reverb: { decay: 2, mix: 0.3 },
   output: { gain: 0.7 },
 };
 

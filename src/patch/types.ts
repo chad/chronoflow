@@ -1,6 +1,6 @@
 // Patch JSON types - the source of truth for synth state
 
-export type PatchNodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'output';
+export type PatchNodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'output';
 
 export interface PatchNodeParams {
   [key: string]: number | string | boolean;

@@ -1,6 +1,7 @@
 // MidiRouter - routes MIDI messages to synth parameters
 
 import { midiEngine } from './MidiEngine';
+import { audioGraph } from '../audio/AudioGraph';
 import { usePatchStore } from '../patch/patchStore';
 
 // MIDI message types
@@ -65,17 +66,21 @@ class MidiRouter {
 
     // Update all oscillator frequencies in the patch
     const patch = usePatchStore.getState().patch;
+    const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
+
     patch.nodes.forEach((node) => {
       if (node.type === 'oscillator') {
         usePatchStore.getState().updateNodeParam(node.id, 'frequency', frequency);
       }
-      // Optionally control VCA gain with velocity
-      if (node.type === 'vca') {
-        // Scale velocity to gain (keeping some minimum)
+      // Only control VCA directly if there's no ADSR (ADSR handles it otherwise)
+      if (node.type === 'vca' && !hasADSR) {
         const gain = 0.1 + normalizedVelocity * 0.9;
         usePatchStore.getState().updateNodeParam(node.id, 'gain', gain);
       }
     });
+
+    // Trigger all ADSRs with velocity
+    audioGraph.triggerAllADSRs(normalizedVelocity);
 
     // Forward to MIDI output if selected (for GarageBand, etc.)
     midiEngine.noteOn(channel, note, velocity);
@@ -85,13 +90,20 @@ class MidiRouter {
     if (this.currentNote === note) {
       this.currentNote = null;
 
-      // Set all VCAs to zero for note off
       const patch = usePatchStore.getState().patch;
-      patch.nodes.forEach((node) => {
-        if (node.type === 'vca') {
-          usePatchStore.getState().updateNodeParam(node.id, 'gain', 0);
-        }
-      });
+      const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
+
+      // Only set VCAs to zero directly if there's no ADSR
+      if (!hasADSR) {
+        patch.nodes.forEach((node) => {
+          if (node.type === 'vca') {
+            usePatchStore.getState().updateNodeParam(node.id, 'gain', 0);
+          }
+        });
+      }
+
+      // Release all ADSRs
+      audioGraph.releaseAllADSRs();
     }
 
     // Forward to MIDI output

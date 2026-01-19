@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
+import { audioGraph } from '../../audio/AudioGraph';
 
 // Map computer keyboard to MIDI notes (starting at C3 = 48)
 const KEY_TO_NOTE: Record<string, number> = {
@@ -49,16 +50,21 @@ export function KeyboardInput() {
         setActiveNote(note);
 
         const frequency = midiNoteToFrequency(note);
+        const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
 
         // Update all oscillators
         patch.nodes.forEach((node) => {
           if (node.type === 'oscillator') {
             updateNodeParam(node.id, 'frequency', frequency);
           }
-          if (node.type === 'vca') {
+          // Only control VCA directly if there's no ADSR
+          if (node.type === 'vca' && !hasADSR) {
             updateNodeParam(node.id, 'gain', 0.5);
           }
         });
+
+        // Trigger all ADSRs
+        audioGraph.triggerAllADSRs(0.8);
       }
     };
 
@@ -67,12 +73,19 @@ export function KeyboardInput() {
       if (note !== undefined && note === activeNote) {
         setActiveNote(null);
 
-        // Set VCAs to zero
-        patch.nodes.forEach((node) => {
-          if (node.type === 'vca') {
-            updateNodeParam(node.id, 'gain', 0);
-          }
-        });
+        const hasADSR = patch.nodes.some((node) => node.type === 'adsr');
+
+        // Only set VCAs to zero directly if there's no ADSR
+        if (!hasADSR) {
+          patch.nodes.forEach((node) => {
+            if (node.type === 'vca') {
+              updateNodeParam(node.id, 'gain', 0);
+            }
+          });
+        }
+
+        // Release all ADSRs
+        audioGraph.releaseAllADSRs();
       }
     };
 

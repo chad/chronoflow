@@ -11,7 +11,7 @@ interface NodeOption {
 const NODE_OPTIONS: NodeOption[] = [
   {
     type: 'oscillator',
-    label: 'Oscillator',
+    label: 'Osc',
     color: 'bg-orange-500',
     description: 'Audio oscillator',
   },
@@ -28,10 +28,28 @@ const NODE_OPTIONS: NodeOption[] = [
     description: 'Volume control',
   },
   {
+    type: 'adsr',
+    label: 'ADSR',
+    color: 'bg-pink-500',
+    description: 'Envelope generator',
+  },
+  {
     type: 'lfo',
     label: 'LFO',
     color: 'bg-yellow-500',
     description: 'Modulation source',
+  },
+  {
+    type: 'delay',
+    label: 'Delay',
+    color: 'bg-blue-500',
+    description: 'Delay effect',
+  },
+  {
+    type: 'reverb',
+    label: 'Reverb',
+    color: 'bg-indigo-500',
+    description: 'Reverb effect',
   },
 ];
 

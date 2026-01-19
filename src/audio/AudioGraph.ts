@@ -7,10 +7,13 @@ import {
   SynthFilterNode,
   SynthVCANode,
   SynthLFONode,
+  SynthADSRNode,
+  SynthDelayNode,
+  SynthReverbNode,
   SynthOutputNode,
 } from './nodes';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'output';
 
 interface Connection {
   fromId: string;
@@ -62,6 +65,15 @@ class AudioGraph {
         break;
       case 'lfo':
         node = new SynthLFONode(context, id, params);
+        break;
+      case 'adsr':
+        node = new SynthADSRNode(context, id, params);
+        break;
+      case 'delay':
+        node = new SynthDelayNode(context, id, params);
+        break;
+      case 'reverb':
+        node = new SynthReverbNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
@@ -200,6 +212,38 @@ class AudioGraph {
     if (node instanceof SynthLFONode) {
       node.stop();
     }
+  }
+
+  triggerADSR(id: string, velocity: number = 1): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthADSRNode) {
+      node.trigger(velocity);
+    }
+  }
+
+  releaseADSR(id: string): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthADSRNode) {
+      node.release();
+    }
+  }
+
+  // Trigger all ADSRs (for note on)
+  triggerAllADSRs(velocity: number = 1): void {
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthADSRNode) {
+        node.trigger(velocity);
+      }
+    });
+  }
+
+  // Release all ADSRs (for note off)
+  releaseAllADSRs(): void {
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthADSRNode) {
+        node.release();
+      }
+    });
   }
 
   // Start all oscillators and LFOs

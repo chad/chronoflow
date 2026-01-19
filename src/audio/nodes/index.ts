@@ -3,4 +3,7 @@ export * from './OscillatorNode';
 export * from './FilterNode';
 export * from './VCANode';
 export * from './LFONode';
+export * from './ADSRNode';
+export * from './DelayNode';
+export * from './ReverbNode';
 export * from './OutputNode';

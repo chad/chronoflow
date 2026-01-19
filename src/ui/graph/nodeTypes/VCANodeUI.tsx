@@ -34,7 +34,16 @@ export const VCANodeUI = memo(({ id, data, selected }: NodeProps<VCANode>) => {
         />
       </div>
 
-      {/* Input handle */}
+      {/* Modulation input (top) */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="gain_mod"
+        className="!bg-yellow-400 !w-2 !h-2 !-top-1"
+        title="Gain Mod (ADSR)"
+      />
+
+      {/* Audio input */}
       <Handle
         type="target"
         position={Position.Left}
