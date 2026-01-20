@@ -46,14 +46,22 @@ class PatchSyncer {
       return JSON.stringify(n.params) !== JSON.stringify(prev.params);
     });
 
-    // Find removed connections
+    // Helper to compare connections by content (not just ID)
+    const connectionsEqual = (a: PatchConnection, b: PatchConnection) =>
+      a.id === b.id &&
+      a.from.nodeId === b.from.nodeId &&
+      a.from.port === b.from.port &&
+      a.to.nodeId === b.to.nodeId &&
+      a.to.port === b.to.port;
+
+    // Find removed connections (including modified ones - they need to be disconnected first)
     const removedConnections = prevConnections.filter(
-      (p) => !patch.connections.some((c) => c.id === p.id)
+      (p) => !patch.connections.some((c) => connectionsEqual(p, c))
     );
 
-    // Find added connections
+    // Find added connections (including modified ones - they need to be reconnected)
     const addedConnections = patch.connections.filter(
-      (c) => !prevConnections.some((p) => p.id === c.id)
+      (c) => !prevConnections.some((p) => connectionsEqual(c, p))
     );
 
     // Apply changes to audio graph
