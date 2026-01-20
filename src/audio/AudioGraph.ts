@@ -386,7 +386,6 @@ class AudioGraph {
     // This is the first delay, reverb, or output that a VCA/filter connects to
     const effectsEntryNode = this.findEffectsEntryNode(patchNodes, patchConnections);
 
-
     if (effectsEntryNode) {
       const entryNode = this.nodes.get(effectsEntryNode);
       if (entryNode) {
@@ -400,6 +399,38 @@ class AudioGraph {
       const outputInput = this.outputNode.getInputNode();
       if (outputInput) {
         voiceOutput.connect(outputInput);
+      }
+    }
+
+    // Connect global LFOs to voice modulation targets
+    this.connectLFOsToVoices(patchConnections);
+  }
+
+  // Connect global LFO nodes to voice modulation targets
+  private connectLFOsToVoices(patchConnections: PatchConnection[]): void {
+    if (!this.voiceAllocator) return;
+
+    // Find LFO -> voice modulation connections
+    for (const conn of patchConnections) {
+      const fromNode = this.nodes.get(conn.from.nodeId);
+      if (!fromNode || fromNode.type !== 'lfo') continue;
+
+      // Check if this connects to a modulation target on a voice node
+      if (!conn.to.port.endsWith('_mod')) continue;
+
+      const lfoOutput = fromNode.getOutputNode();
+      if (!lfoOutput) continue;
+
+      // Connect LFO to each voice's corresponding node's modulation target
+      const voices = this.voiceAllocator.getVoices();
+      for (const voice of voices) {
+        const voiceNode = voice.getNode(conn.to.nodeId);
+        if (voiceNode) {
+          const modTarget = voiceNode.getModulationTarget(conn.to.port);
+          if (modTarget) {
+            lfoOutput.connect(modTarget);
+          }
+        }
       }
     }
   }

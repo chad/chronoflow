@@ -212,6 +212,11 @@ export class VoiceAllocator {
     return Array.from(this.noteToVoice.keys());
   }
 
+  // Get all voices (for LFO modulation connections)
+  getVoices(): Voice[] {
+    return this.voices;
+  }
+
   // Release all notes
   releaseAll(): void {
     this.noteToVoice.forEach((_, note) => {

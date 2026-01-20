@@ -5,6 +5,9 @@ import type { NodeType } from '../audio/AudioGraph';
 import { usePatchStore } from './patchStore';
 import type { Patch, PatchNode, PatchConnection } from './types';
 
+// Node types that are per-voice (handled by VoiceAllocator, not global connections)
+const VOICE_NODE_TYPES = ['oscillator', 'filter', 'vca', 'adsr'];
+
 class PatchSyncer {
   private previousPatch: Patch | null = null;
   private unsubscribe: (() => void) | null = null;
@@ -58,7 +61,7 @@ class PatchSyncer {
     removedNodes.forEach((n) => this.removeAudioNode(n));
     addedNodes.forEach((n) => this.addAudioNode(n));
     modifiedNodes.forEach((n) => this.updateAudioNode(n));
-    addedConnections.forEach((c) => this.addAudioConnection(c));
+    addedConnections.forEach((c) => this.addAudioConnection(c, patch));
 
     // Rebuild polyphonic voices if structure changed
     const structureChanged = addedNodes.length > 0 || removedNodes.length > 0 ||
@@ -75,11 +78,16 @@ class PatchSyncer {
 
     const audioNode = audioGraph.createNode(node.type as NodeType, node.id, node.params);
 
-    // Start oscillators and LFOs
-    if (audioNode && (node.type === 'oscillator' || node.type === 'lfo')) {
+    // Start oscillators and LFOs (but not global oscillators when polyphony is enabled)
+    if (audioNode) {
       if (node.type === 'oscillator') {
-        audioGraph.startOscillator(node.id);
-      } else {
+        // Don't start global oscillators when polyphony is enabled
+        // Voice oscillators are started by VoiceAllocator
+        if (!audioGraph.isPolyphonyEnabled()) {
+          audioGraph.startOscillator(node.id);
+        }
+      } else if (node.type === 'lfo') {
+        // LFOs are always global, always start them
         audioGraph.startLFO(node.id);
       }
     }
@@ -95,7 +103,26 @@ class PatchSyncer {
     });
   }
 
-  private addAudioConnection(connection: PatchConnection): void {
+  private addAudioConnection(connection: PatchConnection, patch: Patch): void {
+    // When polyphony is enabled, skip connections between voice-type nodes
+    // The VoiceAllocator handles those connections internally
+    if (audioGraph.isPolyphonyEnabled()) {
+      const fromNode = patch.nodes.find((n) => n.id === connection.from.nodeId);
+      const toNode = patch.nodes.find((n) => n.id === connection.to.nodeId);
+      const fromIsVoice = fromNode && VOICE_NODE_TYPES.includes(fromNode.type);
+      const toIsVoice = toNode && VOICE_NODE_TYPES.includes(toNode.type);
+
+      // Skip if both are voice nodes (handled by VoiceAllocator)
+      if (fromIsVoice && toIsVoice) {
+        return;
+      }
+
+      // Skip if voice node connects to global node (handled by VoiceAllocator -> effects entry)
+      if (fromIsVoice && !toIsVoice) {
+        return;
+      }
+    }
+
     audioGraph.connect(
       connection.from.nodeId,
       connection.from.port,
