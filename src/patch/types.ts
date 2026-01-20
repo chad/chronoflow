@@ -25,6 +25,13 @@ export interface PatchConnection {
   };
 }
 
+export interface ExposedPort {
+  nodeId: string;
+  port: string;
+  alias: string;
+  direction: 'input' | 'output';
+}
+
 export interface PatchGroup {
   id: string;
   name: string;
@@ -34,6 +41,10 @@ export interface PatchGroup {
     param: string;
     alias: string;
   }[];
+  exposedPorts: ExposedPort[];
+  collapsed: boolean;
+  collapsedPosition: { x: number; y: number };
+  color?: string;
 }
 
 export interface PatchMeta {

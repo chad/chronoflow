@@ -1,12 +1,16 @@
 import { create } from 'zustand';
 import { nanoid } from 'nanoid';
-import type { Patch, PatchNode, PatchConnection, PatchNodeType } from './types';
+import type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchGroup, ExposedPort } from './types';
 import { createEmptyPatch } from './types';
+import { computeAutoLayout } from '../layout/autoLayout';
+import { detectExposedPorts, calculateGroupCenter, generatePortAlias } from '../layout/groupUtils';
 
 interface PatchState {
   patch: Patch;
   isAudioEnabled: boolean;
   selectedNodeId: string | null;
+  selectedNodeIds: string[]; // Multi-select for grouping
+  focusedGroupId: string | null; // Currently focused group for dive-in
 
   // Actions
   setAudioEnabled: (enabled: boolean) => void;
@@ -19,6 +23,9 @@ interface PatchState {
   updateNodePosition: (id: string, position: { x: number; y: number }) => void;
   updateNodeParam: (id: string, param: string, value: number | string | boolean) => void;
   selectNode: (id: string | null) => void;
+  setSelectedNodeIds: (ids: string[]) => void;
+  toggleNodeSelection: (id: string) => void;
+  clearSelection: () => void;
 
   // Connection operations
   addConnection: (
@@ -28,6 +35,26 @@ interface PatchState {
     toPort: string
   ) => string | null;
   removeConnection: (id: string) => void;
+
+  // Layout operations
+  autoLayoutNodes: () => void;
+
+  // Group operations
+  createGroup: (name: string, nodeIds: string[]) => string | null;
+  deleteGroup: (groupId: string) => void;
+  collapseGroup: (groupId: string) => void;
+  expandGroup: (groupId: string) => void;
+  diveIntoGroup: (groupId: string) => void;
+  exitGroup: () => void;
+  exposePort: (
+    groupId: string,
+    nodeId: string,
+    port: string,
+    direction: 'input' | 'output',
+    alias: string
+  ) => void;
+  unexposePort: (groupId: string, alias: string) => void;
+  duplicateGroup: (groupId: string, position: { x: number; y: number }) => string | null;
 
   // Persistence
   savePatch: () => void;
@@ -51,6 +78,8 @@ export const usePatchStore = create<PatchState>((set, get) => ({
   patch: createEmptyPatch(),
   isAudioEnabled: false,
   selectedNodeId: null,
+  selectedNodeIds: [],
+  focusedGroupId: null,
 
   setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
 
@@ -123,6 +152,21 @@ export const usePatchStore = create<PatchState>((set, get) => ({
 
   selectNode: (id) => set({ selectedNodeId: id }),
 
+  setSelectedNodeIds: (ids) => set({ selectedNodeIds: ids }),
+
+  toggleNodeSelection: (id) => {
+    set((state) => {
+      const current = state.selectedNodeIds;
+      if (current.includes(id)) {
+        return { selectedNodeIds: current.filter((nid) => nid !== id) };
+      } else {
+        return { selectedNodeIds: [...current, id] };
+      }
+    });
+  },
+
+  clearSelection: () => set({ selectedNodeIds: [], selectedNodeId: null }),
+
   addConnection: (fromNodeId, fromPort, toNodeId, toPort) => {
     const state = get();
 
@@ -180,6 +224,232 @@ export const usePatchStore = create<PatchState>((set, get) => ({
         meta: { ...state.patch.meta, modified: new Date().toISOString() },
       },
     }));
+  },
+
+  // Layout operations
+  autoLayoutNodes: () => {
+    const state = get();
+    const positions = computeAutoLayout(state.patch.nodes, state.patch.connections);
+
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: state.patch.nodes.map((node) => {
+          const newPos = positions.get(node.id);
+          return newPos ? { ...node, position: newPos } : node;
+        }),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  // Group operations
+  createGroup: (name, nodeIds) => {
+    if (nodeIds.length < 2) return null; // Need at least 2 nodes
+
+    const state = get();
+    const groupId = `group_${nanoid(8)}`;
+    const nodeIdSet = new Set(nodeIds);
+
+    // Detect exposed ports
+    const { inputs, outputs } = detectExposedPorts(nodeIdSet, state.patch.connections);
+    const existingAliases = new Set<string>();
+    const exposedPorts: ExposedPort[] = [];
+
+    inputs.forEach(({ nodeId, port }) => {
+      const alias = generatePortAlias(port, existingAliases);
+      existingAliases.add(alias);
+      exposedPorts.push({ nodeId, port, alias, direction: 'input' });
+    });
+
+    outputs.forEach(({ nodeId, port }) => {
+      const alias = generatePortAlias(port, existingAliases);
+      existingAliases.add(alias);
+      exposedPorts.push({ nodeId, port, alias, direction: 'output' });
+    });
+
+    // Calculate collapsed position
+    const collapsedPosition = calculateGroupCenter(nodeIds, state.patch.nodes);
+
+    const newGroup: PatchGroup = {
+      id: groupId,
+      name,
+      nodeIds,
+      exposedParams: [],
+      exposedPorts,
+      collapsed: false,
+      collapsedPosition,
+      color: '#6366f1', // Default indigo color
+    };
+
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: [...state.patch.groups, newGroup],
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+      selectedNodeIds: [], // Clear selection after grouping
+    }));
+
+    return groupId;
+  },
+
+  deleteGroup: (groupId) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: state.patch.groups.filter((g) => g.id !== groupId),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+      focusedGroupId: state.focusedGroupId === groupId ? null : state.focusedGroupId,
+    }));
+  },
+
+  collapseGroup: (groupId) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: state.patch.groups.map((g) =>
+          g.id === groupId ? { ...g, collapsed: true } : g
+        ),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  expandGroup: (groupId) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: state.patch.groups.map((g) =>
+          g.id === groupId ? { ...g, collapsed: false } : g
+        ),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  diveIntoGroup: (groupId) => {
+    const state = get();
+    const group = state.patch.groups.find((g) => g.id === groupId);
+    if (group) {
+      set({ focusedGroupId: groupId });
+    }
+  },
+
+  exitGroup: () => {
+    set({ focusedGroupId: null });
+  },
+
+  exposePort: (groupId, nodeId, port, direction, alias) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: state.patch.groups.map((g) => {
+          if (g.id !== groupId) return g;
+          // Check if port is already exposed
+          const exists = g.exposedPorts.some(
+            (p) => p.nodeId === nodeId && p.port === port && p.direction === direction
+          );
+          if (exists) return g;
+          return {
+            ...g,
+            exposedPorts: [...g.exposedPorts, { nodeId, port, alias, direction }],
+          };
+        }),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  unexposePort: (groupId, alias) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        groups: state.patch.groups.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            exposedPorts: g.exposedPorts.filter((p) => p.alias !== alias),
+          };
+        }),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  duplicateGroup: (groupId, position) => {
+    const state = get();
+    const group = state.patch.groups.find((g) => g.id === groupId);
+    if (!group) return null;
+
+    const newGroupId = `group_${nanoid(8)}`;
+    const nodeIdMap = new Map<string, string>(); // old id -> new id
+
+    // Create copies of all nodes in the group
+    const newNodes: PatchNode[] = [];
+    const groupNodes = state.patch.nodes.filter((n) => group.nodeIds.includes(n.id));
+
+    // Calculate offset from original group center
+    const originalCenter = calculateGroupCenter(group.nodeIds, state.patch.nodes);
+    const offsetX = position.x - originalCenter.x;
+    const offsetY = position.y - originalCenter.y;
+
+    groupNodes.forEach((node) => {
+      const newId = nanoid(8);
+      nodeIdMap.set(node.id, newId);
+      newNodes.push({
+        ...node,
+        id: newId,
+        position: {
+          x: node.position.x + offsetX,
+          y: node.position.y + offsetY,
+        },
+      });
+    });
+
+    // Copy internal connections with remapped IDs
+    const groupNodeIds = new Set(group.nodeIds);
+    const internalConnections = state.patch.connections.filter(
+      (c) => groupNodeIds.has(c.from.nodeId) && groupNodeIds.has(c.to.nodeId)
+    );
+
+    const newConnections: PatchConnection[] = internalConnections.map((conn) => ({
+      id: nanoid(8),
+      from: {
+        nodeId: nodeIdMap.get(conn.from.nodeId) || conn.from.nodeId,
+        port: conn.from.port,
+      },
+      to: {
+        nodeId: nodeIdMap.get(conn.to.nodeId) || conn.to.nodeId,
+        port: conn.to.port,
+      },
+    }));
+
+    // Create new group with remapped node IDs
+    const newGroup: PatchGroup = {
+      ...group,
+      id: newGroupId,
+      name: `${group.name} (copy)`,
+      nodeIds: group.nodeIds.map((id) => nodeIdMap.get(id) || id),
+      exposedPorts: group.exposedPorts.map((p) => ({
+        ...p,
+        nodeId: nodeIdMap.get(p.nodeId) || p.nodeId,
+      })),
+      collapsedPosition: position,
+    };
+
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: [...state.patch.nodes, ...newNodes],
+        connections: [...state.patch.connections, ...newConnections],
+        groups: [...state.patch.groups, newGroup],
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+
+    return newGroupId;
   },
 
   savePatch: () => {
