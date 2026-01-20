@@ -48,12 +48,16 @@ export class VoiceAllocator {
       ['oscillator', 'filter', 'vca', 'adsr'].includes(n.type)
     );
 
-    // Filter connections to only those between voice nodes or from voice to output
+    // Filter connections to only those between voice nodes or from voice to output/effects
+    const globalNodeTypes = ['output', 'delay', 'reverb', 'lfo'];
     const voiceConnections = connections.filter((c) => {
       const fromIsVoice = voiceNodes.some((n) => n.id === c.from.nodeId);
       const toIsVoice = voiceNodes.some((n) => n.id === c.to.nodeId);
-      // Include if both are voice nodes, or if from voice to output/effects
-      return fromIsVoice && (toIsVoice || ['output', 'delay', 'reverb'].includes(c.to.nodeId));
+      // Check if destination is a global node by looking up its type
+      const toNode = patchNodes.find((n) => n.id === c.to.nodeId);
+      const toIsGlobal = toNode && globalNodeTypes.includes(toNode.type);
+      // Include if both are voice nodes, or if from voice to global node
+      return fromIsVoice && (toIsVoice || toIsGlobal);
     });
 
     // Create voice pool
@@ -71,6 +75,7 @@ export class VoiceAllocator {
 
   // Allocate a voice for a note
   noteOn(note: number, velocity: number): Voice | null {
+
     // Check if this note is already playing
     const existingVoice = this.noteToVoice.get(note);
     if (existingVoice) {

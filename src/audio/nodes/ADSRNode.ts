@@ -18,6 +18,7 @@ export class SynthADSRNode implements SynthNode {
   id: string;
   type = 'adsr';
 
+  private constantSource: ConstantSourceNode;
   private gainNode: GainNode;
   private context: AudioContext;
   private params: ADSRParams;
@@ -29,9 +30,18 @@ export class SynthADSRNode implements SynthNode {
     this.id = id;
     this.params = { ...DEFAULT_PARAMS, ...params };
 
-    // The gain node acts as our envelope output
+    // ConstantSourceNode outputs a constant value of 1.0
+    // This feeds into the gain node which shapes it with the envelope
+    this.constantSource = context.createConstantSource();
+    this.constantSource.offset.value = 1;
+
+    // The gain node shapes the constant signal into the envelope
     this.gainNode = context.createGain();
     this.gainNode.gain.value = 0;
+
+    // Connect: constant 1.0 -> gain (envelope shape) -> output
+    this.constantSource.connect(this.gainNode);
+    this.constantSource.start();
   }
 
   trigger(velocity: number = 1): void {
@@ -136,6 +146,8 @@ export class SynthADSRNode implements SynthNode {
 
   dispose(): void {
     this.forceStop();
+    this.constantSource.stop();
+    this.constantSource.disconnect();
     this.gainNode.disconnect();
   }
 }

@@ -262,7 +262,10 @@ class AudioGraph {
   // Note on with polyphony
   noteOn(note: number, velocity: number): void {
     if (this.polyphonyEnabled && this.voiceAllocator) {
-      this.voiceAllocator.noteOn(note, velocity);
+      const voice = this.voiceAllocator.noteOn(note, velocity);
+      if (!voice) {
+        this.monoNoteOn(note, velocity);
+      }
     } else {
       // Mono mode: update all oscillators and trigger ADSRs
       this.monoNoteOn(note, velocity);
@@ -366,6 +369,13 @@ class AudioGraph {
   rebuildVoices(patchNodes: PatchNode[], patchConnections: PatchConnection[]): void {
     if (!this.voiceAllocator) return;
 
+    // Disconnect previous voice output connections
+    try {
+      this.voiceAllocator.getOutputNode().disconnect();
+    } catch {
+      // Ignore if not connected
+    }
+
     // Initialize voice allocator with the patch
     this.voiceAllocator.initialize(patchNodes, patchConnections);
 
@@ -375,6 +385,7 @@ class AudioGraph {
     // Find the first node in the effects chain that receives from voice nodes
     // This is the first delay, reverb, or output that a VCA/filter connects to
     const effectsEntryNode = this.findEffectsEntryNode(patchNodes, patchConnections);
+
 
     if (effectsEntryNode) {
       const entryNode = this.nodes.get(effectsEntryNode);

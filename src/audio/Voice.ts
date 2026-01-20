@@ -44,6 +44,13 @@ export class Voice {
     // Skip output, delay, reverb, LFO - those are shared/global
     this.createVoiceNodes(patchNodes);
     this.connectVoiceNodes(connections);
+
+    // Start all oscillators
+    this.nodes.forEach((node) => {
+      if (node.type === 'oscillator') {
+        (node as SynthOscillatorNode).start();
+      }
+    });
   }
 
   private createVoiceNodes(patchNodes: PatchNode[]): void {
@@ -83,6 +90,7 @@ export class Voice {
     for (const conn of connections) {
       const fromNode = this.nodes.get(conn.from.nodeId);
       const toNode = this.nodes.get(conn.to.nodeId);
+
 
       // Skip connections that involve global nodes (not in this voice)
       if (!fromNode && !toNode) continue;
