@@ -26,6 +26,7 @@ class PatchSyncer {
   }
 
   private syncPatch(patch: Patch): void {
+    console.log('[PatchSyncer] syncPatch called for:', patch.meta.name);
     const prevNodes = this.previousPatch?.nodes ?? [];
     const prevConnections = this.previousPatch?.connections ?? [];
 
@@ -65,6 +66,14 @@ class PatchSyncer {
     );
 
     // Apply changes to audio graph
+    console.log('[PatchSyncer] Changes:', {
+      addedNodes: addedNodes.map(n => n.id),
+      removedNodes: removedNodes.map(n => n.id),
+      modifiedNodes: modifiedNodes.map(n => n.id),
+      addedConnections: addedConnections.map(c => `${c.from.nodeId}.${c.from.port} -> ${c.to.nodeId}.${c.to.port}`),
+      removedConnections: removedConnections.map(c => `${c.from.nodeId}.${c.from.port} -> ${c.to.nodeId}.${c.to.port}`),
+    });
+
     removedConnections.forEach((c) => this.removeAudioConnection(c));
     removedNodes.forEach((n) => this.removeAudioNode(n));
     addedNodes.forEach((n) => this.addAudioNode(n));
@@ -74,6 +83,7 @@ class PatchSyncer {
     // Rebuild polyphonic voices if structure changed
     const structureChanged = addedNodes.length > 0 || removedNodes.length > 0 ||
                             addedConnections.length > 0 || removedConnections.length > 0;
+    console.log('[PatchSyncer] Structure changed:', structureChanged);
     if (structureChanged) {
       audioGraph.rebuildVoices(patch.nodes, patch.connections);
     }
@@ -112,6 +122,8 @@ class PatchSyncer {
   }
 
   private addAudioConnection(connection: PatchConnection, patch: Patch): void {
+    const connStr = `${connection.from.nodeId}.${connection.from.port} -> ${connection.to.nodeId}.${connection.to.port}`;
+
     // When polyphony is enabled, skip connections between voice-type nodes
     // The VoiceAllocator handles those connections internally
     if (audioGraph.isPolyphonyEnabled()) {
@@ -122,21 +134,25 @@ class PatchSyncer {
 
       // Skip if both are voice nodes (handled by VoiceAllocator)
       if (fromIsVoice && toIsVoice) {
+        console.log('[PatchSyncer] SKIP (both voice):', connStr);
         return;
       }
 
       // Skip if voice node connects to global node (handled by VoiceAllocator -> effects entry)
       if (fromIsVoice && !toIsVoice) {
+        console.log('[PatchSyncer] SKIP (voice->global):', connStr);
         return;
       }
     }
 
-    audioGraph.connect(
+    console.log('[PatchSyncer] CONNECT:', connStr);
+    const result = audioGraph.connect(
       connection.from.nodeId,
       connection.from.port,
       connection.to.nodeId,
       connection.to.port
     );
+    console.log('[PatchSyncer] connect result:', result);
   }
 
   private removeAudioConnection(connection: PatchConnection): void {

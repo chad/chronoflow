@@ -46,11 +46,16 @@ export class Voice {
     this.connectVoiceNodes(connections);
 
     // Start all oscillators
+    let oscCount = 0;
     this.nodes.forEach((node) => {
       if (node.type === 'oscillator') {
         (node as SynthOscillatorNode).start();
+        oscCount++;
       }
     });
+    if (id === 0) {
+      console.log('[Voice 0] Created with nodes:', Array.from(this.nodes.keys()), 'oscillators started:', oscCount);
+    }
   }
 
   private createVoiceNodes(patchNodes: PatchNode[]): void {
@@ -90,15 +95,19 @@ export class Voice {
     for (const conn of connections) {
       const fromNode = this.nodes.get(conn.from.nodeId);
       const toNode = this.nodes.get(conn.to.nodeId);
-
+      const connStr = `${conn.from.nodeId}.${conn.from.port} -> ${conn.to.nodeId}.${conn.to.port}`;
 
       // Skip connections that involve global nodes (not in this voice)
-      if (!fromNode && !toNode) continue;
+      if (!fromNode && !toNode) {
+        if (this.id === 0) console.log('[Voice 0] SKIP (no nodes):', connStr);
+        continue;
+      }
 
       // If the destination is a voice node
       if (toNode) {
         if (fromNode) {
           // Both nodes are voice-local
+          if (this.id === 0) console.log('[Voice 0] CONNECT internal:', connStr);
           this.connectNodes(fromNode, conn.from.port, toNode, conn.to.port);
         }
         // If source is global (LFO), we'll handle that separately via AudioGraph
@@ -111,10 +120,13 @@ export class Voice {
         const isToOutput = conn.to.nodeId === 'output' ||
                           conn.to.port === 'input';
         if (isToOutput) {
+          if (this.id === 0) console.log('[Voice 0] CONNECT to outputGain:', connStr);
           const output = fromNode.getOutputNode();
           if (output) {
             output.connect(this.outputGain);
           }
+        } else {
+          if (this.id === 0) console.log('[Voice 0] SKIP (not to output):', connStr);
         }
       }
     }
@@ -151,6 +163,8 @@ export class Voice {
     const frequency = 440 * Math.pow(2, (note - 69) / 12);
     const normalizedVelocity = velocity / 127;
 
+    console.log(`[Voice ${this.id}] noteOn: note=${note} freq=${frequency.toFixed(1)} vel=${normalizedVelocity.toFixed(2)}`);
+
     this.state = {
       note,
       velocity: normalizedVelocity,
@@ -159,18 +173,24 @@ export class Voice {
     };
 
     // Set frequency on all oscillators
+    let oscCount = 0;
     this.nodes.forEach((node) => {
       if (node.type === 'oscillator') {
         node.setParam('frequency', frequency);
+        oscCount++;
       }
     });
 
     // Trigger all ADSRs
+    let adsrCount = 0;
     this.nodes.forEach((node) => {
       if (node.type === 'adsr') {
         (node as SynthADSRNode).trigger(normalizedVelocity);
+        adsrCount++;
       }
     });
+
+    console.log(`[Voice ${this.id}] Updated ${oscCount} oscillators, triggered ${adsrCount} ADSRs`);
 
     // If no ADSR, set VCA gain directly
     const hasADSR = Array.from(this.nodes.values()).some((n) => n.type === 'adsr');

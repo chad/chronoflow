@@ -60,6 +60,11 @@ export class VoiceAllocator {
       return fromIsVoice && (toIsVoice || toIsGlobal);
     });
 
+    console.log('[VoiceAllocator] initialize:', {
+      voiceNodes: voiceNodes.map(n => n.id),
+      voiceConnections: voiceConnections.map(c => `${c.from.nodeId}.${c.from.port} -> ${c.to.nodeId}.${c.to.port}`),
+    });
+
     // Create voice pool
     const mixer = this.ensureMixerGain();
     for (let i = 0; i < this.config.maxVoices; i++) {
@@ -67,6 +72,7 @@ export class VoiceAllocator {
       voice.getOutputNode().connect(mixer);
       this.voices.push(voice);
     }
+    console.log('[VoiceAllocator] Created', this.voices.length, 'voices');
   }
 
   getOutputNode(): GainNode {
