@@ -1,5 +1,8 @@
 // AudioGraph - manages audio node instances and connections with polyphony support
 
+// Set to true to enable debug logging
+const DEBUG = false;
+
 import { audioEngine } from './AudioEngine';
 import type { SynthNode } from './nodes';
 import {
@@ -261,10 +264,10 @@ class AudioGraph {
 
   // Note on with polyphony
   noteOn(note: number, velocity: number): void {
-    console.log('[AudioGraph] noteOn:', note, velocity, 'polyphony:', this.polyphonyEnabled, 'hasAllocator:', !!this.voiceAllocator);
+    if (DEBUG) console.log('[AudioGraph] noteOn:', note, velocity, 'polyphony:', this.polyphonyEnabled, 'hasAllocator:', !!this.voiceAllocator);
     if (this.polyphonyEnabled && this.voiceAllocator) {
       const voice = this.voiceAllocator.noteOn(note, velocity);
-      console.log('[AudioGraph] Voice allocated:', voice?.id);
+      if (DEBUG) console.log('[AudioGraph] Voice allocated:', voice?.id);
       if (!voice) {
         this.monoNoteOn(note, velocity);
       }
@@ -369,9 +372,9 @@ class AudioGraph {
 
   // Rebuild voice allocator when patch changes
   rebuildVoices(patchNodes: PatchNode[], patchConnections: PatchConnection[]): void {
-    console.log('[AudioGraph] rebuildVoices called');
+    if (DEBUG) console.log('[AudioGraph] rebuildVoices called');
     if (!this.voiceAllocator) {
-      console.log('[AudioGraph] No voice allocator!');
+      if (DEBUG) console.log('[AudioGraph] No voice allocator!');
       return;
     }
 
@@ -384,7 +387,7 @@ class AudioGraph {
 
     // Initialize voice allocator with the patch
     this.voiceAllocator.initialize(patchNodes, patchConnections);
-    console.log('[AudioGraph] Voice allocator initialized, voice count:', this.voiceAllocator.getVoices().length);
+    if (DEBUG) console.log('[AudioGraph] Voice allocator initialized, voice count:', this.voiceAllocator.getVoices().length);
 
     // Find where voices should connect to (first effect or output)
     const voiceOutput = this.voiceAllocator.getOutputNode();
@@ -392,17 +395,17 @@ class AudioGraph {
     // Find the first node in the effects chain that receives from voice nodes
     // This is the first delay, reverb, or output that a VCA/filter connects to
     const effectsEntryNode = this.findEffectsEntryNode(patchNodes, patchConnections);
-    console.log('[AudioGraph] Effects entry node:', effectsEntryNode);
+    if (DEBUG) console.log('[AudioGraph] Effects entry node:', effectsEntryNode);
 
     if (effectsEntryNode) {
       const entryNode = this.nodes.get(effectsEntryNode);
-      console.log('[AudioGraph] Entry node exists:', !!entryNode);
+      if (DEBUG) console.log('[AudioGraph] Entry node exists:', !!entryNode);
       if (entryNode) {
         const input = entryNode.getInputNode();
-        console.log('[AudioGraph] Entry node input exists:', !!input);
+        if (DEBUG) console.log('[AudioGraph] Entry node input exists:', !!input);
         if (input) {
           voiceOutput.connect(input);
-          console.log('[AudioGraph] Connected voice output to', effectsEntryNode);
+          if (DEBUG) console.log('[AudioGraph] Connected voice output to', effectsEntryNode);
         }
       }
     } else if (this.outputNode) {
@@ -410,7 +413,7 @@ class AudioGraph {
       const outputInput = this.outputNode.getInputNode();
       if (outputInput) {
         voiceOutput.connect(outputInput);
-        console.log('[AudioGraph] Connected voice output to output node');
+        if (DEBUG) console.log('[AudioGraph] Connected voice output to output node');
       }
     }
 

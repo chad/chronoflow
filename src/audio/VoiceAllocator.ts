@@ -1,5 +1,8 @@
 // VoiceAllocator.ts - Manages polyphonic voice allocation
 
+// Set to true to enable debug logging
+const DEBUG = false;
+
 import { Voice } from './Voice';
 import { audioEngine } from './AudioEngine';
 import type { PatchNode, PatchConnection } from '../patch/types';
@@ -60,7 +63,7 @@ export class VoiceAllocator {
       return fromIsVoice && (toIsVoice || toIsGlobal);
     });
 
-    console.log('[VoiceAllocator] initialize:', {
+    if (DEBUG) console.log('[VoiceAllocator] initialize:', {
       voiceNodes: voiceNodes.map(n => n.id),
       voiceConnections: voiceConnections.map(c => `${c.from.nodeId}.${c.from.port} -> ${c.to.nodeId}.${c.to.port}`),
     });
@@ -72,7 +75,7 @@ export class VoiceAllocator {
       voice.getOutputNode().connect(mixer);
       this.voices.push(voice);
     }
-    console.log('[VoiceAllocator] Created', this.voices.length, 'voices');
+    if (DEBUG) console.log('[VoiceAllocator] Created', this.voices.length, 'voices');
   }
 
   getOutputNode(): GainNode {

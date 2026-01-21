@@ -1,6 +1,9 @@
 // Voice.ts - Represents a single polyphonic voice
 // Each voice has its own oscillator(s), filter, VCA, and ADSR
 
+// Set to true to enable debug logging
+const DEBUG = false;
+
 import { audioEngine } from './AudioEngine';
 import { SynthOscillatorNode } from './nodes/OscillatorNode';
 import { SynthFilterNode } from './nodes/FilterNode';
@@ -53,7 +56,7 @@ export class Voice {
         oscCount++;
       }
     });
-    if (id === 0) {
+    if (DEBUG && id === 0) {
       console.log('[Voice 0] Created with nodes:', Array.from(this.nodes.keys()), 'oscillators started:', oscCount);
     }
   }
@@ -99,7 +102,7 @@ export class Voice {
 
       // Skip connections that involve global nodes (not in this voice)
       if (!fromNode && !toNode) {
-        if (this.id === 0) console.log('[Voice 0] SKIP (no nodes):', connStr);
+        if (DEBUG && this.id === 0) console.log('[Voice 0] SKIP (no nodes):', connStr);
         continue;
       }
 
@@ -107,7 +110,7 @@ export class Voice {
       if (toNode) {
         if (fromNode) {
           // Both nodes are voice-local
-          if (this.id === 0) console.log('[Voice 0] CONNECT internal:', connStr);
+          if (DEBUG && this.id === 0) console.log('[Voice 0] CONNECT internal:', connStr);
           this.connectNodes(fromNode, conn.from.port, toNode, conn.to.port);
         }
         // If source is global (LFO), we'll handle that separately via AudioGraph
@@ -120,13 +123,13 @@ export class Voice {
         const isToOutput = conn.to.nodeId === 'output' ||
                           conn.to.port === 'input';
         if (isToOutput) {
-          if (this.id === 0) console.log('[Voice 0] CONNECT to outputGain:', connStr);
+          if (DEBUG && this.id === 0) console.log('[Voice 0] CONNECT to outputGain:', connStr);
           const output = fromNode.getOutputNode();
           if (output) {
             output.connect(this.outputGain);
           }
         } else {
-          if (this.id === 0) console.log('[Voice 0] SKIP (not to output):', connStr);
+          if (DEBUG && this.id === 0) console.log('[Voice 0] SKIP (not to output):', connStr);
         }
       }
     }
@@ -163,7 +166,7 @@ export class Voice {
     const frequency = 440 * Math.pow(2, (note - 69) / 12);
     const normalizedVelocity = velocity / 127;
 
-    console.log(`[Voice ${this.id}] noteOn: note=${note} freq=${frequency.toFixed(1)} vel=${normalizedVelocity.toFixed(2)}`);
+    if (DEBUG) console.log(`[Voice ${this.id}] noteOn: note=${note} freq=${frequency.toFixed(1)} vel=${normalizedVelocity.toFixed(2)}`);
 
     this.state = {
       note,
@@ -190,7 +193,7 @@ export class Voice {
       }
     });
 
-    console.log(`[Voice ${this.id}] Updated ${oscCount} oscillators, triggered ${adsrCount} ADSRs`);
+    if (DEBUG) console.log(`[Voice ${this.id}] Updated ${oscCount} oscillators, triggered ${adsrCount} ADSRs`);
 
     // If no ADSR, set VCA gain directly
     const hasADSR = Array.from(this.nodes.values()).some((n) => n.type === 'adsr');
