@@ -1,5 +1,26 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
 
+// Helper to create SVG arc path
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const angleRad = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: cx + r * Math.cos(angleRad),
+    y: cy + r * Math.sin(angleRad),
+  };
+}
+
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  // Handle case where angles are the same
+  if (Math.abs(endAngle - startAngle) < 0.1) return '';
+
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+  const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
+  const sweep = endAngle > startAngle ? 1 : 0;
+
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} ${sweep} ${end.x} ${end.y}`;
+}
+
 interface KnobProps {
   value: number;
   min: number;
@@ -9,6 +30,8 @@ interface KnobProps {
   unit?: string;
   onChange: (value: number) => void;
   logarithmic?: boolean;
+  modulatedValue?: number;
+  isModulated?: boolean;
 }
 
 export function Knob({
@@ -20,6 +43,8 @@ export function Knob({
   unit = '',
   onChange,
   logarithmic = false,
+  modulatedValue,
+  isModulated = false,
 }: KnobProps) {
   const knobRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -44,7 +69,15 @@ export function Knob({
   );
 
   // Calculate rotation from value (0-270 degrees)
-  const rotation = ((toLinear(value) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min)) * 270 - 135;
+  const normalizedValue = (toLinear(value) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min);
+  const rotation = normalizedValue * 270 - 135;
+
+  // Calculate modulation indicator rotation
+  const clampedModValue = modulatedValue !== undefined
+    ? Math.max(min, Math.min(max, modulatedValue))
+    : value;
+  const normalizedModValue = (toLinear(clampedModValue) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min);
+  const modRotation = normalizedModValue * 270 - 135;
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -107,9 +140,43 @@ export function Knob({
         onMouseDown={handleMouseDown}
         style={{ touchAction: 'none' }}
       >
-        {/* Indicator line */}
+        {/* Modulation arc (shows when modulated) */}
+        {isModulated && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 40 40"
+          >
+            {/* Modulation indicator dot */}
+            <circle
+              cx="20"
+              cy="20"
+              r="14"
+              fill="none"
+              stroke="transparent"
+            />
+            <circle
+              cx={20 + 14 * Math.sin((modRotation * Math.PI) / 180)}
+              cy={20 - 14 * Math.cos((modRotation * Math.PI) / 180)}
+              r="3"
+              fill="#22d3ee"
+              opacity="0.8"
+            />
+            {/* Arc from base value to modulated value */}
+            <path
+              d={describeArc(20, 20, 17, rotation, modRotation)}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="2"
+              opacity="0.4"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+        {/* Base indicator line (user's setting) */}
         <div
-          className="absolute w-0.5 h-3 bg-cyan-400 left-1/2 top-1 -translate-x-1/2 origin-bottom rounded"
+          className={`absolute w-0.5 h-3 left-1/2 top-1 -translate-x-1/2 origin-bottom rounded ${
+            isModulated ? 'bg-white' : 'bg-cyan-400'
+          }`}
           style={{ transform: `translateX(-50%) rotate(${rotation}deg)`, transformOrigin: 'center 16px' }}
         />
       </div>

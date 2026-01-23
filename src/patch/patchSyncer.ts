@@ -9,7 +9,7 @@ import type { Patch, PatchNode, PatchConnection } from './types';
 const DEBUG = false;
 
 // Node types that are per-voice (handled by VoiceAllocator, not global connections)
-const VOICE_NODE_TYPES = ['oscillator', 'filter', 'vca', 'adsr'];
+const VOICE_NODE_TYPES = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
 
 class PatchSyncer {
   private previousPatch: Patch | null = null;
@@ -29,6 +29,7 @@ class PatchSyncer {
   }
 
   private syncPatch(patch: Patch): void {
+    try {
     if (DEBUG) console.log('[PatchSyncer] syncPatch called for:', patch.meta.name);
     const prevNodes = this.previousPatch?.nodes ?? [];
     const prevConnections = this.previousPatch?.connections ?? [];
@@ -92,6 +93,9 @@ class PatchSyncer {
     }
 
     this.previousPatch = JSON.parse(JSON.stringify(patch));
+    } catch (err) {
+      console.error('[PatchSyncer] Error in syncPatch:', err);
+    }
   }
 
   private addAudioNode(node: PatchNode): void {

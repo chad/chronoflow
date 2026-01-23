@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
-import { Knob } from '../../controls/Knob';
+import { ModulatedKnob } from '../../controls/ModulatedKnob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 
@@ -39,7 +39,9 @@ export const FilterNodeUI = memo(({ id, data, selected }: NodeProps<FilterNode>)
           options={FILTER_MODES}
           onChange={(v) => updateNodeParam(id, 'mode', v)}
         />
-        <Knob
+        <ModulatedKnob
+          nodeId={id}
+          paramName="cutoff"
           label="Cutoff"
           value={data.cutoff}
           min={20}
@@ -49,7 +51,9 @@ export const FilterNodeUI = memo(({ id, data, selected }: NodeProps<FilterNode>)
           logarithmic
           onChange={(v) => updateNodeParam(id, 'cutoff', v)}
         />
-        <Knob
+        <ModulatedKnob
+          nodeId={id}
+          paramName="resonance"
           label="Res"
           value={data.resonance}
           min={0.1}

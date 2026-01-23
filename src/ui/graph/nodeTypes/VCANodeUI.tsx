@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
-import { Knob } from '../../controls/Knob';
+import { ModulatedKnob } from '../../controls/ModulatedKnob';
 import { usePatchStore } from '../../../patch/patchStore';
 
 type VCAData = {
@@ -24,7 +24,9 @@ export const VCANodeUI = memo(({ id, data, selected }: NodeProps<VCANode>) => {
       </div>
 
       <div className="flex justify-center">
-        <Knob
+        <ModulatedKnob
+          nodeId={id}
+          paramName="gain"
           label="Gain"
           value={data.gain}
           min={0}

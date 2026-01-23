@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
-import { Knob } from '../../controls/Knob';
+import { ModulatedKnob } from '../../controls/ModulatedKnob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 
@@ -40,7 +40,9 @@ export const OscillatorNodeUI = memo(({ id, data, selected }: NodeProps<Oscillat
           options={WAVEFORM_OPTIONS}
           onChange={(v) => updateNodeParam(id, 'waveform', v)}
         />
-        <Knob
+        <ModulatedKnob
+          nodeId={id}
+          paramName="frequency"
           label="Freq"
           value={data.frequency}
           min={20}
@@ -50,7 +52,9 @@ export const OscillatorNodeUI = memo(({ id, data, selected }: NodeProps<Oscillat
           logarithmic
           onChange={(v) => updateNodeParam(id, 'frequency', v)}
         />
-        <Knob
+        <ModulatedKnob
+          nodeId={id}
+          paramName="detune"
           label="Detune"
           value={data.detune}
           min={-100}

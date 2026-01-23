@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GraphCanvas } from './ui/graph/GraphCanvas';
 import { NodePalette } from './ui/panels/NodePalette';
 import { MidiPanel } from './ui/panels/MidiPanel';
@@ -14,16 +14,20 @@ function App() {
   const isAudioEnabled = usePatchStore((state) => state.isAudioEnabled);
   const setAudioEnabled = usePatchStore((state) => state.setAudioEnabled);
   const loadPatch = usePatchStore((state) => state.loadPatch);
+  const audioInitializedRef = useRef(false);
 
   const handleEnableAudio = async () => {
-    if (isAudioEnabled) return;
+    if (audioInitializedRef.current) return;
+    audioInitializedRef.current = true;
     try {
       await patchSyncer.init();
       midiRouter.init();
       setAudioEnabled(true);
+      console.log('[App] Audio initialized successfully');
     } catch (err) {
       setError('Failed to initialize audio');
       console.error(err);
+      audioInitializedRef.current = false;
     }
   };
 
@@ -33,10 +37,10 @@ function App() {
     setIsLoading(false);
 
     // Auto-enable audio on first user interaction (browsers require user gesture)
-    const enableOnInteraction = () => {
-      handleEnableAudio();
+    const enableOnInteraction = async () => {
       document.removeEventListener('click', enableOnInteraction);
       document.removeEventListener('keydown', enableOnInteraction);
+      await handleEnableAudio();
     };
     document.addEventListener('click', enableOnInteraction);
     document.addEventListener('keydown', enableOnInteraction);
@@ -45,7 +49,7 @@ function App() {
       document.removeEventListener('click', enableOnInteraction);
       document.removeEventListener('keydown', enableOnInteraction);
     };
-  }, [loadPatch]);
+  }, []);
 
   if (isLoading) {
     return (
