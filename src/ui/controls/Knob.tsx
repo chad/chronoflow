@@ -47,7 +47,10 @@ export function Knob({
   isModulated = false,
 }: KnobProps) {
   const knobRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
   const dragStartY = useRef(0);
   const dragStartValue = useRef(0);
 
@@ -129,6 +132,37 @@ export function Knob({
   // Format display value
   const displayValue = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(step < 1 ? 2 : 0);
 
+  // Handle double-click to edit
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditValue(value.toString());
+    setIsEditing(true);
+    // Focus input after render
+    setTimeout(() => inputRef.current?.select(), 0);
+  }, [value]);
+
+  // Handle input submission
+  const handleInputSubmit = useCallback(() => {
+    const parsed = parseFloat(editValue);
+    if (!isNaN(parsed)) {
+      const clamped = Math.max(min, Math.min(max, parsed));
+      const stepped = Math.round(clamped / step) * step;
+      onChange(stepped);
+    }
+    setIsEditing(false);
+  }, [editValue, min, max, step, onChange]);
+
+  // Handle input key events
+  const handleInputKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      handleInputSubmit();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  }, [handleInputSubmit]);
+
   return (
     <div className="flex flex-col items-center gap-1">
       <span className="text-[10px] text-gray-400 uppercase">{label}</span>
@@ -180,10 +214,27 @@ export function Knob({
           style={{ transform: `translateX(-50%) rotate(${rotation}deg)`, transformOrigin: 'center 16px' }}
         />
       </div>
-      <span className="text-[10px] text-gray-300">
-        {displayValue}
-        {unit}
-      </span>
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={handleInputSubmit}
+          onKeyDown={handleInputKeyDown}
+          className="nodrag w-12 text-[10px] text-center bg-gray-700 text-white border border-cyan-400 rounded px-1 outline-none"
+          autoFocus
+        />
+      ) : (
+        <span
+          className="text-[10px] text-gray-300 cursor-text hover:text-cyan-300"
+          onDoubleClick={handleDoubleClick}
+          title="Double-click to edit"
+        >
+          {displayValue}
+          {unit}
+        </span>
+      )}
     </div>
   );
 }
