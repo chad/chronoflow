@@ -129,6 +129,10 @@ class AudioGraph {
             this.noteOff(note);
           }, gateTime * 1000);
         });
+        // Wire up stop callback to clear effects
+        (node as SynthSequencerNode).setStopCallback(() => {
+          this.clearEffects();
+        });
         break;
       case 'output':
         // Output node is a singleton
@@ -368,9 +372,19 @@ class AudioGraph {
     return this.voiceAllocator?.getActiveVoiceCount() ?? 0;
   }
 
-  // Panic - stop all voices immediately
+  // Panic - stop all voices and clear effects immediately
   panic(): void {
     this.voiceAllocator?.panic();
+    this.clearEffects();
+  }
+
+  // Clear all delay/reverb tails
+  clearEffects(): void {
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthDelayNode || node instanceof SynthReverbNode) {
+        (node as { clear: () => void }).clear();
+      }
+    });
   }
 
   // === LEGACY ADSR METHODS (for mono mode compatibility) ===

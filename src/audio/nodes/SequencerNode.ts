@@ -32,6 +32,7 @@ const DEFAULT_PARAMS: SequencerParams = {
 
 type NoteCallback = (note: number, velocity: number, gateTime: number) => void;
 type StepCallback = (step: number) => void;
+type StopCallback = () => void;
 
 export class SynthSequencerNode implements SynthNode {
   id: string;
@@ -42,6 +43,7 @@ export class SynthSequencerNode implements SynthNode {
   private currentStep = 0;
   private intervalId: number | null = null;
   private noteCallback: NoteCallback | null = null;
+  private stopCallback: StopCallback | null = null;
   private stepCallbacks: StepCallback[] = [];
   private dummyGain: GainNode; // For satisfying the SynthNode interface
   private isConnected = false; // Only trigger notes when connected
@@ -64,6 +66,11 @@ export class SynthSequencerNode implements SynthNode {
   // Set the callback that triggers notes
   setNoteCallback(callback: NoteCallback): void {
     this.noteCallback = callback;
+  }
+
+  // Set the callback for when sequencer stops (to clear effects)
+  setStopCallback(callback: StopCallback): void {
+    this.stopCallback = callback;
   }
 
   // Subscribe to step changes (for UI visualization)
@@ -112,6 +119,11 @@ export class SynthSequencerNode implements SynthNode {
     }
     this.currentStep = 0;
     this.stepCallbacks.forEach((cb) => cb(-1)); // Reset UI
+
+    // Clear effects when stopping
+    if (this.stopCallback) {
+      this.stopCallback();
+    }
   }
 
   // Update the interval timing without triggering a new note

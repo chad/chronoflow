@@ -69,6 +69,17 @@ export class SynthReverbNode implements SynthNode {
     this.wetGain.gain.value = this.params.mix;
   }
 
+  // Clear the reverb tail by fading out the wet signal quickly
+  clear(): void {
+    this.wetGain.gain.setTargetAtTime(0, this.context.currentTime, 0.05);
+    // Restore after a short time if mix is still > 0
+    setTimeout(() => {
+      if (this.params.mix > 0) {
+        this.wetGain.gain.setTargetAtTime(this.params.mix, this.context.currentTime, 0.01);
+      }
+    }, 200);
+  }
+
   getOutputNode(): AudioNode {
     return this.outputGain;
   }

@@ -58,6 +58,27 @@ export class SynthDelayNode implements SynthNode {
   private updateMix(): void {
     this.dryGain.gain.value = 1 - this.params.mix;
     this.wetGain.gain.value = this.params.mix;
+
+    // When mix is very low, kill feedback to stop the delay loop
+    if (this.params.mix < 0.01) {
+      this.feedbackGain.gain.setTargetAtTime(0, this.context.currentTime, 0.01);
+    } else {
+      // Restore feedback when mix is turned back up
+      this.feedbackGain.gain.setTargetAtTime(this.params.feedback, this.context.currentTime, 0.01);
+    }
+  }
+
+  // Clear the delay buffer by temporarily killing feedback
+  clear(): void {
+    this.feedbackGain.gain.setTargetAtTime(0, this.context.currentTime, 0.001);
+    this.wetGain.gain.setTargetAtTime(0, this.context.currentTime, 0.001);
+    // Restore after delay buffer would be empty
+    setTimeout(() => {
+      if (this.params.mix >= 0.01) {
+        this.feedbackGain.gain.setTargetAtTime(this.params.feedback, this.context.currentTime, 0.01);
+        this.wetGain.gain.setTargetAtTime(this.params.mix, this.context.currentTime, 0.01);
+      }
+    }, this.params.time * 1000 * 3); // Wait for 3x delay time to fully clear
   }
 
   getOutputNode(): AudioNode {
