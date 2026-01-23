@@ -6,6 +6,7 @@ import { ADSRNodeUI } from './ADSRNodeUI';
 import { DelayNodeUI } from './DelayNodeUI';
 import { ReverbNodeUI } from './ReverbNodeUI';
 import { MixerNodeUI } from './MixerNodeUI';
+import { SequencerNodeUI } from './SequencerNodeUI';
 import { OutputNodeUI } from './OutputNodeUI';
 import { GroupNodeUI } from './GroupNodeUI';
 
@@ -18,6 +19,7 @@ export const nodeTypes = {
   delay: DelayNodeUI,
   reverb: ReverbNodeUI,
   mixer: MixerNodeUI,
+  sequencer: SequencerNodeUI,
   output: OutputNodeUI,
   group: GroupNodeUI,
 };

@@ -72,6 +72,14 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   delay: { time: 0.3, feedback: 0.4, mix: 0.5 },
   reverb: { decay: 2, mix: 0.3 },
   mixer: { level1: 1, level2: 1, level3: 1, level4: 1, master: 1 },
+  sequencer: {
+    bpm: 120,
+    steps: 8,
+    gate: 0.5,
+    step1: 0, step2: 2, step3: 4, step4: 5,
+    step5: 7, step6: 9, step7: 11, step8: 12,
+    running: true,
+  },
   output: { gain: 0.7 },
 };
 

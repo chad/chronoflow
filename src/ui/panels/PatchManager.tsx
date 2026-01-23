@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
-import { DEMO_PATCH, SIMPLE_PATCH, MIXER_PATCH } from '../../patch/samplePatches';
+import { DEMO_PATCH, SIMPLE_PATCH, MIXER_PATCH, SEQUENCER_PATCH } from '../../patch/samplePatches';
 
 export function PatchManager() {
   const patch = usePatchStore((state) => state.patch);
@@ -15,8 +15,8 @@ export function PatchManager() {
   const [showSamples, setShowSamples] = useState(false);
   const setPatch = usePatchStore((state) => state.setPatch);
 
-  const loadSamplePatch = (name: 'demo' | 'simple' | 'mixer') => {
-    const samplePatch = name === 'demo' ? DEMO_PATCH : name === 'mixer' ? MIXER_PATCH : SIMPLE_PATCH;
+  const loadSamplePatch = (name: 'demo' | 'simple' | 'mixer' | 'sequencer') => {
+    const samplePatch = name === 'demo' ? DEMO_PATCH : name === 'mixer' ? MIXER_PATCH : name === 'sequencer' ? SEQUENCER_PATCH : SIMPLE_PATCH;
     // Create fresh dates for the loaded patch
     setPatch({
       ...samplePatch,
@@ -149,6 +149,13 @@ export function PatchManager() {
             >
               Triple Oscillator
               <span className="block text-amber-200 text-[10px]">3 oscs with mixer</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('sequencer')}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Arpeggio Sequence
+              <span className="block text-emerald-200 text-[10px]">8-step sequencer with FX</span>
             </button>
           </div>
         )}

@@ -205,3 +205,123 @@ export const MIXER_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// Sequencer patch - musical arpeggio
+export const SEQUENCER_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Arpeggio Sequence',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Sequencer - C minor arpeggio pattern
+    {
+      id: 'seq1',
+      type: 'sequencer',
+      position: { x: 50, y: 20 },
+      params: {
+        bpm: 140,
+        steps: 8,
+        gate: 0.4,
+        // C minor 7 arpeggio: C, Eb, G, Bb, C+, Bb, G, Eb
+        step1: 0,   // C4
+        step2: 3,   // Eb4
+        step3: 7,   // G4
+        step4: 10,  // Bb4
+        step5: 12,  // C5
+        step6: 10,  // Bb4
+        step7: 7,   // G4
+        step8: 3,   // Eb4
+        running: true,
+      },
+    },
+    // Oscillator 1 - main
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 180 },
+      params: { frequency: 440, detune: 0, waveform: 'sawtooth' },
+    },
+    // Oscillator 2 - detuned for richness
+    {
+      id: 'osc2',
+      type: 'oscillator',
+      position: { x: 50, y: 310 },
+      params: { frequency: 440, detune: 7, waveform: 'sawtooth' },
+    },
+    // Mixer
+    {
+      id: 'mixer1',
+      type: 'mixer',
+      position: { x: 220, y: 220 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
+    },
+    // Filter with resonance for plucky sound
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 420, y: 180 },
+      params: { mode: 'lowpass', cutoff: 2500, resonance: 3 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 600, y: 180 },
+      params: { gain: 0 },
+    },
+    // Snappy ADSR for plucky envelope
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 420, y: 50 },
+      params: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.2 },
+    },
+    // LFO for subtle filter movement
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 220, y: 50 },
+      params: { rate: 0.25, depth: 400, waveform: 'sine' },
+    },
+    // Delay for rhythmic echo
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 750, y: 120 },
+      params: { time: 0.214, feedback: 0.45, mix: 0.35 }, // ~1/8 note at 140 BPM
+    },
+    // Reverb for space
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 750, y: 260 },
+      params: { decay: 2.5, mix: 0.3 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 920, y: 180 },
+      params: { gain: 0.6 },
+    },
+  ],
+  connections: [
+    // Oscillators to mixer
+    { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
+    { id: 'c2', from: { nodeId: 'osc2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
+    // Mixer -> Filter -> VCA
+    { id: 'c3', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c4', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    // VCA -> Effects -> Output
+    { id: 'c5', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c6', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c7', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA gain modulation
+    { id: 'c8', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    // LFO -> Filter cutoff modulation
+    { id: 'c9', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'filter1', port: 'cutoff_mod' } },
+  ],
+  groups: [],
+};

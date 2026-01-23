@@ -40,6 +40,12 @@ const NODE_OPTIONS: NodeOption[] = [
     description: 'Modulation source',
   },
   {
+    type: 'sequencer',
+    label: 'Seq',
+    color: 'bg-emerald-500',
+    description: '8-step sequencer',
+  },
+  {
     type: 'delay',
     label: 'Delay',
     color: 'bg-blue-500',
