@@ -37,16 +37,20 @@ function App() {
     setIsLoading(false);
 
     // Auto-enable audio on first user interaction (browsers require user gesture)
-    const enableOnInteraction = async () => {
-      document.removeEventListener('click', enableOnInteraction);
-      document.removeEventListener('keydown', enableOnInteraction);
-      await handleEnableAudio();
+    // Use mouseup instead of click to avoid interfering with drag operations
+    const enableOnInteraction = () => {
+      // Use setTimeout to defer audio init to after current event processing
+      setTimeout(() => {
+        handleEnableAudio();
+      }, 0);
     };
-    document.addEventListener('click', enableOnInteraction);
-    document.addEventListener('keydown', enableOnInteraction);
+
+    // Only listen once
+    document.addEventListener('mouseup', enableOnInteraction, { once: true });
+    document.addEventListener('keydown', enableOnInteraction, { once: true });
 
     return () => {
-      document.removeEventListener('click', enableOnInteraction);
+      document.removeEventListener('mouseup', enableOnInteraction);
       document.removeEventListener('keydown', enableOnInteraction);
     };
   }, []);

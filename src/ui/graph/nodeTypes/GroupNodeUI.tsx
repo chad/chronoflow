@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { usePatchStore } from '../../../patch/patchStore';
 import type { ExposedPort } from '../../../patch/types';
+import { ClickableHandle } from '../ClickableHandle';
 
 type GroupData = {
   name: string;
@@ -118,11 +119,12 @@ export const GroupNodeUI = memo(({ id, data, selected }: NodeProps<GroupNode>) =
 
       {/* Input handles (left side) */}
       {inputPorts.map((port, index) => (
-        <Handle
+        <ClickableHandle
           key={`in-${port.alias}`}
           type="target"
           position={Position.Left}
           id={port.alias}
+          nodeId={id}
           className="!bg-indigo-400 !w-3 !h-3"
           style={{ top: inputPositions[index].top }}
           title={port.alias}
@@ -131,11 +133,12 @@ export const GroupNodeUI = memo(({ id, data, selected }: NodeProps<GroupNode>) =
 
       {/* Output handles (right side) */}
       {outputPorts.map((port, index) => (
-        <Handle
+        <ClickableHandle
           key={`out-${port.alias}`}
           type="source"
           position={Position.Right}
           id={port.alias}
+          nodeId={id}
           className="!bg-indigo-400 !w-3 !h-3"
           style={{ top: outputPositions[index].top }}
           title={port.alias}

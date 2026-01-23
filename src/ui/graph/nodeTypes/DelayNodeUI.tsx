@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 type DelayData = {
   time: number;
@@ -54,36 +55,40 @@ export const DelayNodeUI = memo(({ id, data, selected }: NodeProps<DelayNode>) =
       </div>
 
       {/* Modulation inputs */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="time_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '35%' }}
         title="Time Mod"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="feedback_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '65%' }}
         title="Feedback Mod"
       />
 
       {/* Audio input */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input"
+        nodeId={id}
         className="!bg-blue-400 !w-3 !h-3"
       />
 
       {/* Audio output */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-blue-400 !w-3 !h-3"
       />
     </div>

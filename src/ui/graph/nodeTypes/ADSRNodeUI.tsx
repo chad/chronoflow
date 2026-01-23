@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 type ADSRData = {
   attack: number;
@@ -65,10 +66,11 @@ export const ADSRNodeUI = memo(({ id, data, selected }: NodeProps<ADSRNode>) => 
       </div>
 
       {/* Output handle - connects to VCA gain_mod or other mod inputs */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-pink-400 !w-3 !h-3"
       />
     </div>

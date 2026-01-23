@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 type MixerData = {
   level1: number;
@@ -74,44 +75,49 @@ export const MixerNodeUI = memo(({ id, data, selected }: NodeProps<MixerNode>) =
       </div>
 
       {/* Input handles - 4 channels on left side */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input1"
+        nodeId={id}
         className="!bg-amber-400 !w-3 !h-3"
         style={{ top: '25%' }}
         title="Input 1"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input2"
+        nodeId={id}
         className="!bg-amber-400 !w-3 !h-3"
         style={{ top: '42%' }}
         title="Input 2"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input3"
+        nodeId={id}
         className="!bg-amber-400 !w-3 !h-3"
         style={{ top: '58%' }}
         title="Input 3"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input4"
+        nodeId={id}
         className="!bg-amber-400 !w-3 !h-3"
         style={{ top: '75%' }}
         title="Input 4"
       />
 
       {/* Output handle */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-amber-400 !w-3 !h-3"
       />
     </div>

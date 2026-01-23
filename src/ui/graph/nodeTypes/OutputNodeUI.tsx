@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 type OutputData = {
   gain: number;
@@ -35,10 +36,11 @@ export const OutputNodeUI = memo(({ id, data, selected }: NodeProps<OutputNode>)
       </div>
 
       {/* Input handle */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input"
+        nodeId={id}
         className="!bg-red-400 !w-3 !h-3"
       />
     </div>

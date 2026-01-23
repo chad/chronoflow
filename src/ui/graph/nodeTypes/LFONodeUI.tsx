@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 const WAVEFORM_OPTIONS = [
   { value: 'sine', label: 'Sine' },
@@ -60,10 +61,11 @@ export const LFONodeUI = memo(({ id, data, selected }: NodeProps<LFONode>) => {
       </div>
 
       {/* Output handle */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-yellow-400 !w-3 !h-3"
       />
     </div>

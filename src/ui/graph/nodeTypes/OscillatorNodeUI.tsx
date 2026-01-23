@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { ModulatedKnob } from '../../controls/ModulatedKnob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 const WAVEFORM_OPTIONS = [
   { value: 'sine', label: 'Sine' },
@@ -66,28 +67,31 @@ export const OscillatorNodeUI = memo(({ id, data, selected }: NodeProps<Oscillat
       </div>
 
       {/* Modulation input handles (top) */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="freq_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '30%' }}
         title="Frequency Mod"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="detune_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '70%' }}
         title="Detune Mod"
       />
 
       {/* Output handle */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-orange-400 !w-3 !h-3"
       />
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -9,6 +9,8 @@ import {
   addEdge,
   Panel,
   SelectionMode,
+  useReactFlow,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import type {
   Node,
@@ -26,6 +28,7 @@ import { nodeTypes } from './nodeTypes';
 import { usePatchStore } from '../../patch/patchStore';
 import type { PatchNode, PatchConnection, PatchGroup } from '../../patch/types';
 import { remapConnectionsForCollapsedGroup } from '../../layout/groupUtils';
+import { ConnectionProvider, useConnection } from './ConnectionContext';
 
 // Convert patch nodes to React Flow nodes
 function patchNodesToFlowNodes(
@@ -136,7 +139,7 @@ function patchConnectionsToFlowEdges(
   }));
 }
 
-export function GraphCanvas() {
+function GraphCanvasInner() {
   const patch = usePatchStore((state) => state.patch);
   const updateNodePosition = usePatchStore((state) => state.updateNodePosition);
   const addConnection = usePatchStore((state) => state.addConnection);
@@ -152,6 +155,62 @@ export function GraphCanvas() {
   const diveIntoGroup = usePatchStore((state) => state.diveIntoGroup);
   const exitGroup = usePatchStore((state) => state.exitGroup);
   const deleteGroup = usePatchStore((state) => state.deleteGroup);
+
+  // Click-to-connect state
+  const { isConnecting, connectionSource, cancelConnection, setOnConnectionComplete } = useConnection();
+  const { setCenter, getNodes } = useReactFlow();
+
+  // Auto-pan to show all nodes when connection mode starts
+  useEffect(() => {
+    if (isConnecting && connectionSource) {
+      // Find potential target nodes and pan to show them
+      const nodes = getNodes();
+      if (nodes.length > 1) {
+        // Calculate bounding box of all nodes
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        nodes.forEach(node => {
+          const x = node.position.x;
+          const y = node.position.y;
+          const width = node.width || 160;
+          const height = node.height || 100;
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x + width);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y + height);
+        });
+
+        // Center on the midpoint of all nodes with some zoom out
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        setCenter(centerX, centerY, { zoom: 0.8, duration: 300 });
+      }
+    }
+  }, [isConnecting, connectionSource, getNodes, setCenter]);
+
+  // Handle ESC key to cancel connection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isConnecting) {
+        cancelConnection();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isConnecting, cancelConnection]);
+
+  // Set up connection complete callback
+  useEffect(() => {
+    setOnConnectionComplete((sourceNodeId, sourceHandle, targetNodeId, targetHandle) => {
+      addConnection(sourceNodeId, sourceHandle, targetNodeId, targetHandle);
+    });
+  }, [setOnConnectionComplete, addConnection]);
+
+  // Handle pane click to cancel connection
+  const handlePaneClick = useCallback(() => {
+    if (isConnecting) {
+      cancelConnection();
+    }
+  }, [isConnecting, cancelConnection]);
 
   // Get the current focused group for breadcrumb
   const focusedGroup = useMemo(
@@ -294,6 +353,7 @@ export function GraphCanvas() {
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
         onNodeDoubleClick={handleNodeDoubleClick}
+        onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         fitView
         snapToGrid
@@ -388,7 +448,30 @@ export function GraphCanvas() {
             </div>
           </Panel>
         )}
+
+        {/* Connection Mode Indicator */}
+        {isConnecting && (
+          <Panel position="bottom-center" className="bg-cyan-900/90 border border-cyan-500 rounded-lg px-4 py-2">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-cyan-100">
+                Click a target handle to connect, or press <kbd className="px-1.5 py-0.5 bg-cyan-800 rounded text-xs">ESC</kbd> to cancel
+              </span>
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
     </div>
+  );
+}
+
+// Wrapper component that provides ReactFlowProvider and ConnectionProvider
+export function GraphCanvas() {
+  return (
+    <ReactFlowProvider>
+      <ConnectionProvider>
+        <GraphCanvasInner />
+      </ConnectionProvider>
+    </ReactFlowProvider>
   );
 }

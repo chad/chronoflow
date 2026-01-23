@@ -1,9 +1,10 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { ModulatedKnob } from '../../controls/ModulatedKnob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 const FILTER_MODES = [
   { value: 'lowpass', label: 'LowPass' },
@@ -64,36 +65,40 @@ export const FilterNodeUI = memo(({ id, data, selected }: NodeProps<FilterNode>)
       </div>
 
       {/* Modulation input handles (top) */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="cutoff_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '30%' }}
         title="Cutoff Mod"
       />
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Top}
         id="resonance_mod"
+        nodeId={id}
         className="!bg-yellow-400 !w-2 !h-2 !-top-1"
         style={{ left: '70%' }}
         title="Resonance Mod"
       />
 
       {/* Audio input handle */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input"
+        nodeId={id}
         className="!bg-purple-400 !w-3 !h-3"
       />
 
       {/* Output handle */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-purple-400 !w-3 !h-3"
       />
     </div>

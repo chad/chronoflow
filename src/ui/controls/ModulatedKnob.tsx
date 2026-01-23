@@ -1,9 +1,7 @@
 // ModulatedKnob - Knob with real-time modulation visualization
 
-import { useMemo } from 'react';
 import { Knob } from './Knob';
 import { useModulationValue } from '../../audio/useModulationValue';
-import { usePatchStore } from '../../patch/patchStore';
 
 interface ModulatedKnobProps {
   nodeId: string;
@@ -30,16 +28,7 @@ export function ModulatedKnob({
   onChange,
   logarithmic,
 }: ModulatedKnobProps) {
-  const connections = usePatchStore((state) => state.patch.connections);
-
-  const hasModConnection = useMemo(() => {
-    const modPort = `${paramName}_mod`;
-    return connections.some(
-      (c) => c.to.nodeId === nodeId && c.to.port === modPort
-    );
-  }, [connections, nodeId, paramName]);
-
-  const { currentValue, isModulated } = useModulationValue(nodeId, paramName, value);
+  const { modulatedValue, isModulated } = useModulationValue(nodeId, paramName, value);
 
   return (
     <Knob
@@ -51,8 +40,8 @@ export function ModulatedKnob({
       unit={unit}
       onChange={onChange}
       logarithmic={logarithmic}
-      isModulated={hasModConnection && isModulated}
-      modulatedValue={hasModConnection ? currentValue : undefined}
+      isModulated={isModulated}
+      modulatedValue={isModulated ? modulatedValue : undefined}
     />
   );
 }

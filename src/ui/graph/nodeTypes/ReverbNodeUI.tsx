@@ -1,8 +1,9 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
+import { ClickableHandle } from '../ClickableHandle';
 
 type ReverbData = {
   decay: number;
@@ -45,18 +46,20 @@ export const ReverbNodeUI = memo(({ id, data, selected }: NodeProps<ReverbNode>)
       </div>
 
       {/* Audio input */}
-      <Handle
+      <ClickableHandle
         type="target"
         position={Position.Left}
         id="input"
+        nodeId={id}
         className="!bg-indigo-400 !w-3 !h-3"
       />
 
       {/* Audio output */}
-      <Handle
+      <ClickableHandle
         type="source"
         position={Position.Right}
         id="output"
+        nodeId={id}
         className="!bg-indigo-400 !w-3 !h-3"
       />
     </div>
