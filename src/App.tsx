@@ -16,6 +16,7 @@ function App() {
   const loadPatch = usePatchStore((state) => state.loadPatch);
 
   const handleEnableAudio = async () => {
+    if (isAudioEnabled) return;
     try {
       await patchSyncer.init();
       midiRouter.init();
@@ -30,6 +31,20 @@ function App() {
     // Try to load saved patch
     loadPatch();
     setIsLoading(false);
+
+    // Auto-enable audio on first user interaction (browsers require user gesture)
+    const enableOnInteraction = () => {
+      handleEnableAudio();
+      document.removeEventListener('click', enableOnInteraction);
+      document.removeEventListener('keydown', enableOnInteraction);
+    };
+    document.addEventListener('click', enableOnInteraction);
+    document.addEventListener('keydown', enableOnInteraction);
+
+    return () => {
+      document.removeEventListener('click', enableOnInteraction);
+      document.removeEventListener('keydown', enableOnInteraction);
+    };
   }, [loadPatch]);
 
   if (isLoading) {
