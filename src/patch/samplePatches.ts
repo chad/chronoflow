@@ -308,6 +308,8 @@ export const SEQUENCER_PATCH: Patch = {
     },
   ],
   connections: [
+    // Sequencer triggers notes (connect to ADSR to indicate it's controlling the envelope)
+    { id: 'c0', from: { nodeId: 'seq1', port: 'output' }, to: { nodeId: 'adsr1', port: 'trigger' } },
     // Oscillators to mixer
     { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
     { id: 'c2', from: { nodeId: 'osc2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },

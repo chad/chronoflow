@@ -44,6 +44,7 @@ export class SynthSequencerNode implements SynthNode {
   private noteCallback: NoteCallback | null = null;
   private stepCallbacks: StepCallback[] = [];
   private dummyGain: GainNode; // For satisfying the SynthNode interface
+  private isConnected = false; // Only trigger notes when connected
 
   constructor(context: AudioContext, id: string, params?: Partial<SequencerParams>) {
     this.context = context;
@@ -87,8 +88,8 @@ export class SynthSequencerNode implements SynthNode {
     // Notify UI of current step
     this.stepCallbacks.forEach((cb) => cb(this.currentStep));
 
-    // Trigger the note
-    if (this.noteCallback) {
+    // Only trigger notes if the sequencer is connected to something
+    if (this.noteCallback && this.isConnected) {
       this.noteCallback(note, velocity, gateTime);
     }
 
@@ -113,10 +114,12 @@ export class SynthSequencerNode implements SynthNode {
     this.stepCallbacks.forEach((cb) => cb(-1)); // Reset UI
   }
 
-  private restartIfRunning(): void {
-    if (this.params.running) {
-      this.stop();
-      this.start();
+  // Update the interval timing without triggering a new note
+  private updateTiming(): void {
+    if (this.intervalId !== null) {
+      window.clearInterval(this.intervalId);
+      const stepDuration = (60 / this.params.bpm) * 1000;
+      this.intervalId = window.setInterval(this.tick, stepDuration);
     }
   }
 
@@ -133,11 +136,19 @@ export class SynthSequencerNode implements SynthNode {
   }
 
   connect(_destination: AudioNode | SynthNode): void {
-    // Sequencer doesn't connect audio - it triggers notes
+    // Sequencer doesn't connect audio, but we track that it's "connected"
+    // to enable note triggering (modular synth paradigm)
+    this.isConnected = true;
   }
 
   disconnect(): void {
-    // No audio connections to disconnect
+    // Mark as disconnected to stop triggering notes
+    this.isConnected = false;
+  }
+
+  // Called by AudioGraph when a connection is made to this sequencer's output
+  setConnected(connected: boolean): void {
+    this.isConnected = connected;
   }
 
   setParam(name: string, value: number | string | boolean): void {
@@ -146,7 +157,7 @@ export class SynthSequencerNode implements SynthNode {
     switch (name) {
       case 'bpm':
         this.params.bpm = value as number;
-        this.restartIfRunning();
+        this.updateTiming(); // Update interval without triggering a note
         break;
       case 'steps':
         this.params.steps = Math.max(1, Math.min(8, value as number));

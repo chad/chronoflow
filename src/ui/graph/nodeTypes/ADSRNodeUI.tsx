@@ -65,6 +65,16 @@ export const ADSRNodeUI = memo(({ id, data, selected }: NodeProps<ADSRNode>) => 
         />
       </div>
 
+      {/* Trigger input - for sequencer connection */}
+      <ClickableHandle
+        type="target"
+        position={Position.Left}
+        id="trigger"
+        nodeId={id}
+        className="!bg-emerald-400 !w-3 !h-3"
+        title="Trigger (from Sequencer)"
+      />
+
       {/* Output handle - connects to VCA gain_mod or other mod inputs */}
       <ClickableHandle
         type="source"

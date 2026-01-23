@@ -2,6 +2,7 @@
 
 import { audioGraph } from '../audio/AudioGraph';
 import type { NodeType } from '../audio/AudioGraph';
+import { SynthSequencerNode } from '../audio/nodes';
 import { usePatchStore } from './patchStore';
 import type { Patch, PatchNode, PatchConnection } from './types';
 
@@ -92,6 +93,9 @@ class PatchSyncer {
       audioGraph.rebuildVoices(patch.nodes, patch.connections);
     }
 
+    // Update sequencer connection states
+    this.updateSequencerConnections(patch);
+
     this.previousPatch = JSON.parse(JSON.stringify(patch));
     } catch (err) {
       console.error('[PatchSyncer] Error in syncPatch:', err);
@@ -169,6 +173,25 @@ class PatchSyncer {
       connection.to.nodeId,
       connection.to.port
     );
+  }
+
+  // Update sequencer nodes to know if they're connected
+  private updateSequencerConnections(patch: Patch): void {
+    // Find all sequencer nodes
+    const sequencerNodes = patch.nodes.filter(n => n.type === 'sequencer');
+
+    for (const seqNode of sequencerNodes) {
+      // Check if this sequencer has any outgoing connections
+      const hasConnection = patch.connections.some(
+        c => c.from.nodeId === seqNode.id
+      );
+
+      // Update the sequencer's connection state
+      const audioNode = audioGraph.getNode(seqNode.id);
+      if (audioNode && audioNode instanceof SynthSequencerNode) {
+        audioNode.setConnected(hasConnection);
+      }
+    }
   }
 
   destroy(): void {
