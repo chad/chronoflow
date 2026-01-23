@@ -7,6 +7,7 @@ import { DelayNodeUI } from './DelayNodeUI';
 import { ReverbNodeUI } from './ReverbNodeUI';
 import { MixerNodeUI } from './MixerNodeUI';
 import { SequencerNodeUI } from './SequencerNodeUI';
+import { AttenuverterNodeUI } from './AttenuverterNodeUI';
 import { OutputNodeUI } from './OutputNodeUI';
 import { GroupNodeUI } from './GroupNodeUI';
 
@@ -20,6 +21,7 @@ export const nodeTypes = {
   reverb: ReverbNodeUI,
   mixer: MixerNodeUI,
   sequencer: SequencerNodeUI,
+  attenuverter: AttenuverterNodeUI,
   output: OutputNodeUI,
   group: GroupNodeUI,
 };

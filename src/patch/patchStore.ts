@@ -80,6 +80,7 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
     step5: 7, step6: 9, step7: 11, step8: 12,
     running: true,
   },
+  attenuverter: { amount: 1 },
   output: { gain: 0.7 },
 };
 

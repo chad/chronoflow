@@ -8,4 +8,5 @@ export * from './DelayNode';
 export * from './ReverbNode';
 export * from './MixerNode';
 export * from './SequencerNode';
+export * from './AttenuverterNode';
 export * from './OutputNode';

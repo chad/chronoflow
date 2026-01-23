@@ -15,18 +15,19 @@ import {
   SynthReverbNode,
   SynthMixerNode,
   SynthSequencerNode,
+  SynthAttenuverterNode,
   SynthOutputNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'output';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'delay', 'reverb', 'output'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'delay', 'reverb', 'output'];
 
 interface Connection {
   fromId: string;
@@ -133,6 +134,9 @@ class AudioGraph {
         (node as SynthSequencerNode).setStopCallback(() => {
           this.clearEffects();
         });
+        break;
+      case 'attenuverter':
+        node = new SynthAttenuverterNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton

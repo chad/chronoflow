@@ -40,6 +40,12 @@ const NODE_OPTIONS: NodeOption[] = [
     description: 'Modulation source',
   },
   {
+    type: 'attenuverter',
+    label: 'Atten',
+    color: 'bg-gray-500',
+    description: 'Invert/scale signal',
+  },
+  {
     type: 'sequencer',
     label: 'Seq',
     color: 'bg-emerald-500',
