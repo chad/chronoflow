@@ -34,6 +34,8 @@ export function useModulationValue(
   const [isModulated, setIsModulated] = useState(false);
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(performance.now());
+  const noteStartTimeRef = useRef<number | null>(null);
+  const wasActiveRef = useRef<boolean>(false);
 
   // Get connections and nodes from patch store
   const connections = usePatchStore((state) => state.patch.connections);
@@ -74,19 +76,24 @@ export function useModulationValue(
         const waveValue = getWaveformValue(phase, waveform);
         modValue = baseValue + waveValue * depth;
       } else if (sourceNode.type === 'adsr') {
-        // ADSR modulation - check if any voices are active
+        // ADSR modulation - only animate when voices are active
         const voiceAllocator = audioGraph.getVoiceAllocator();
         const activeCount = voiceAllocator?.getActiveVoiceCount() || 0;
+        const isActive = activeCount > 0;
 
-        if (activeCount > 0) {
-          // Simplified ADSR visualization - ramp up then sustain
+        // Detect note-on to reset envelope timing
+        if (isActive && !wasActiveRef.current) {
+          noteStartTimeRef.current = now;
+        }
+        wasActiveRef.current = isActive;
+
+        if (isActive && noteStartTimeRef.current !== null) {
           const attack = (sourceNode.params.attack as number) || 0.01;
           const decay = (sourceNode.params.decay as number) || 0.1;
           const sustain = (sourceNode.params.sustain as number) || 0.7;
 
-          // Get time since last note (simplified - use modulo for demo)
-          const cycleTime = attack + decay + 0.5; // Attack + decay + some sustain time
-          const t = elapsed % cycleTime;
+          // Time since note started
+          const t = (now - noteStartTimeRef.current) / 1000;
 
           let envelope = 0;
           if (t < attack) {
@@ -101,9 +108,10 @@ export function useModulationValue(
             envelope = sustain;
           }
 
-          // ADSR typically modulates gain (0-1 range)
-          modValue = envelope;
+          // Scale the base value by the envelope (for gain, 0-1 maps to 0-baseValue)
+          modValue = baseValue * envelope;
         } else {
+          // No active notes - envelope is at 0
           modValue = 0;
         }
       }
