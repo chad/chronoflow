@@ -16,15 +16,16 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
 
   // Format display: show as percentage
   const displayPercent = Math.round(data.amount * 100);
+  const polarityColor = displayPercent < 0 ? 'text-red-400' : displayPercent > 0 ? 'text-green-400' : 'text-gray-500';
 
   return (
     <div
-      className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[90px] ${
+      className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[100px] ${
         selected ? 'border-cyan-400' : 'border-gray-500'
       }`}
     >
-      <div className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide text-center">
-        Atten
+      <div className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">
+        Attenuverter
       </div>
 
       <div className="flex justify-center">
@@ -34,16 +35,13 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
           min={-1}
           max={1}
           step={0.01}
-          unit="%"
           onChange={(v) => updateNodeParam(id, 'amount', v)}
         />
       </div>
 
-      {/* Visual indicator of polarity */}
-      <div className="text-[10px] text-center mt-1">
-        <span className={displayPercent < 0 ? 'text-red-400' : displayPercent > 0 ? 'text-green-400' : 'text-gray-500'}>
-          {displayPercent > 0 ? '+' : ''}{displayPercent}%
-        </span>
+      {/* Polarity indicator */}
+      <div className={`text-xs text-center mt-1 font-mono ${polarityColor}`}>
+        {displayPercent > 0 ? '+' : ''}{displayPercent}%
       </div>
 
       {/* Input (modulation signal in) */}
@@ -53,7 +51,6 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
         id="input"
         nodeId={id}
         className="!bg-yellow-400 !w-3 !h-3"
-        title="Modulation In"
       />
 
       {/* Output (processed modulation signal) */}
@@ -63,7 +60,6 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
         id="output"
         nodeId={id}
         className="!bg-yellow-400 !w-3 !h-3"
-        title="Modulation Out"
       />
     </div>
   );
