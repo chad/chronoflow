@@ -45,6 +45,15 @@ class PatchSyncer {
       (p) => !patch.nodes.some((n) => n.id === p.id) && p.id !== 'output'
     );
 
+    // If this is a "full reset" (all non-output nodes removed) or a major patch change,
+    // panic first to stop all audio and clear effects
+    const isFullReset = prevNodes.length > 1 && patch.nodes.length <= 1 && removedNodes.length > 0;
+    const isMajorPatchChange = removedNodes.length >= 3 && addedNodes.length >= 3;
+    if (isFullReset || isMajorPatchChange) {
+      if (DEBUG) console.log('[PatchSyncer] Full reset or major patch change detected, calling panic');
+      audioGraph.panic();
+    }
+
     // Find modified nodes (params changed)
     const modifiedNodes = patch.nodes.filter((n) => {
       const prev = prevNodes.find((p) => p.id === n.id);
