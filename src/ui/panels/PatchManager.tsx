@@ -9,6 +9,7 @@ export function PatchManager() {
   const resetPatch = usePatchStore((state) => state.resetPatch);
   const exportPatch = usePatchStore((state) => state.exportPatch);
   const importPatch = usePatchStore((state) => state.importPatch);
+  const autoLayoutNodes = usePatchStore((state) => state.autoLayoutNodes);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSamples, setShowSamples] = useState(false);
@@ -25,6 +26,8 @@ export function PatchManager() {
         modified: new Date().toISOString(),
       },
     });
+    // Auto-layout after loading
+    setTimeout(() => autoLayoutNodes(), 0);
     setShowSamples(false);
   };
 
@@ -43,6 +46,12 @@ export function PatchManager() {
     fileInputRef.current?.click();
   };
 
+  const handleLoad = () => {
+    loadPatch();
+    // Auto-layout after loading from localStorage
+    setTimeout(() => autoLayoutNodes(), 0);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -51,7 +60,8 @@ export function PatchManager() {
     reader.onload = (event) => {
       const json = event.target?.result as string;
       if (importPatch(json)) {
-        console.log('Patch imported successfully');
+        // Auto-layout after importing
+        setTimeout(() => autoLayoutNodes(), 0);
       } else {
         console.error('Failed to import patch');
       }
@@ -75,7 +85,7 @@ export function PatchManager() {
           Save
         </button>
         <button
-          onClick={loadPatch}
+          onClick={handleLoad}
           className="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 rounded transition-colors"
         >
           Load
