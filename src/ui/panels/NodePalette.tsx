@@ -51,6 +51,12 @@ const NODE_OPTIONS: NodeOption[] = [
     color: 'bg-indigo-500',
     description: 'Reverb effect',
   },
+  {
+    type: 'mixer',
+    label: 'Mixer',
+    color: 'bg-amber-500',
+    description: '4-channel mixer',
+  },
 ];
 
 export function NodePalette() {

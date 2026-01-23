@@ -13,15 +13,16 @@ import {
   SynthADSRNode,
   SynthDelayNode,
   SynthReverbNode,
+  SynthMixerNode,
   SynthOutputNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'output';
 
 // Node types that are per-voice (duplicated for polyphony)
-const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr'];
+const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
 
 // Node types that are global (shared across all voices)
 const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'delay', 'reverb', 'output'];
@@ -115,6 +116,9 @@ class AudioGraph {
       case 'reverb':
         node = new SynthReverbNode(context, id, params);
         break;
+      case 'mixer':
+        node = new SynthMixerNode(context, id, params);
+        break;
       case 'output':
         // Output node is a singleton
         return this.outputNode;
@@ -172,13 +176,25 @@ class AudioGraph {
       }
       output.connect(modTarget);
     } else {
-      // Regular audio connection
-      const input = toNode.getInputNode();
-      if (!input) {
-        console.error(`AudioGraph: Cannot connect - missing input`);
-        return false;
+      // Check if this is a mixer channel input
+      const mixerInputMatch = toPort.match(/^input([1-4])$/);
+      if (mixerInputMatch && toNode instanceof SynthMixerNode) {
+        const channel = parseInt(mixerInputMatch[1], 10);
+        const input = toNode.getInputChannel(channel);
+        if (!input) {
+          console.error(`AudioGraph: Cannot connect - mixer channel ${channel} not found`);
+          return false;
+        }
+        output.connect(input);
+      } else {
+        // Regular audio connection
+        const input = toNode.getInputNode();
+        if (!input) {
+          console.error(`AudioGraph: Cannot connect - missing input`);
+          return false;
+        }
+        output.connect(input);
       }
-      output.connect(input);
     }
 
     this.connections.push({ fromId, fromPort, toId, toPort });
@@ -205,9 +221,19 @@ class AudioGraph {
         output.disconnect(modTarget);
       }
     } else {
-      const input = toNode.getInputNode();
-      if (input) {
-        output.disconnect(input);
+      // Check if this is a mixer channel input
+      const mixerInputMatch = toPort.match(/^input([1-4])$/);
+      if (mixerInputMatch && toNode instanceof SynthMixerNode) {
+        const channel = parseInt(mixerInputMatch[1], 10);
+        const input = toNode.getInputChannel(channel);
+        if (input) {
+          output.disconnect(input);
+        }
+      } else {
+        const input = toNode.getInputNode();
+        if (input) {
+          output.disconnect(input);
+        }
       }
     }
 

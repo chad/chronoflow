@@ -6,4 +6,5 @@ export * from './LFONode';
 export * from './ADSRNode';
 export * from './DelayNode';
 export * from './ReverbNode';
+export * from './MixerNode';
 export * from './OutputNode';

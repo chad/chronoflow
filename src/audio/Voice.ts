@@ -9,6 +9,7 @@ import { SynthOscillatorNode } from './nodes/OscillatorNode';
 import { SynthFilterNode } from './nodes/FilterNode';
 import { SynthVCANode } from './nodes/VCANode';
 import { SynthADSRNode } from './nodes/ADSRNode';
+import { SynthMixerNode } from './nodes/MixerNode';
 import type { SynthNode } from './nodes/types';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
@@ -90,6 +91,12 @@ export class Voice {
             new SynthADSRNode(this.context, `${node.id}_v${this.id}`, node.params)
           );
           break;
+        case 'mixer':
+          this.nodes.set(
+            node.id,
+            new SynthMixerNode(this.context, `${node.id}_v${this.id}`, node.params)
+          );
+          break;
       }
     }
   }
@@ -146,9 +153,19 @@ export class Voice {
         output.connect(modTarget);
       }
     } else {
-      const input = to.getInputNode();
-      if (input) {
-        output.connect(input);
+      // Check if this is a mixer channel input
+      const mixerInputMatch = toPort.match(/^input([1-4])$/);
+      if (mixerInputMatch && to instanceof SynthMixerNode) {
+        const channel = parseInt(mixerInputMatch[1], 10);
+        const input = to.getInputChannel(channel);
+        if (input) {
+          output.connect(input);
+        }
+      } else {
+        const input = to.getInputNode();
+        if (input) {
+          output.connect(input);
+        }
       }
     }
   }

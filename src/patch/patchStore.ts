@@ -71,6 +71,7 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   adsr: { attack: 0.01, decay: 0.1, sustain: 0.7, release: 0.3 },
   delay: { time: 0.3, feedback: 0.4, mix: 0.5 },
   reverb: { decay: 2, mix: 0.3 },
+  mixer: { level1: 1, level2: 1, level3: 1, level4: 1, master: 1 },
   output: { gain: 0.7 },
 };
 
