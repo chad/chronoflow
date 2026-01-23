@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
-import { DEMO_PATCH, SIMPLE_PATCH } from '../../patch/samplePatches';
+import { DEMO_PATCH, SIMPLE_PATCH, MIXER_PATCH } from '../../patch/samplePatches';
 
 export function PatchManager() {
   const patch = usePatchStore((state) => state.patch);
@@ -14,8 +14,8 @@ export function PatchManager() {
   const [showSamples, setShowSamples] = useState(false);
   const setPatch = usePatchStore((state) => state.setPatch);
 
-  const loadSamplePatch = (name: 'demo' | 'simple') => {
-    const samplePatch = name === 'demo' ? DEMO_PATCH : SIMPLE_PATCH;
+  const loadSamplePatch = (name: 'demo' | 'simple' | 'mixer') => {
+    const samplePatch = name === 'demo' ? DEMO_PATCH : name === 'mixer' ? MIXER_PATCH : SIMPLE_PATCH;
     // Create fresh dates for the loaded patch
     setPatch({
       ...samplePatch,
@@ -132,6 +132,13 @@ export function PatchManager() {
             >
               Simple Synth
               <span className="block text-teal-200 text-[10px]">Basic osc → filter → output</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('mixer')}
+              className="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Triple Oscillator
+              <span className="block text-amber-200 text-[10px]">3 oscs with mixer</span>
             </button>
           </div>
         )}
