@@ -996,109 +996,224 @@ export const POLYRHYTHM_PATCH: Patch = {
   groups: [],
 };
 
-// Tracker Demo - Showcases tracker notation with velocity, probability, patterns, and chain
+// Tracker Showcase - Full demonstration of sequencer features
+// Features: velocity dynamics, probability, 4 patterns, chain sequencing, swing, dual voices
 export const TRACKER_DEMO_PATCH: Patch = {
   version: '1.0',
   meta: {
-    name: 'Tracker Demo',
+    name: 'Tracker Showcase',
     created: new Date().toISOString(),
     modified: new Date().toISOString(),
   },
   nodes: [
-    // Sequencer with tracker notation - demonstrates all new features
+    // ═══════════════════════════════════════════════════════════════
+    // LEAD SEQUENCER - Demonstrates all tracker features
+    // ═══════════════════════════════════════════════════════════════
     {
-      id: 'seq1',
+      id: 'seq_lead',
       type: 'sequencer',
       position: { x: 50, y: 20 },
       params: {
-        bpm: 130,
+        bpm: 115,
         steps: 16,
-        gate: 0.5,
-        swing: 55,
-        // Pattern A: Main melody with velocity dynamics
-        patternA: 'E-4:127 E-4:80 --- E-4:100 --- C-4:90 E-4:127 --- G-4:127 --- --- --- G-3:100 --- --- ---',
-        // Pattern B: Variation with probability for randomness
-        patternB: 'C-5:127 --- G-4:100?70 --- E-4:90 --- G-4:80?50 --- A-4:100 --- G-4?75 --- --- --- --- ---',
-        // Pattern C: Rhythmic variation
-        patternC: 'E-4:127 E-4:60 E-4:80 E-4:60 G-4:127 G-4:60 G-4:80 G-4:60 A-4:127 --- G-4:100 --- E-4:90 --- C-4:80 ---',
-        patternD: '',
-        // Chain: Play A twice, then B, then C
-        chain: 'AABC',
+        gate: 0.4,
+        swing: 62, // Subtle swing for groove
+        // Pattern A: Main hook - strong velocity dynamics (accents on 1 & 9)
+        patternA: 'G-4:127 --- D-4:70 G-4:90 --- D-4:60 A-4:100 --- G-4:127 --- D-4:70 G-4:80 --- B-4:110 A-4:90 ---',
+        // Pattern B: Response phrase with probability (ghost notes)
+        patternB: 'D-5:127 --- B-4:80?70 A-4:70 --- G-4:90?60 --- D-4:60?50 D-5:110 --- B-4:70?65 --- A-4:100 G-4:80?55 --- ---',
+        // Pattern C: Breakdown - sparse with high probability variation
+        patternC: 'G-4:127 --- --- --- D-5:100?40 --- --- --- G-4:110 --- --- --- A-4:90?50 --- --- ---',
+        // Pattern D: Build/climax - dense 16th notes with velocity ramp
+        patternD: 'G-4:90 A-4:95 B-4:100 D-5:105 G-4:95 A-4:100 B-4:110 D-5:115 G-4:100 A-4:110 B-4:115 D-5:120 G-4:110 A-4:115 B-4:120 D-5:127',
+        // Chain: Intro(A) -> Call/Response(AB) -> Breakdown(C) -> Build(D) -> Reprise
+        chain: 'AABABACDAB',
         running: true,
         extClock: false,
       },
     },
-    // Main oscillator
+
+    // ═══════════════════════════════════════════════════════════════
+    // BASS SEQUENCER - Complementary patterns with own chain
+    // ═══════════════════════════════════════════════════════════════
     {
-      id: 'osc1',
-      type: 'oscillator',
-      position: { x: 50, y: 180 },
-      params: { frequency: 440, detune: 0, waveform: 'square' },
+      id: 'seq_bass',
+      type: 'sequencer',
+      position: { x: 50, y: 380 },
+      params: {
+        bpm: 115,
+        steps: 8,
+        gate: 0.7,
+        swing: 58,
+        // Pattern A: Solid root
+        patternA: 'G-2:127 --- --- G-2:80 --- --- G-2:90 ---',
+        // Pattern B: Walking bass
+        patternB: 'G-2:127 --- A-2:90 --- B-2:100 --- D-3:110 ---',
+        // Pattern C: Sparse for breakdown
+        patternC: 'G-2:127 --- --- --- --- --- --- ---',
+        // Pattern D: Driving 8ths for build
+        patternD: 'G-2:127 G-2:90 G-2:100 G-2:85 G-2:110 G-2:90 G-2:100 G-2:95',
+        // Bass chain complements lead (2 bars per lead bar due to 8 vs 16 steps)
+        chain: 'AAAABBBBAAAABBBBCCCCDDDDAABB',
+        running: true,
+        extClock: false,
+      },
     },
-    // Detuned oscillator for richness
+
+    // ═══════════════════════════════════════════════════════════════
+    // LEAD SYNTH VOICE
+    // ═══════════════════════════════════════════════════════════════
+    // Lead oscillator 1 - main
     {
-      id: 'osc2',
+      id: 'osc_lead1',
       type: 'oscillator',
-      position: { x: 50, y: 310 },
-      params: { frequency: 440, detune: 5, waveform: 'square' },
+      position: { x: 300, y: 20 },
+      params: { frequency: 440, detune: 0, waveform: 'sawtooth' },
     },
-    // Mixer
+    // Lead oscillator 2 - detuned for thickness
     {
-      id: 'mixer1',
+      id: 'osc_lead2',
+      type: 'oscillator',
+      position: { x: 300, y: 120 },
+      params: { frequency: 440, detune: 8, waveform: 'sawtooth' },
+    },
+    // Lead mixer
+    {
+      id: 'mixer_lead',
       type: 'mixer',
-      position: { x: 220, y: 220 },
-      params: { level1: 0.5, level2: 0.3, level3: 0, level4: 0, master: 1 },
+      position: { x: 470, y: 50 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
     },
-    // Filter
+    // Lead filter - resonant for pluck character
     {
-      id: 'filter1',
+      id: 'filter_lead',
       type: 'filter',
-      position: { x: 420, y: 180 },
-      params: { mode: 'lowpass', cutoff: 3500, resonance: 1.5 },
+      position: { x: 640, y: 50 },
+      params: { mode: 'lowpass', cutoff: 4000, resonance: 3 },
     },
-    // VCA
+    // Lead VCA
     {
-      id: 'vca1',
+      id: 'vca_lead',
       type: 'vca',
-      position: { x: 600, y: 180 },
+      position: { x: 810, y: 50 },
       params: { gain: 0 },
     },
-    // Bouncy ADSR
+    // Lead ADSR - snappy for rhythmic clarity
     {
-      id: 'adsr1',
+      id: 'adsr_lead',
       type: 'adsr',
-      position: { x: 420, y: 50 },
-      params: { attack: 0.002, decay: 0.1, sustain: 0.3, release: 0.15 },
+      position: { x: 640, y: 180 },
+      params: { attack: 0.003, decay: 0.12, sustain: 0.25, release: 0.18 },
     },
-    // Delay for echo
+    // Filter envelope - adds pluck brightness
+    {
+      id: 'adsr_filter',
+      type: 'adsr',
+      position: { x: 470, y: 180 },
+      params: { attack: 0.001, decay: 0.15, sustain: 0.1, release: 0.1 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // BASS SYNTH VOICE
+    // ═══════════════════════════════════════════════════════════════
+    // Bass oscillator - sub square
+    {
+      id: 'osc_bass',
+      type: 'oscillator',
+      position: { x: 300, y: 380 },
+      params: { frequency: 110, detune: 0, waveform: 'square' },
+    },
+    // Bass filter - warm lowpass
+    {
+      id: 'filter_bass',
+      type: 'filter',
+      position: { x: 470, y: 380 },
+      params: { mode: 'lowpass', cutoff: 600, resonance: 1.5 },
+    },
+    // Bass VCA
+    {
+      id: 'vca_bass',
+      type: 'vca',
+      position: { x: 640, y: 380 },
+      params: { gain: 0 },
+    },
+    // Bass ADSR - rounded for warmth
+    {
+      id: 'adsr_bass',
+      type: 'adsr',
+      position: { x: 470, y: 500 },
+      params: { attack: 0.008, decay: 0.25, sustain: 0.6, release: 0.25 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MIX & EFFECTS
+    // ═══════════════════════════════════════════════════════════════
+    // Main mixer
+    {
+      id: 'mixer_main',
+      type: 'mixer',
+      position: { x: 980, y: 200 },
+      params: { level1: 0.55, level2: 0.7, level3: 0, level4: 0, master: 1 },
+    },
+    // Delay - synced to tempo (~1/8 note at 115 BPM)
     {
       id: 'delay1',
       type: 'delay',
-      position: { x: 750, y: 120 },
-      params: { time: 0.23, feedback: 0.35, mix: 0.25 },
+      position: { x: 1150, y: 140 },
+      params: { time: 0.26, feedback: 0.4, mix: 0.3 },
+    },
+    // Reverb - medium space
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 1150, y: 280 },
+      params: { decay: 2.2, mix: 0.28 },
+    },
+    // LFO for subtle filter movement on lead
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 810, y: 180 },
+      params: { rate: 0.15, depth: 300, waveform: 'sine' },
     },
     // Output
     {
       id: 'output',
       type: 'output',
-      position: { x: 920, y: 180 },
-      params: { gain: 0.55 },
+      position: { x: 1320, y: 200 },
+      params: { gain: 0.6 },
     },
   ],
   connections: [
-    // Sequencer triggers ADSR
-    { id: 'c0', from: { nodeId: 'seq1', port: 'output' }, to: { nodeId: 'adsr1', port: 'trigger' } },
-    // Oscillators to mixer
-    { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
-    { id: 'c2', from: { nodeId: 'osc2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
-    // Mixer -> Filter -> VCA
-    { id: 'c3', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
-    { id: 'c4', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
-    // VCA -> Delay -> Output
-    { id: 'c5', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
-    { id: 'c6', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
-    // ADSR -> VCA gain modulation
-    { id: 'c7', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    // ═══ LEAD SEQUENCER -> LEAD VOICE ═══
+    { id: 'sl1', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'adsr_lead', port: 'trigger' } },
+    { id: 'sl2', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'adsr_filter', port: 'trigger' } },
+
+    // ═══ LEAD AUDIO CHAIN ═══
+    { id: 'la1', from: { nodeId: 'osc_lead1', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input1' } },
+    { id: 'la2', from: { nodeId: 'osc_lead2', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input2' } },
+    { id: 'la3', from: { nodeId: 'mixer_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'input' } },
+    { id: 'la4', from: { nodeId: 'filter_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'input' } },
+    { id: 'la5', from: { nodeId: 'adsr_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'gain_mod' } },
+    { id: 'la6', from: { nodeId: 'adsr_filter', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
+    { id: 'la7', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
+
+    // ═══ BASS SEQUENCER -> BASS VOICE ═══
+    { id: 'sb1', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'adsr_bass', port: 'trigger' } },
+
+    // ═══ BASS AUDIO CHAIN ═══
+    { id: 'ba1', from: { nodeId: 'osc_bass', port: 'output' }, to: { nodeId: 'filter_bass', port: 'input' } },
+    { id: 'ba2', from: { nodeId: 'filter_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'input' } },
+    { id: 'ba3', from: { nodeId: 'adsr_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'gain_mod' } },
+
+    // ═══ VOICES -> MAIN MIXER ═══
+    { id: 'mx1', from: { nodeId: 'vca_lead', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input1' } },
+    { id: 'mx2', from: { nodeId: 'vca_bass', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input2' } },
+
+    // ═══ EFFECTS -> OUTPUT ═══
+    { id: 'fx1', from: { nodeId: 'mixer_main', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'fx2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'fx3', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
   ],
   groups: [],
 };
