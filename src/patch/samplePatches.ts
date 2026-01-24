@@ -327,3 +327,471 @@ export const SEQUENCER_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// Random Melody - Noise through S&H and Quantizer creates generative melodies
+export const RANDOM_MELODY_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Random Melody',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Noise source for randomness
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 50 },
+      params: { type: 'white', level: 1 },
+    },
+    // Sample & Hold to capture random values
+    {
+      id: 'sh1',
+      type: 'samplehold',
+      position: { x: 200, y: 50 },
+      params: { rate: 4, smooth: 0.1 },
+    },
+    // Quantizer to snap to musical scale
+    {
+      id: 'quant1',
+      type: 'quantizer',
+      position: { x: 350, y: 50 },
+      params: { scale: 'pentatonic', root: 0, octaves: 2 },
+    },
+    // Main oscillator
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 200 },
+      params: { frequency: 440, detune: 0, waveform: 'triangle' },
+    },
+    // Filter
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 250, y: 200 },
+      params: { mode: 'lowpass', cutoff: 3000, resonance: 2 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 450, y: 200 },
+      params: { gain: 0 },
+    },
+    // ADSR
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 250, y: 350 },
+      params: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.4 },
+    },
+    // Delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 600, y: 150 },
+      params: { time: 0.375, feedback: 0.5, mix: 0.4 },
+    },
+    // Reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 600, y: 280 },
+      params: { decay: 3, mix: 0.4 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 780, y: 200 },
+      params: { gain: 0.6 },
+    },
+  ],
+  connections: [
+    // Random CV chain: Noise -> S&H -> Quantizer -> Osc frequency
+    { id: 'c1', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'sh1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'sh1', port: 'output' }, to: { nodeId: 'quant1', port: 'input' } },
+    { id: 'c3', from: { nodeId: 'quant1', port: 'output' }, to: { nodeId: 'osc1', port: 'freq_mod' } },
+    // Audio chain
+    { id: 'c4', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c6', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c7', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c8', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA
+    { id: 'c9', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+  ],
+  groups: [],
+};
+
+// West Coast Lead - Wavefolder for aggressive harmonic content
+export const WESTCOAST_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'West Coast Lead',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Sine oscillator (wavefolding works best with simple waves)
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 150 },
+      params: { frequency: 440, detune: 0, waveform: 'sine' },
+    },
+    // Wavefolder for harmonic richness
+    {
+      id: 'fold1',
+      type: 'wavefolder',
+      position: { x: 220, y: 150 },
+      params: { drive: 3, folds: 3, mix: 0.8 },
+    },
+    // Filter to tame harshness
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 420, y: 150 },
+      params: { mode: 'lowpass', cutoff: 4000, resonance: 1 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 600, y: 150 },
+      params: { gain: 0 },
+    },
+    // ADSR
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 420, y: 20 },
+      params: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.5 },
+    },
+    // LFO to modulate wavefolder drive
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 50, y: 20 },
+      params: { rate: 2, depth: 2, waveform: 'triangle' },
+    },
+    // Delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 750, y: 100 },
+      params: { time: 0.2, feedback: 0.3, mix: 0.25 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 900, y: 150 },
+      params: { gain: 0.5 },
+    },
+  ],
+  connections: [
+    // Audio: Osc -> Wavefolder -> Filter -> VCA -> Delay -> Output
+    { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'fold1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'fold1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c3', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c4', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA
+    { id: 'c6', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    // LFO -> Wavefolder drive for movement
+    { id: 'c7', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'fold1', port: 'drive_mod' } },
+  ],
+  groups: [],
+};
+
+// Metallic Bells - Ring modulator for bell-like inharmonic tones
+export const BELLS_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Metallic Bells',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Main oscillator (signal to modulate)
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 150 },
+      params: { frequency: 440, detune: 0, waveform: 'sine' },
+    },
+    // Ring modulator with high carrier frequency
+    {
+      id: 'ring1',
+      type: 'ringmod',
+      position: { x: 250, y: 150 },
+      params: { carrierFreq: 880, carrierType: 'sine', mix: 0.7, useExternal: false },
+    },
+    // Filter
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 450, y: 150 },
+      params: { mode: 'lowpass', cutoff: 6000, resonance: 0.5 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 620, y: 150 },
+      params: { gain: 0 },
+    },
+    // Bell-like ADSR (fast attack, long decay)
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 450, y: 20 },
+      params: { attack: 0.001, decay: 1.5, sustain: 0, release: 1 },
+    },
+    // LFO for subtle carrier frequency modulation
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 50, y: 20 },
+      params: { rate: 0.3, depth: 50, waveform: 'sine' },
+    },
+    // Big reverb for bell ambience
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 780, y: 150 },
+      params: { decay: 4, mix: 0.5 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 950, y: 150 },
+      params: { gain: 0.5 },
+    },
+  ],
+  connections: [
+    // Audio: Osc -> Ring Mod -> Filter -> VCA -> Reverb -> Output
+    { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'ring1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'ring1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c3', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c4', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA
+    { id: 'c6', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    // LFO -> Ring mod carrier frequency
+    { id: 'c7', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'ring1', port: 'freq_mod' } },
+  ],
+  groups: [],
+};
+
+// Noise Drums - Filtered noise for percussion
+export const NOISE_DRUMS_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Noise Drums',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Sequencer for rhythm
+    {
+      id: 'seq1',
+      type: 'sequencer',
+      position: { x: 50, y: 20 },
+      params: {
+        bpm: 120,
+        steps: 8,
+        gate: 0.1,
+        step1: 0, step2: 0, step3: 0, step4: 0,
+        step5: 0, step6: 0, step7: 0, step8: 0,
+        running: true,
+      },
+    },
+    // White noise source
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 180 },
+      params: { type: 'white', level: 1 },
+    },
+    // Highpass filter for hi-hat character
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 220, y: 180 },
+      params: { mode: 'highpass', cutoff: 8000, resonance: 1 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 400, y: 180 },
+      params: { gain: 0 },
+    },
+    // Very snappy ADSR for percussion
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 220, y: 50 },
+      params: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.05 },
+    },
+    // Subtle delay for rhythm interest
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 550, y: 130 },
+      params: { time: 0.125, feedback: 0.3, mix: 0.2 },
+    },
+    // Small reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 550, y: 260 },
+      params: { decay: 0.8, mix: 0.2 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 720, y: 180 },
+      params: { gain: 0.7 },
+    },
+  ],
+  connections: [
+    // Sequencer triggers ADSR
+    { id: 'c0', from: { nodeId: 'seq1', port: 'output' }, to: { nodeId: 'adsr1', port: 'trigger' } },
+    // Audio: Noise -> Filter -> VCA -> Effects -> Output
+    { id: 'c1', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c3', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c4', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA
+    { id: 'c6', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+  ],
+  groups: [],
+};
+
+// Generative Ambient - Combines multiple new modules for evolving textures
+export const AMBIENT_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Generative Ambient',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Pink noise for S&H source
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 20 },
+      params: { type: 'pink', level: 0.5 },
+    },
+    // Slow S&H for evolving pitch
+    {
+      id: 'sh1',
+      type: 'samplehold',
+      position: { x: 180, y: 20 },
+      params: { rate: 0.5, smooth: 0.8 },
+    },
+    // Quantizer for musical results
+    {
+      id: 'quant1',
+      type: 'quantizer',
+      position: { x: 310, y: 20 },
+      params: { scale: 'minor', root: 0, octaves: 2 },
+    },
+    // Main oscillator
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 180 },
+      params: { frequency: 220, detune: 0, waveform: 'sine' },
+    },
+    // Wavefolder for subtle harmonics
+    {
+      id: 'fold1',
+      type: 'wavefolder',
+      position: { x: 200, y: 180 },
+      params: { drive: 1.5, folds: 2, mix: 0.4 },
+    },
+    // Ring mod for shimmer
+    {
+      id: 'ring1',
+      type: 'ringmod',
+      position: { x: 380, y: 180 },
+      params: { carrierFreq: 660, carrierType: 'sine', mix: 0.2, useExternal: false },
+    },
+    // Filter
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 550, y: 180 },
+      params: { mode: 'lowpass', cutoff: 2000, resonance: 2 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 720, y: 180 },
+      params: { gain: 0.3 },
+    },
+    // Slow LFO for filter
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 380, y: 50 },
+      params: { rate: 0.1, depth: 800, waveform: 'sine' },
+    },
+    // Slow LFO for ring mod
+    {
+      id: 'lfo2',
+      type: 'lfo',
+      position: { x: 200, y: 50 },
+      params: { rate: 0.07, depth: 100, waveform: 'triangle' },
+    },
+    // Long delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 870, y: 120 },
+      params: { time: 0.7, feedback: 0.6, mix: 0.5 },
+    },
+    // Big reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 870, y: 260 },
+      params: { decay: 5, mix: 0.6 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 1050, y: 180 },
+      params: { gain: 0.5 },
+    },
+  ],
+  connections: [
+    // Generative pitch: Noise -> S&H -> Quantizer -> Osc
+    { id: 'c1', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'sh1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'sh1', port: 'output' }, to: { nodeId: 'quant1', port: 'input' } },
+    { id: 'c3', from: { nodeId: 'quant1', port: 'output' }, to: { nodeId: 'osc1', port: 'freq_mod' } },
+    // Audio: Osc -> Wavefolder -> Ring Mod -> Filter -> VCA -> Effects
+    { id: 'c4', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'fold1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'fold1', port: 'output' }, to: { nodeId: 'ring1', port: 'input' } },
+    { id: 'c6', from: { nodeId: 'ring1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c7', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c8', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c9', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c10', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // LFO modulations
+    { id: 'c11', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'filter1', port: 'cutoff_mod' } },
+    { id: 'c12', from: { nodeId: 'lfo2', port: 'output' }, to: { nodeId: 'ring1', port: 'freq_mod' } },
+  ],
+  groups: [],
+};
