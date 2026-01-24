@@ -225,15 +225,9 @@ export const SEQUENCER_PATCH: Patch = {
         steps: 8,
         gate: 0.4,
         // C minor 7 arpeggio: C, Eb, G, Bb, C+, Bb, G, Eb
-        step1: 0,   // C4
-        step2: 3,   // Eb4
-        step3: 7,   // G4
-        step4: 10,  // Bb4
-        step5: 12,  // C5
-        step6: 10,  // Bb4
-        step7: 7,   // G4
-        step8: 3,   // Eb4
+        pattern: 'C-4 D#4 G-4 A#4 C-5 A#4 G-4 D#4',
         running: true,
+        extClock: false,
       },
     },
     // Oscillator 1 - main
@@ -605,9 +599,10 @@ export const NOISE_DRUMS_PATCH: Patch = {
         bpm: 120,
         steps: 8,
         gate: 0.1,
-        step1: 0, step2: 0, step3: 0, step4: 0,
-        step5: 0, step6: 0, step7: 0, step8: 0,
+        // Trigger on every step for hi-hat rhythm
+        pattern: 'C-4 C-4 C-4 C-4 C-4 C-4 C-4 C-4',
         running: true,
+        extClock: false,
       },
     },
     // White noise source
@@ -832,14 +827,7 @@ export const POLYRHYTHM_PATCH: Patch = {
         steps: 8,
         gate: 0.3,
         // C minor pentatonic melody
-        step1: 0,   // C4
-        step2: 3,   // Eb4
-        step3: 7,   // G4
-        step4: 12,  // C5
-        step5: 10,  // Bb4
-        step6: 7,   // G4
-        step7: 3,   // Eb4
-        step8: 5,   // F4
+        pattern: 'C-4 D#4 G-4 C-5 A#4 G-4 D#4 F-4',
         running: true,
         extClock: true,
       },
@@ -884,14 +872,7 @@ export const POLYRHYTHM_PATCH: Patch = {
         steps: 4,
         gate: 0.6,
         // Simple bass root movement
-        step1: -12,  // C3
-        step2: -12,  // C3
-        step3: -9,   // Eb3
-        step4: -7,   // F3
-        step5: 0,
-        step6: 0,
-        step7: 0,
-        step8: 0,
+        pattern: 'C-3 C-3 D#3 F-3',
         running: true,
         extClock: true,
       },
@@ -991,6 +972,105 @@ export const POLYRHYTHM_PATCH: Patch = {
     { id: 'm1', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
     { id: 'm2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
     { id: 'm3', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
+
+// Tracker Demo - Showcases tracker notation with rests and 16-step pattern
+export const TRACKER_DEMO_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Tracker Demo',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // Sequencer with tracker notation - 16 step pattern with rests
+    {
+      id: 'seq1',
+      type: 'sequencer',
+      position: { x: 50, y: 20 },
+      params: {
+        bpm: 130,
+        steps: 16,
+        gate: 0.5,
+        // Mario-inspired melody with rests for rhythm
+        pattern: 'E-4 E-4 --- E-4 --- C-4 E-4 --- G-4 --- --- --- G-3 --- --- ---',
+        running: true,
+        extClock: false,
+      },
+    },
+    // Main oscillator
+    {
+      id: 'osc1',
+      type: 'oscillator',
+      position: { x: 50, y: 180 },
+      params: { frequency: 440, detune: 0, waveform: 'square' },
+    },
+    // Detuned oscillator for richness
+    {
+      id: 'osc2',
+      type: 'oscillator',
+      position: { x: 50, y: 310 },
+      params: { frequency: 440, detune: 5, waveform: 'square' },
+    },
+    // Mixer
+    {
+      id: 'mixer1',
+      type: 'mixer',
+      position: { x: 220, y: 220 },
+      params: { level1: 0.5, level2: 0.3, level3: 0, level4: 0, master: 1 },
+    },
+    // Filter
+    {
+      id: 'filter1',
+      type: 'filter',
+      position: { x: 420, y: 180 },
+      params: { mode: 'lowpass', cutoff: 3500, resonance: 1.5 },
+    },
+    // VCA
+    {
+      id: 'vca1',
+      type: 'vca',
+      position: { x: 600, y: 180 },
+      params: { gain: 0 },
+    },
+    // Bouncy ADSR
+    {
+      id: 'adsr1',
+      type: 'adsr',
+      position: { x: 420, y: 50 },
+      params: { attack: 0.002, decay: 0.1, sustain: 0.3, release: 0.15 },
+    },
+    // Delay for echo
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 750, y: 120 },
+      params: { time: 0.23, feedback: 0.35, mix: 0.25 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 920, y: 180 },
+      params: { gain: 0.55 },
+    },
+  ],
+  connections: [
+    // Sequencer triggers ADSR
+    { id: 'c0', from: { nodeId: 'seq1', port: 'output' }, to: { nodeId: 'adsr1', port: 'trigger' } },
+    // Oscillators to mixer
+    { id: 'c1', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
+    { id: 'c2', from: { nodeId: 'osc2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
+    // Mixer -> Filter -> VCA
+    { id: 'c3', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c4', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    // VCA -> Delay -> Output
+    { id: 'c5', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c6', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    // ADSR -> VCA gain modulation
+    { id: 'c7', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
   ],
   groups: [],
 };

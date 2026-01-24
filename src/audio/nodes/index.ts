@@ -8,6 +8,7 @@ export * from './DelayNode';
 export * from './ReverbNode';
 export * from './MixerNode';
 export * from './SequencerNode';
+export * from './trackerParser';
 export * from './AttenuverterNode';
 export * from './NoiseNode';
 export * from './SampleHoldNode';

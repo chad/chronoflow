@@ -1,33 +1,29 @@
 import type { SynthNode, AudioNodeParams } from './types';
+import { parseTrackerPattern, legacyStepsToPattern, type ParsedStep } from './trackerParser';
 
 export interface SequencerParams {
   bpm: number;
   steps: number;
   gate: number;
-  step1: number;
-  step2: number;
-  step3: number;
-  step4: number;
-  step5: number;
-  step6: number;
-  step7: number;
-  step8: number;
+  pattern: string;         // NEW: Tracker notation string
   running: boolean;
-  extClock: boolean; // Use external clock instead of internal BPM
+  extClock: boolean;       // Use external clock instead of internal BPM
+  // Legacy (deprecated, for migration):
+  step1?: number;
+  step2?: number;
+  step3?: number;
+  step4?: number;
+  step5?: number;
+  step6?: number;
+  step7?: number;
+  step8?: number;
 }
 
 const DEFAULT_PARAMS: SequencerParams = {
   bpm: 120,
   steps: 8,
   gate: 0.5,
-  step1: 0,
-  step2: 2,
-  step3: 4,
-  step4: 5,
-  step5: 7,
-  step6: 9,
-  step7: 11,
-  step8: 12,
+  pattern: 'C-4 D-4 E-4 F-4 G-4 A-4 B-4 C-5',
   running: true,
   extClock: false,
 };
@@ -42,6 +38,7 @@ export class SynthSequencerNode implements SynthNode {
 
   private context: AudioContext;
   private params: SequencerParams;
+  private parsedSteps: ParsedStep[] = [];
   private currentStep = 0;
   private intervalId: number | null = null;
   private noteCallback: NoteCallback | null = null;
@@ -60,7 +57,20 @@ export class SynthSequencerNode implements SynthNode {
   constructor(context: AudioContext, id: string, params?: Partial<SequencerParams>) {
     this.context = context;
     this.id = id;
-    this.params = { ...DEFAULT_PARAMS, ...params };
+
+    // Merge with defaults
+    const mergedParams = { ...DEFAULT_PARAMS, ...params };
+
+    // Migration: convert legacy step1-step8 params to pattern if needed
+    if (!params?.pattern && params?.step1 !== undefined) {
+      const stepCount = params.steps || 8;
+      mergedParams.pattern = legacyStepsToPattern(params as Record<string, number | string | boolean>, stepCount);
+    }
+
+    this.params = mergedParams;
+
+    // Parse the pattern
+    this.updateParsedSteps();
 
     // Create a dummy gain node (sequencer doesn't produce audio)
     // Using context to satisfy it being used
@@ -79,6 +89,16 @@ export class SynthSequencerNode implements SynthNode {
     }
   }
 
+  private updateParsedSteps(): void {
+    const { steps } = parseTrackerPattern(this.params.pattern);
+    this.parsedSteps = steps;
+    this.params.steps = steps.length;
+    // Reset currentStep if out of bounds
+    if (this.currentStep >= this.params.steps) {
+      this.currentStep = 0;
+    }
+  }
+
   // Set the callback that triggers notes
   setNoteCallback(callback: NoteCallback): void {
     this.noteCallback = callback;
@@ -94,16 +114,10 @@ export class SynthSequencerNode implements SynthNode {
     this.stepCallbacks.push(callback);
   }
 
-  private getStepValue(step: number): number {
-    const stepKey = `step${step + 1}` as keyof SequencerParams;
-    return this.params[stepKey] as number;
-  }
-
   private tick = (): void => {
     if (!this.params.running) return;
 
-    const semitone = this.getStepValue(this.currentStep);
-    const note = 60 + semitone; // C4 as base
+    const step = this.parsedSteps[this.currentStep];
     const velocity = 100;
     const stepDuration = 60 / this.params.bpm; // Duration of one step in seconds
     const gateTime = stepDuration * this.params.gate;
@@ -111,9 +125,9 @@ export class SynthSequencerNode implements SynthNode {
     // Notify UI of current step
     this.stepCallbacks.forEach((cb) => cb(this.currentStep));
 
-    // Only trigger notes if the sequencer is connected to something
-    if (this.noteCallback && this.isConnected) {
-      this.noteCallback(note, velocity, gateTime);
+    // Only trigger notes if the sequencer is connected to something and step is a note
+    if (this.noteCallback && this.isConnected && step?.type === 'note' && step.midiNote !== undefined) {
+      this.noteCallback(step.midiNote, velocity, gateTime);
     }
 
     // Advance to next step
@@ -237,13 +251,18 @@ export class SynthSequencerNode implements SynthNode {
         this.updateTiming(); // Update interval without triggering a note
         break;
       case 'steps':
-        this.params.steps = Math.max(1, Math.min(8, value as number));
+        // Steps is now derived from pattern, but allow manual override for UI
+        this.params.steps = Math.max(1, Math.min(32, value as number));
         if (this.currentStep >= this.params.steps) {
           this.currentStep = 0;
         }
         break;
       case 'gate':
         this.params.gate = value as number;
+        break;
+      case 'pattern':
+        this.params.pattern = value as string;
+        this.updateParsedSteps();
         break;
       case 'running':
         this.params.running = value as boolean;
@@ -273,7 +292,7 @@ export class SynthSequencerNode implements SynthNode {
         }
         break;
       default:
-        // Handle step values (step1, step2, etc.)
+        // Handle legacy step values (step1, step2, etc.) for backward compatibility
         if (name.startsWith('step')) {
           (this.params as unknown as Record<string, number | string | boolean>)[name] = value as number;
         }
@@ -286,6 +305,10 @@ export class SynthSequencerNode implements SynthNode {
 
   getCurrentStep(): number {
     return this.currentStep;
+  }
+
+  getParsedSteps(): ParsedStep[] {
+    return this.parsedSteps;
   }
 
   dispose(): void {

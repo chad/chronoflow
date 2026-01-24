@@ -12,6 +12,7 @@ import {
   NOISE_DRUMS_PATCH,
   AMBIENT_PATCH,
   POLYRHYTHM_PATCH,
+  TRACKER_DEMO_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -39,6 +40,7 @@ export function PatchManager() {
       drums: NOISE_DRUMS_PATCH,
       ambient: AMBIENT_PATCH,
       polyrhythm: POLYRHYTHM_PATCH,
+      tracker: TRACKER_DEMO_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -183,6 +185,13 @@ export function PatchManager() {
             >
               Arpeggio Sequence
               <span className="block text-emerald-200 text-[10px]">8-step sequencer with FX</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('tracker')}
+              className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Tracker Demo
+              <span className="block text-cyan-200 text-[10px]">16-step tracker notation with rests</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Modules</div>

@@ -1,40 +1,39 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useState, useRef } from 'react';
 import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
 import { audioGraph } from '../../../audio/AudioGraph';
+import { parseTrackerPattern, midiToNoteName, type ParsedStep } from '../../../audio/nodes/trackerParser';
 
 type SequencerData = {
   bpm: number;
   steps: number;
   gate: number;
-  step1: number;
-  step2: number;
-  step3: number;
-  step4: number;
-  step5: number;
-  step6: number;
-  step7: number;
-  step8: number;
+  pattern: string;
   running: boolean;
   extClock: boolean;
+  // Legacy support
+  step1?: number;
+  step2?: number;
+  step3?: number;
+  step4?: number;
+  step5?: number;
+  step6?: number;
+  step7?: number;
+  step8?: number;
 };
 
 type SequencerNode = Node<SequencerData, 'sequencer'>;
 
-// Convert semitone to note name
-function semitoneToNote(semitone: number): string {
-  const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const octave = Math.floor(semitone / 12) + 4;
-  const noteIndex = ((semitone % 12) + 12) % 12;
-  return `${notes[noteIndex]}${octave}`;
-}
-
 export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<SequencerNode>) => {
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
   const [currentStep, setCurrentStep] = useState(0);
+  const [patternInput, setPatternInput] = useState(data.pattern || '');
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [parsedSteps, setParsedSteps] = useState<ParsedStep[]>([]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to sequencer step changes
   useEffect(() => {
@@ -46,20 +45,62 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
     }
   }, [id]);
 
-  const stepValues = [
-    data.step1, data.step2, data.step3, data.step4,
-    data.step5, data.step6, data.step7, data.step8,
-  ];
+  // Sync pattern input from data when it changes externally
+  useEffect(() => {
+    if (data.pattern && data.pattern !== patternInput) {
+      setPatternInput(data.pattern);
+    }
+  }, [data.pattern]);
+
+  // Parse pattern on input change
+  useEffect(() => {
+    const { steps, errors } = parseTrackerPattern(patternInput);
+    setParsedSteps(steps);
+    setParseError(errors.length > 0 ? errors[0] : null);
+  }, [patternInput]);
+
+  // Auto-scroll to show current step during playback
+  useEffect(() => {
+    if (scrollContainerRef.current && data.running && currentStep >= 0) {
+      const container = scrollContainerRef.current;
+      const stepWidth = 32; // Approximate width of each step element
+      const scrollTarget = currentStep * stepWidth - container.clientWidth / 2 + stepWidth / 2;
+      container.scrollLeft = Math.max(0, scrollTarget);
+    }
+  }, [currentStep, data.running]);
+
+  // Commit pattern on blur or Enter
+  const commitPattern = () => {
+    if (!parseError && patternInput !== data.pattern) {
+      updateNodeParam(id, 'pattern', patternInput);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      commitPattern();
+    }
+  };
+
+  // Get display text for a step
+  const getStepDisplay = (step: ParsedStep): string => {
+    if (step.type === 'note' && step.midiNote !== undefined) {
+      return midiToNoteName(step.midiNote);
+    }
+    return '--';
+  };
 
   return (
     <div
-      className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[280px] ${
+      className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[300px] max-w-[400px] ${
         selected ? 'border-cyan-400' : 'border-emerald-500'
       }`}
     >
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs font-bold text-emerald-400 uppercase tracking-wide">
-          Sequencer
+          Tracker Sequencer
         </div>
         <button
           onClick={() => updateNodeParam(id, 'running', !data.running)}
@@ -73,36 +114,50 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
         </button>
       </div>
 
-      {/* Step display */}
-      <div className="flex gap-1 mb-3">
-        {stepValues.slice(0, data.steps).map((value, i) => (
+      {/* Pattern text input */}
+      <div className="mb-2">
+        <label className="text-[10px] text-gray-400 block mb-1">Pattern:</label>
+        <textarea
+          value={patternInput}
+          onChange={(e) => setPatternInput(e.target.value)}
+          onBlur={commitPattern}
+          onKeyDown={handleKeyDown}
+          className={`w-full bg-gray-800 text-gray-100 text-xs font-mono p-2 rounded border resize-none h-12 ${
+            parseError ? 'border-red-500' : 'border-gray-600 focus:border-emerald-500'
+          } focus:outline-none`}
+          placeholder="C-4 D-4 E-4 F-4 G-4 A-4 B-4 C-5"
+          spellCheck={false}
+        />
+        {parseError && (
+          <div className="text-[10px] text-red-400 mt-1">{parseError}</div>
+        )}
+      </div>
+
+      {/* Step display grid - scrollable for many steps */}
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-0.5 mb-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-600"
+      >
+        {parsedSteps.map((step, i) => (
           <div
             key={i}
-            className={`flex-1 text-center py-1 rounded text-[10px] font-mono transition-all ${
+            className={`flex-shrink-0 w-7 text-center py-1 rounded text-[9px] font-mono transition-all ${
               currentStep === i && data.running
                 ? 'bg-emerald-500 text-white scale-105'
-                : 'bg-gray-700 text-gray-300'
+                : step.type === 'note'
+                ? 'bg-gray-700 text-gray-200'
+                : 'bg-gray-800 text-gray-500'
             }`}
+            title={step.originalToken || ''}
           >
-            {semitoneToNote(value)}
+            {getStepDisplay(step)}
           </div>
         ))}
       </div>
 
-      {/* Step knobs */}
-      <div className="flex flex-wrap gap-1 justify-center mb-2">
-        {Array.from({ length: data.steps }, (_, i) => (
-          <div key={i} className="flex flex-col items-center">
-            <Knob
-              label={`${i + 1}`}
-              value={stepValues[i]}
-              min={-12}
-              max={24}
-              step={1}
-              onChange={(v) => updateNodeParam(id, `step${i + 1}`, v)}
-            />
-          </div>
-        ))}
+      {/* Step count indicator */}
+      <div className="text-[10px] text-gray-500 text-center mb-2">
+        {parsedSteps.length} step{parsedSteps.length !== 1 ? 's' : ''}
       </div>
 
       {/* Controls */}
@@ -111,20 +166,12 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
           <Knob
             label="BPM"
             value={data.bpm}
-            min={30}
+            min={20}
             max={300}
             step={1}
             onChange={(v) => updateNodeParam(id, 'bpm', v)}
           />
         )}
-        <Knob
-          label="Steps"
-          value={data.steps}
-          min={1}
-          max={8}
-          step={1}
-          onChange={(v) => updateNodeParam(id, 'steps', v)}
-        />
         <Knob
           label="Gate"
           value={data.gate}
