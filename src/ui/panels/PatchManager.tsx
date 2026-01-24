@@ -13,6 +13,7 @@ import {
   AMBIENT_PATCH,
   POLYRHYTHM_PATCH,
   TRACKER_DEMO_PATCH,
+  AMBIENT_GENERATIVE_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -41,6 +42,7 @@ export function PatchManager() {
       ambient: AMBIENT_PATCH,
       polyrhythm: POLYRHYTHM_PATCH,
       tracker: TRACKER_DEMO_PATCH,
+      ambientgen: AMBIENT_GENERATIVE_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -190,8 +192,17 @@ export function PatchManager() {
               onClick={() => loadSamplePatch('tracker')}
               className="bg-cyan-600 hover:bg-cyan-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
             >
-              Tracker Demo
-              <span className="block text-cyan-200 text-[10px]">16-step tracker notation with rests</span>
+              Tracker Showcase
+              <span className="block text-cyan-200 text-[10px]">Velocity, probability, patterns, chain</span>
+            </button>
+
+            <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">Generative</div>
+            <button
+              onClick={() => loadSamplePatch('ambientgen')}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Ambient Generative
+              <span className="block text-indigo-200 text-[10px]">Probability + S&H + drone layers</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Modules</div>
