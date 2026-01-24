@@ -37,6 +37,12 @@ export function KeyboardInput() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.repeat) return;
 
+    // Don't capture keyboard when user is typing in an input field
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
     const note = KEY_TO_NOTE[e.key.toLowerCase()];
     if (note !== undefined && !activeNotesRef.current.has(note)) {
       e.preventDefault();
@@ -51,6 +57,12 @@ export function KeyboardInput() {
   }, []);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
+    // Don't capture keyboard when user is typing in an input field
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
     const note = KEY_TO_NOTE[e.key.toLowerCase()];
     if (note !== undefined && activeNotesRef.current.has(note)) {
       // Remove from active notes
