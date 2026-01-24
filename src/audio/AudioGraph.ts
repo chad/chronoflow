@@ -552,11 +552,11 @@ class AudioGraph {
     this.connectGlobalModulatorsToVoices(patchConnections);
   }
 
-  // Connect global node outputs to voice modulation targets
+  // Connect global node outputs to voice modulation targets and audio inputs
   private connectGlobalModulatorsToVoices(patchConnections: PatchConnection[]): void {
     if (!this.voiceAllocator) return;
 
-    // Find global node -> voice modulation connections
+    // Find global node -> voice node connections
     for (const conn of patchConnections) {
       const fromNode = this.nodes.get(conn.from.nodeId);
       if (!fromNode) continue;
@@ -564,27 +564,53 @@ class AudioGraph {
       // Check if this is a global node type
       if (!GLOBAL_NODE_TYPES.includes(fromNode.type as NodeType)) continue;
 
-      // Check if this connects to a modulation target on a voice node
-      if (!conn.to.port.endsWith('_mod')) continue;
+      // Check if destination is a voice node type
+      const toNodeType = this.getNodeType(conn.to.nodeId);
+      if (!toNodeType || !VOICE_NODE_TYPES.includes(toNodeType)) continue;
 
       const globalOutput = fromNode.getOutputNode();
       if (!globalOutput) continue;
 
-      if (DEBUG) console.log('[AudioGraph] Connecting global modulator', conn.from.nodeId, 'to voice mod target', conn.to.nodeId, conn.to.port);
+      // Handle modulation connections (_mod ports)
+      if (conn.to.port.endsWith('_mod')) {
+        if (DEBUG) console.log('[AudioGraph] Connecting global modulator', conn.from.nodeId, 'to voice mod target', conn.to.nodeId, conn.to.port);
 
-      // Connect global node to each voice's corresponding node's modulation target
-      const voices = this.voiceAllocator.getVoices();
-      for (const voice of voices) {
-        const voiceNode = voice.getNode(conn.to.nodeId);
-        if (voiceNode) {
-          const modTarget = voiceNode.getModulationTarget(conn.to.port);
-          if (modTarget) {
-            globalOutput.connect(modTarget);
-            if (DEBUG) console.log('[AudioGraph] Connected to voice', voice);
+        // Connect global node to each voice's corresponding node's modulation target
+        const voices = this.voiceAllocator.getVoices();
+        for (const voice of voices) {
+          const voiceNode = voice.getNode(conn.to.nodeId);
+          if (voiceNode) {
+            const modTarget = voiceNode.getModulationTarget(conn.to.port);
+            if (modTarget) {
+              globalOutput.connect(modTarget);
+              if (DEBUG) console.log('[AudioGraph] Connected mod to voice', voice.id);
+            }
+          }
+        }
+      } else {
+        // Handle audio connections (regular input ports)
+        if (DEBUG) console.log('[AudioGraph] Connecting global audio', conn.from.nodeId, 'to voice input', conn.to.nodeId, conn.to.port);
+
+        // Connect global node to each voice's corresponding node's audio input
+        const voices = this.voiceAllocator.getVoices();
+        for (const voice of voices) {
+          const voiceNode = voice.getNode(conn.to.nodeId);
+          if (voiceNode) {
+            const voiceInput = voiceNode.getInputNode();
+            if (voiceInput) {
+              globalOutput.connect(voiceInput);
+              if (DEBUG) console.log('[AudioGraph] Connected audio to voice', voice.id);
+            }
           }
         }
       }
     }
+  }
+
+  // Helper to get node type by ID
+  private getNodeType(nodeId: string): NodeType | null {
+    const node = this.nodes.get(nodeId);
+    return node ? (node.type as NodeType) : null;
   }
 
   // Find the first effects node that should receive voice output
