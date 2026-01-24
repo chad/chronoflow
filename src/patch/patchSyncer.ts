@@ -10,7 +10,7 @@ import type { Patch, PatchNode, PatchConnection } from './types';
 const DEBUG = false;
 
 // Node types that are per-voice (handled by VoiceAllocator, not global connections)
-const VOICE_NODE_TYPES = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
+const VOICE_NODE_TYPES = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 class PatchSyncer {
   private previousPatch: Patch | null = null;

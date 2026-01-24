@@ -13,6 +13,7 @@ export interface SequencerParams {
   step7: number;
   step8: number;
   running: boolean;
+  extClock: boolean; // Use external clock instead of internal BPM
 }
 
 const DEFAULT_PARAMS: SequencerParams = {
@@ -28,6 +29,7 @@ const DEFAULT_PARAMS: SequencerParams = {
   step7: 11,
   step8: 12,
   running: true,
+  extClock: false,
 };
 
 type NoteCallback = (note: number, velocity: number, gateTime: number) => void;
@@ -48,6 +50,13 @@ export class SynthSequencerNode implements SynthNode {
   private dummyGain: GainNode; // For satisfying the SynthNode interface
   private isConnected = false; // Only trigger notes when connected
 
+  // External clock input
+  private clockInput: GainNode;
+  private clockAnalyser: AnalyserNode;
+  private clockDataArray: Float32Array;
+  private lastClockValue: number = 0;
+  private clockCheckInterval: number | null = null;
+
   constructor(context: AudioContext, id: string, params?: Partial<SequencerParams>) {
     this.context = context;
     this.id = id;
@@ -57,6 +66,13 @@ export class SynthSequencerNode implements SynthNode {
     // Using context to satisfy it being used
     this.dummyGain = this.context.createGain();
     this.dummyGain.gain.value = 0;
+
+    // Create clock input for external clock
+    this.clockInput = context.createGain();
+    this.clockAnalyser = context.createAnalyser();
+    this.clockAnalyser.fftSize = 256;
+    this.clockDataArray = new Float32Array(this.clockAnalyser.fftSize);
+    this.clockInput.connect(this.clockAnalyser);
 
     if (this.params.running) {
       this.start();
@@ -105,24 +121,65 @@ export class SynthSequencerNode implements SynthNode {
   };
 
   start(): void {
-    if (this.intervalId !== null) return;
+    if (this.params.extClock) {
+      // External clock mode - start monitoring clock input
+      this.startClockMonitoring();
+    } else {
+      // Internal clock mode
+      if (this.intervalId !== null) return;
 
-    const stepDuration = (60 / this.params.bpm) * 1000; // ms per step
-    this.tick(); // Play first step immediately
-    this.intervalId = window.setInterval(this.tick, stepDuration);
+      const stepDuration = (60 / this.params.bpm) * 1000; // ms per step
+      this.tick(); // Play first step immediately
+      this.intervalId = window.setInterval(this.tick, stepDuration);
+    }
   }
 
   stop(): void {
+    // Stop internal clock
     if (this.intervalId !== null) {
       window.clearInterval(this.intervalId);
       this.intervalId = null;
     }
+    // Stop clock monitoring
+    this.stopClockMonitoring();
+
     this.currentStep = 0;
     this.stepCallbacks.forEach((cb) => cb(-1)); // Reset UI
 
     // Clear effects when stopping
     if (this.stopCallback) {
       this.stopCallback();
+    }
+  }
+
+  private startClockMonitoring(): void {
+    if (this.clockCheckInterval !== null) return;
+    this.clockCheckInterval = window.setInterval(() => this.checkClockInput(), 2);
+  }
+
+  private stopClockMonitoring(): void {
+    if (this.clockCheckInterval !== null) {
+      window.clearInterval(this.clockCheckInterval);
+      this.clockCheckInterval = null;
+    }
+  }
+
+  private checkClockInput(): void {
+    this.clockAnalyser.getFloatTimeDomainData(this.clockDataArray as Float32Array<ArrayBuffer>);
+    const currentValue = this.clockDataArray[0] || 0;
+
+    // Detect rising edge (trigger)
+    if (currentValue > 0.5 && this.lastClockValue <= 0.5) {
+      this.tick();
+    }
+
+    this.lastClockValue = currentValue;
+  }
+
+  // External trigger method (can be called directly by clock nodes)
+  externalTrigger(): void {
+    if (this.params.running) {
+      this.tick();
     }
   }
 
@@ -140,11 +197,18 @@ export class SynthSequencerNode implements SynthNode {
   }
 
   getInputNode(): AudioNode | null {
-    return null;
+    // Return clock input for external clock connections
+    return this.clockInput;
   }
 
-  getModulationTarget(_paramName: string): AudioParam | null {
-    return null;
+  getModulationTarget(paramName: string): AudioParam | null {
+    switch (paramName) {
+      case 'clock':
+        // Return clock input gain for modulation-style connections
+        return this.clockInput.gain;
+      default:
+        return null;
+    }
   }
 
   connect(_destination: AudioNode | SynthNode): void {
@@ -165,6 +229,7 @@ export class SynthSequencerNode implements SynthNode {
 
   setParam(name: string, value: number | string | boolean): void {
     const prevRunning = this.params.running;
+    const prevExtClock = this.params.extClock;
 
     switch (name) {
       case 'bpm':
@@ -188,6 +253,25 @@ export class SynthSequencerNode implements SynthNode {
           this.stop();
         }
         break;
+      case 'extClock':
+        this.params.extClock = value as boolean;
+        // Switch clock mode if running
+        if (this.params.running) {
+          if (this.params.extClock && !prevExtClock) {
+            // Switch to external clock
+            if (this.intervalId !== null) {
+              window.clearInterval(this.intervalId);
+              this.intervalId = null;
+            }
+            this.startClockMonitoring();
+          } else if (!this.params.extClock && prevExtClock) {
+            // Switch to internal clock
+            this.stopClockMonitoring();
+            const stepDuration = (60 / this.params.bpm) * 1000;
+            this.intervalId = window.setInterval(this.tick, stepDuration);
+          }
+        }
+        break;
       default:
         // Handle step values (step1, step2, etc.)
         if (name.startsWith('step')) {
@@ -209,5 +293,7 @@ export class SynthSequencerNode implements SynthNode {
     this.stepCallbacks = [];
     this.noteCallback = null;
     this.dummyGain.disconnect();
+    this.clockInput.disconnect();
+    this.clockAnalyser.disconnect();
   }
 }

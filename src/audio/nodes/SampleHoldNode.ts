@@ -17,6 +17,7 @@ export class SynthSampleHoldNode implements SynthNode {
   private context: AudioContext;
   private params: SampleHoldParams;
   private inputGain: GainNode;
+  private constantSource: ConstantSourceNode;
   private outputGain: GainNode;
   private analyser: AnalyserNode;
   private clockInterval: number | null = null;
@@ -34,6 +35,12 @@ export class SynthSampleHoldNode implements SynthNode {
     this.analyser = context.createAnalyser();
     this.analyser.fftSize = 256;
     this.dataArray = new Float32Array(this.analyser.fftSize);
+
+    // Create constant source for DC output
+    this.constantSource = context.createConstantSource();
+    this.constantSource.offset.value = 0;
+    this.constantSource.connect(this.outputGain);
+    this.constantSource.start();
 
     // Connect input through analyser for sampling
     this.inputGain.connect(this.analyser);
@@ -55,12 +62,12 @@ export class SynthSampleHoldNode implements SynthNode {
     this.analyser.getFloatTimeDomainData(this.dataArray as Float32Array<ArrayBuffer>);
     const newValue = this.dataArray[0] || 0;
 
-    // Apply smoothing
+    // Apply smoothing - set on constantSource.offset which is the actual signal
     if (this.params.smooth > 0) {
       const smoothTime = this.params.smooth * 0.5; // Max 500ms
-      this.outputGain.gain.setTargetAtTime(newValue, this.context.currentTime, smoothTime);
+      this.constantSource.offset.setTargetAtTime(newValue, this.context.currentTime, smoothTime);
     } else {
-      this.outputGain.gain.setValueAtTime(newValue, this.context.currentTime);
+      this.constantSource.offset.setValueAtTime(newValue, this.context.currentTime);
     }
     this.currentValue = newValue;
   }
@@ -121,6 +128,8 @@ export class SynthSampleHoldNode implements SynthNode {
     if (this.clockInterval !== null) {
       window.clearInterval(this.clockInterval);
     }
+    this.constantSource.stop();
+    this.constantSource.disconnect();
     this.inputGain.disconnect();
     this.analyser.disconnect();
     this.outputGain.disconnect();

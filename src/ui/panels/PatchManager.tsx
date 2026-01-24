@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
+import { audioGraph } from '../../audio/AudioGraph';
 import {
   DEMO_PATCH,
   SIMPLE_PATCH,
@@ -10,6 +11,7 @@ import {
   BELLS_PATCH,
   NOISE_DRUMS_PATCH,
   AMBIENT_PATCH,
+  POLYRHYTHM_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -36,8 +38,11 @@ export function PatchManager() {
       bells: BELLS_PATCH,
       drums: NOISE_DRUMS_PATCH,
       ambient: AMBIENT_PATCH,
+      polyrhythm: POLYRHYTHM_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
+    // Stop all sound before switching patches
+    audioGraph.panic();
     // Create fresh dates for the loaded patch
     setPatch({
       ...samplePatch,
@@ -215,6 +220,15 @@ export function PatchManager() {
             >
               Generative Ambient
               <span className="block text-sky-200 text-[10px]">All new modules combined</span>
+            </button>
+
+            <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">Clock System</div>
+            <button
+              onClick={() => loadSamplePatch('polyrhythm')}
+              className="bg-red-600 hover:bg-red-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Polyrhythmic Voices
+              <span className="block text-red-200 text-[10px]">Master clock + divider + 2 voices</span>
             </button>
           </div>
         )}

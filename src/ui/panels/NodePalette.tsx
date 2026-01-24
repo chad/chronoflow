@@ -76,6 +76,18 @@ const NODE_OPTIONS: NodeOption[] = [
     description: 'Scale quantizer',
   },
   {
+    type: 'clock',
+    label: 'Clock',
+    color: 'bg-red-500',
+    description: 'Master clock',
+  },
+  {
+    type: 'clockdiv',
+    label: 'Div',
+    color: 'bg-orange-500',
+    description: 'Clock divider',
+  },
+  {
     type: 'sequencer',
     label: 'Seq',
     color: 'bg-emerald-500',

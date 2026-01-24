@@ -13,6 +13,8 @@ import { SampleHoldNodeUI } from './SampleHoldNodeUI';
 import { WavefolderNodeUI } from './WavefolderNodeUI';
 import { RingModNodeUI } from './RingModNodeUI';
 import { QuantizerNodeUI } from './QuantizerNodeUI';
+import { ClockNodeUI } from './ClockNodeUI';
+import { ClockDividerNodeUI } from './ClockDividerNodeUI';
 import { OutputNodeUI } from './OutputNodeUI';
 import { GroupNodeUI } from './GroupNodeUI';
 
@@ -32,6 +34,8 @@ export const nodeTypes = {
   wavefolder: WavefolderNodeUI,
   ringmod: RingModNodeUI,
   quantizer: QuantizerNodeUI,
+  clock: ClockNodeUI,
+  clockdiv: ClockDividerNodeUI,
   output: OutputNodeUI,
   group: GroupNodeUI,
 };

@@ -14,4 +14,6 @@ export * from './SampleHoldNode';
 export * from './WavefolderNode';
 export * from './RingModNode';
 export * from './QuantizerNode';
+export * from './ClockNode';
+export * from './ClockDividerNode';
 export * from './OutputNode';

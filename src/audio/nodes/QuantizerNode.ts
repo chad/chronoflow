@@ -32,6 +32,7 @@ export class SynthQuantizerNode implements SynthNode {
   private params: QuantizerParams;
   private inputGain: GainNode;
   private outputGain: GainNode;
+  private constantSource: ConstantSourceNode;
   private analyser: AnalyserNode;
   private dataArray: Float32Array;
   private updateInterval: number | null = null;
@@ -47,6 +48,12 @@ export class SynthQuantizerNode implements SynthNode {
     this.analyser = context.createAnalyser();
     this.analyser.fftSize = 256;
     this.dataArray = new Float32Array(this.analyser.fftSize);
+
+    // Create constant source for DC output
+    this.constantSource = context.createConstantSource();
+    this.constantSource.offset.value = 0;
+    this.constantSource.connect(this.outputGain);
+    this.constantSource.start();
 
     // Connect input to analyser for reading
     this.inputGain.connect(this.analyser);
@@ -77,11 +84,15 @@ export class SynthQuantizerNode implements SynthNode {
     const scale = SCALES[this.params.scale] || SCALES.chromatic;
     const quantized = this.quantizeToScale(semitone, scale, this.params.root);
 
-    // Convert back to output value (scaled to match input range)
-    const outputValue = (quantized / totalSemitones) * 2 - 1;
+    // Convert semitones to frequency offset (assuming A4=440Hz base)
+    // Each semitone is a ratio of 2^(1/12), so frequency = baseFreq * 2^(semitones/12)
+    // Output the frequency offset from base (440Hz)
+    const baseFreq = 440;
+    const freq = baseFreq * Math.pow(2, (quantized - 12) / 12); // -12 to center around base
+    const freqOffset = freq - baseFreq; // Output as offset from 440Hz
 
-    // Set output
-    this.outputGain.gain.setValueAtTime(outputValue, this.context.currentTime);
+    // Set output on constantSource.offset which is the actual signal
+    this.constantSource.offset.setValueAtTime(freqOffset, this.context.currentTime);
   }
 
   private quantizeToScale(semitone: number, scale: number[], root: number): number {
@@ -154,6 +165,8 @@ export class SynthQuantizerNode implements SynthNode {
     if (this.updateInterval !== null) {
       window.clearInterval(this.updateInterval);
     }
+    this.constantSource.stop();
+    this.constantSource.disconnect();
     this.inputGain.disconnect();
     this.analyser.disconnect();
     this.outputGain.disconnect();

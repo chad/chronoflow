@@ -157,12 +157,26 @@ function GraphCanvasInner() {
   const deleteGroup = usePatchStore((state) => state.deleteGroup);
 
   // Click-to-connect state
-  const { isConnecting, connectionSource, cancelConnection, setOnConnectionComplete } = useConnection();
-  const { setCenter, getNodes } = useReactFlow();
+  const {
+    isConnecting,
+    connectionSource,
+    cancelConnection,
+    setOnConnectionComplete,
+    snapTarget,
+    setSnapTarget,
+    preConnectionViewport,
+    setPreConnectionViewport,
+    completeConnection,
+  } = useConnection();
+  const { setCenter, getNodes, getViewport, setViewport } = useReactFlow();
 
-  // Auto-pan to show all nodes when connection mode starts
+  // Save viewport and auto-pan to show all nodes when connection mode starts
   useEffect(() => {
     if (isConnecting && connectionSource) {
+      // Save current viewport to restore later
+      const currentViewport = getViewport();
+      setPreConnectionViewport(currentViewport);
+
       // Find potential target nodes and pan to show them
       const nodes = getNodes();
       if (nodes.length > 1) {
@@ -185,32 +199,105 @@ function GraphCanvasInner() {
         setCenter(centerX, centerY, { zoom: 0.8, duration: 300 });
       }
     }
-  }, [isConnecting, connectionSource, getNodes, setCenter]);
+  }, [isConnecting, connectionSource, getNodes, setCenter, getViewport, setPreConnectionViewport]);
 
-  // Handle ESC key to cancel connection
+  // Handle ESC key to cancel connection and restore viewport
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isConnecting) {
         cancelConnection();
+        // Restore viewport on cancel
+        if (preConnectionViewport) {
+          setViewport(preConnectionViewport, { duration: 300 });
+          setPreConnectionViewport(null);
+        }
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isConnecting, cancelConnection]);
+  }, [isConnecting, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
 
-  // Set up connection complete callback
+  // Set up connection complete callback with viewport restore
   useEffect(() => {
     setOnConnectionComplete((sourceNodeId, sourceHandle, targetNodeId, targetHandle) => {
       addConnection(sourceNodeId, sourceHandle, targetNodeId, targetHandle);
-    });
-  }, [setOnConnectionComplete, addConnection]);
 
-  // Handle pane click to cancel connection
+      // Restore viewport after a brief delay to let the connection render
+      if (preConnectionViewport) {
+        setTimeout(() => {
+          setViewport(preConnectionViewport, { duration: 300 });
+          setPreConnectionViewport(null);
+        }, 100);
+      }
+    });
+  }, [setOnConnectionComplete, addConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
+
+  // Track mouse position and find closest snap target during connection
+  useEffect(() => {
+    if (!isConnecting || !connectionSource) return;
+
+    const SNAP_DISTANCE = 50; // pixels
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Get all handle elements that are valid targets
+      const handles = document.querySelectorAll('.react-flow__handle');
+      let closest: { nodeId: string; handleId: string; distance: number } | null = null;
+
+      handles.forEach((handle) => {
+        const rect = handle.getBoundingClientRect();
+        const handleCenterX = rect.left + rect.width / 2;
+        const handleCenterY = rect.top + rect.height / 2;
+        const distance = Math.sqrt(
+          Math.pow(e.clientX - handleCenterX, 2) + Math.pow(e.clientY - handleCenterY, 2)
+        );
+
+        // Check if this handle is a valid target
+        const handleType = handle.classList.contains('source') ? 'source' : 'target';
+        const isValidType =
+          (connectionSource.handleType === 'source' && handleType === 'target') ||
+          (connectionSource.handleType === 'target' && handleType === 'source');
+
+        // Get node ID and handle ID from data attributes
+        const nodeId = handle.getAttribute('data-nodeid');
+        const handleId = handle.getAttribute('data-handleid');
+
+        if (
+          nodeId &&
+          handleId &&
+          nodeId !== connectionSource.nodeId &&
+          isValidType &&
+          distance < SNAP_DISTANCE
+        ) {
+          if (!closest || distance < closest.distance) {
+            closest = { nodeId, handleId, distance };
+          }
+        }
+      });
+
+      setSnapTarget(closest);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [isConnecting, connectionSource, setSnapTarget]);
+
+  // Handle pane click - connect to snap target or cancel
   const handlePaneClick = useCallback(() => {
     if (isConnecting) {
-      cancelConnection();
+      if (snapTarget) {
+        // Connect to the snap target
+        completeConnection(snapTarget.nodeId, snapTarget.handleId);
+      } else {
+        // Cancel if no snap target
+        cancelConnection();
+        // Restore viewport on cancel
+        if (preConnectionViewport) {
+          setViewport(preConnectionViewport, { duration: 300 });
+          setPreConnectionViewport(null);
+        }
+      }
     }
-  }, [isConnecting, cancelConnection]);
+  }, [isConnecting, snapTarget, completeConnection, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
 
   // Get the current focused group for breadcrumb
   const focusedGroup = useMemo(
@@ -451,12 +538,18 @@ function GraphCanvasInner() {
 
         {/* Connection Mode Indicator */}
         {isConnecting && (
-          <Panel position="bottom-center" className="bg-cyan-900/90 border border-cyan-500 rounded-lg px-4 py-2">
+          <Panel position="bottom-center" className={`${snapTarget ? 'bg-pink-900/90 border-pink-500' : 'bg-cyan-900/90 border-cyan-500'} border rounded-lg px-4 py-2`}>
             <div className="flex items-center gap-3 text-sm">
-              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-cyan-100">
-                Click a target handle to connect, or press <kbd className="px-1.5 py-0.5 bg-cyan-800 rounded text-xs">ESC</kbd> to cancel
-              </span>
+              <div className={`w-2 h-2 rounded-full ${snapTarget ? 'bg-pink-400' : 'bg-cyan-400'} animate-pulse`} />
+              {snapTarget ? (
+                <span className="text-pink-100">
+                  Click to connect to <span className="font-bold">{snapTarget.nodeId}.{snapTarget.handleId}</span>
+                </span>
+              ) : (
+                <span className="text-cyan-100">
+                  Move near a target handle to snap, or press <kbd className="px-1.5 py-0.5 bg-cyan-800 rounded text-xs">ESC</kbd> to cancel
+                </span>
+              )}
             </div>
           </Panel>
         )}

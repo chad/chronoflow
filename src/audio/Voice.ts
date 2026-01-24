@@ -10,6 +10,8 @@ import { SynthFilterNode } from './nodes/FilterNode';
 import { SynthVCANode } from './nodes/VCANode';
 import { SynthADSRNode } from './nodes/ADSRNode';
 import { SynthMixerNode } from './nodes/MixerNode';
+import { SynthWavefolderNode } from './nodes/WavefolderNode';
+import { SynthRingModNode } from './nodes/RingModNode';
 import type { SynthNode } from './nodes/types';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
@@ -95,6 +97,18 @@ export class Voice {
           this.nodes.set(
             node.id,
             new SynthMixerNode(this.context, `${node.id}_v${this.id}`, node.params)
+          );
+          break;
+        case 'wavefolder':
+          this.nodes.set(
+            node.id,
+            new SynthWavefolderNode(this.context, `${node.id}_v${this.id}`, node.params)
+          );
+          break;
+        case 'ringmod':
+          this.nodes.set(
+            node.id,
+            new SynthRingModNode(this.context, `${node.id}_v${this.id}`, node.params)
           );
           break;
       }

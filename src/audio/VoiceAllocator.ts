@@ -46,9 +46,9 @@ export class VoiceAllocator {
   initialize(patchNodes: PatchNode[], connections: PatchConnection[]): void {
     this.dispose();
 
-    // Filter to only voice-relevant nodes (osc, filter, vca, adsr, mixer)
+    // Filter to only voice-relevant nodes (osc, filter, vca, adsr, mixer, wavefolder, ringmod)
     const voiceNodes = patchNodes.filter((n) =>
-      ['oscillator', 'filter', 'vca', 'adsr', 'mixer'].includes(n.type)
+      ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'].includes(n.type)
     );
 
     // Filter connections to only those between voice nodes or from voice to output/effects

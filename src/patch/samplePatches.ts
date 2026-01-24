@@ -795,3 +795,202 @@ export const AMBIENT_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// Polyrhythmic Voices - Master Clock + Clock Divider with multiple sequencers
+export const POLYRHYTHM_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Polyrhythmic Voices',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // === CLOCK SECTION ===
+    // Master Clock - controls everything
+    {
+      id: 'clock1',
+      type: 'clock',
+      position: { x: 50, y: 20 },
+      params: { bpm: 120, running: true, swing: 0 },
+    },
+    // Clock Divider - splits clock into different rhythms
+    {
+      id: 'clockdiv1',
+      type: 'clockdiv',
+      position: { x: 200, y: 20 },
+      params: {},
+    },
+
+    // === LEAD VOICE (fast - /1 division) ===
+    // Sequencer - arpeggiated lead melody
+    {
+      id: 'seq_lead',
+      type: 'sequencer',
+      position: { x: 400, y: 20 },
+      params: {
+        bpm: 120,
+        steps: 8,
+        gate: 0.3,
+        // C minor pentatonic melody
+        step1: 0,   // C4
+        step2: 3,   // Eb4
+        step3: 7,   // G4
+        step4: 12,  // C5
+        step5: 10,  // Bb4
+        step6: 7,   // G4
+        step7: 3,   // Eb4
+        step8: 5,   // F4
+        running: true,
+        extClock: true,
+      },
+    },
+    // Lead oscillator - bright sawtooth
+    {
+      id: 'osc_lead',
+      type: 'oscillator',
+      position: { x: 400, y: 180 },
+      params: { frequency: 440, detune: 0, waveform: 'sawtooth' },
+    },
+    // Lead filter
+    {
+      id: 'filter_lead',
+      type: 'filter',
+      position: { x: 550, y: 180 },
+      params: { mode: 'lowpass', cutoff: 3000, resonance: 2 },
+    },
+    // Lead VCA
+    {
+      id: 'vca_lead',
+      type: 'vca',
+      position: { x: 700, y: 180 },
+      params: { gain: 0 },
+    },
+    // Lead ADSR - plucky
+    {
+      id: 'adsr_lead',
+      type: 'adsr',
+      position: { x: 550, y: 50 },
+      params: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.15 },
+    },
+
+    // === BASS VOICE (slow - /4 division) ===
+    // Sequencer - slow bass line
+    {
+      id: 'seq_bass',
+      type: 'sequencer',
+      position: { x: 400, y: 350 },
+      params: {
+        bpm: 120,
+        steps: 4,
+        gate: 0.6,
+        // Simple bass root movement
+        step1: -12,  // C3
+        step2: -12,  // C3
+        step3: -9,   // Eb3
+        step4: -7,   // F3
+        step5: 0,
+        step6: 0,
+        step7: 0,
+        step8: 0,
+        running: true,
+        extClock: true,
+      },
+    },
+    // Bass oscillator - sub square
+    {
+      id: 'osc_bass',
+      type: 'oscillator',
+      position: { x: 400, y: 500 },
+      params: { frequency: 110, detune: 0, waveform: 'square' },
+    },
+    // Bass filter - warm lowpass
+    {
+      id: 'filter_bass',
+      type: 'filter',
+      position: { x: 550, y: 500 },
+      params: { mode: 'lowpass', cutoff: 800, resonance: 1 },
+    },
+    // Bass VCA
+    {
+      id: 'vca_bass',
+      type: 'vca',
+      position: { x: 700, y: 500 },
+      params: { gain: 0 },
+    },
+    // Bass ADSR - longer, rounder
+    {
+      id: 'adsr_bass',
+      type: 'adsr',
+      position: { x: 550, y: 380 },
+      params: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.3 },
+    },
+
+    // === MIX SECTION ===
+    // Mixer to combine voices
+    {
+      id: 'mixer1',
+      type: 'mixer',
+      position: { x: 870, y: 300 },
+      params: { level1: 0.6, level2: 0.7, level3: 0, level4: 0, master: 1 },
+    },
+    // Delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 1050, y: 250 },
+      params: { time: 0.25, feedback: 0.4, mix: 0.3 },
+    },
+    // Reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 1050, y: 380 },
+      params: { decay: 2.5, mix: 0.3 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 1220, y: 300 },
+      params: { gain: 0.6 },
+    },
+  ],
+  connections: [
+    // === CLOCK ROUTING ===
+    // Master clock -> Clock divider
+    { id: 'clk1', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'clockdiv1', port: 'input' } },
+    // Clock divider /1 -> Lead sequencer (fast)
+    { id: 'clk2', from: { nodeId: 'clockdiv1', port: 'div1' }, to: { nodeId: 'seq_lead', port: 'input' } },
+    // Clock divider /4 -> Bass sequencer (slow)
+    { id: 'clk3', from: { nodeId: 'clockdiv1', port: 'div4' }, to: { nodeId: 'seq_bass', port: 'input' } },
+
+    // === LEAD VOICE CHAIN ===
+    // Sequencer -> ADSR trigger
+    { id: 'l1', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'adsr_lead', port: 'trigger' } },
+    // Osc -> Filter -> VCA
+    { id: 'l2', from: { nodeId: 'osc_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'input' } },
+    { id: 'l3', from: { nodeId: 'filter_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'input' } },
+    // ADSR -> VCA gain
+    { id: 'l4', from: { nodeId: 'adsr_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'gain_mod' } },
+    // Lead -> Mixer channel 1
+    { id: 'l5', from: { nodeId: 'vca_lead', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
+
+    // === BASS VOICE CHAIN ===
+    // Sequencer -> ADSR trigger
+    { id: 'b1', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'adsr_bass', port: 'trigger' } },
+    // Osc -> Filter -> VCA
+    { id: 'b2', from: { nodeId: 'osc_bass', port: 'output' }, to: { nodeId: 'filter_bass', port: 'input' } },
+    { id: 'b3', from: { nodeId: 'filter_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'input' } },
+    // ADSR -> VCA gain
+    { id: 'b4', from: { nodeId: 'adsr_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'gain_mod' } },
+    // Bass -> Mixer channel 2
+    { id: 'b5', from: { nodeId: 'vca_bass', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
+
+    // === OUTPUT CHAIN ===
+    // Mixer -> Delay -> Reverb -> Output
+    { id: 'm1', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'm2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'm3', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};

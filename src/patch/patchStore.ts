@@ -79,6 +79,7 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
     step1: 0, step2: 2, step3: 4, step4: 5,
     step5: 7, step6: 9, step7: 11, step8: 12,
     running: true,
+    extClock: false,
   },
   attenuverter: { amount: 1 },
   noise: { type: 'white', level: 1 },
@@ -86,6 +87,8 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   wavefolder: { drive: 1, folds: 2, mix: 1 },
   ringmod: { carrierFreq: 440, carrierType: 'sine', mix: 1, useExternal: false },
   quantizer: { scale: 'minor', root: 0, octaves: 2 },
+  clock: { bpm: 120, running: true, swing: 0 },
+  clockdiv: {},
   output: { gain: 0.7 },
 };
 

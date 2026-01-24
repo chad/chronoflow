@@ -1,4 +1,4 @@
-// ClickableHandle - Handle that supports click-to-connect
+// ClickableHandle - Handle that supports click-to-connect with snap preview
 
 import { Handle, Position, useReactFlow } from '@xyflow/react';
 import { useConnection } from './ConnectionContext';
@@ -26,7 +26,7 @@ export function ClickableHandle({
   title,
   isValidTarget = true,
 }: ClickableHandleProps) {
-  const { isConnecting, connectionSource, startConnection, completeConnection, cancelConnection } =
+  const { isConnecting, connectionSource, startConnection, completeConnection, cancelConnection, snapTarget } =
     useConnection();
   const { getNode } = useReactFlow();
 
@@ -42,6 +42,13 @@ export function ClickableHandle({
     ((connectionSource.handleType === 'source' && type === 'target') ||
       (connectionSource.handleType === 'target' && type === 'source')) &&
     isValidTarget;
+
+  // Check if this handle is the current snap target
+  const isSnapTarget =
+    isConnecting &&
+    snapTarget &&
+    snapTarget.nodeId === nodeId &&
+    snapTarget.handleId === id;
 
   const handleClick = useCallback(
     (e: MouseEvent) => {
@@ -88,6 +95,11 @@ export function ClickableHandle({
   if (isSelected) {
     // Selected source - pulsing cyan
     handleClassName += ' !ring-2 !ring-cyan-400 !ring-offset-1 !ring-offset-gray-900 animate-pulse';
+  } else if (isSnapTarget) {
+    // Snap target - prominent magenta glow with scale
+    handleClassName += ' !ring-4 !ring-magenta-400 !ring-offset-2 !ring-offset-gray-900 !bg-magenta-400 !scale-150 !shadow-lg !shadow-magenta-500/50';
+    // Fallback to pink since magenta might not be in Tailwind
+    handleClassName = handleClassName.replace(/magenta/g, 'pink');
   } else if (isValidConnectionTarget) {
     // Valid target - green glow
     handleClassName += ' !ring-2 !ring-green-400 !ring-offset-1 !ring-offset-gray-900 !bg-green-400';
@@ -101,6 +113,8 @@ export function ClickableHandle({
       type={type}
       position={position}
       id={id}
+      data-nodeid={nodeId}
+      data-handleid={id}
       className={`${handleClassName} cursor-pointer transition-all duration-150`}
       style={style}
       title={title}

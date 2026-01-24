@@ -19,6 +19,7 @@ type SequencerData = {
   step7: number;
   step8: number;
   running: boolean;
+  extClock: boolean;
 };
 
 type SequencerNode = Node<SequencerData, 'sequencer'>;
@@ -106,14 +107,16 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
 
       {/* Controls */}
       <div className="flex gap-3 justify-center pt-2 border-t border-gray-700">
-        <Knob
-          label="BPM"
-          value={data.bpm}
-          min={30}
-          max={300}
-          step={1}
-          onChange={(v) => updateNodeParam(id, 'bpm', v)}
-        />
+        {!data.extClock && (
+          <Knob
+            label="BPM"
+            value={data.bpm}
+            min={30}
+            max={300}
+            step={1}
+            onChange={(v) => updateNodeParam(id, 'bpm', v)}
+          />
+        )}
         <Knob
           label="Steps"
           value={data.steps}
@@ -131,6 +134,30 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
           onChange={(v) => updateNodeParam(id, 'gate', v)}
         />
       </div>
+
+      {/* Ext Clock toggle */}
+      <div className="flex justify-center mt-2">
+        <button
+          onClick={() => updateNodeParam(id, 'extClock', !data.extClock)}
+          className={`px-2 py-0.5 text-[10px] font-medium rounded transition-colors ${
+            data.extClock
+              ? 'bg-orange-500 text-white'
+              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+          }`}
+        >
+          {data.extClock ? 'EXT CLK' : 'INT CLK'}
+        </button>
+      </div>
+
+      {/* Clock input handle (left) - for external clock */}
+      <ClickableHandle
+        type="target"
+        position={Position.Left}
+        id="input"
+        nodeId={id}
+        className={`!w-2.5 !h-2.5 ${data.extClock ? '!bg-orange-400' : '!bg-gray-600'}`}
+        title="Clock In (enable Ext Clock mode)"
+      />
 
       {/* Output handle - triggers notes */}
       <ClickableHandle

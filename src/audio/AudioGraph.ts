@@ -21,18 +21,20 @@ import {
   SynthWavefolderNode,
   SynthRingModNode,
   SynthQuantizerNode,
+  SynthClockNode,
+  SynthClockDividerNode,
   SynthOutputNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output';
 
 // Node types that are per-voice (duplicated for polyphony)
-const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
+const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'wavefolder', 'ringmod', 'quantizer', 'delay', 'reverb', 'output'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output'];
 
 interface Connection {
   fromId: string;
@@ -157,6 +159,12 @@ class AudioGraph {
         break;
       case 'quantizer':
         node = new SynthQuantizerNode(context, id, params);
+        break;
+      case 'clock':
+        node = new SynthClockNode(context, id, params);
+        break;
+      case 'clockdiv':
+        node = new SynthClockDividerNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
@@ -492,33 +500,39 @@ class AudioGraph {
       }
     }
 
-    // Connect global LFOs to voice modulation targets
-    this.connectLFOsToVoices(patchConnections);
+    // Connect global modulators (LFO, S&H, Quantizer, etc.) to voice modulation targets
+    this.connectGlobalModulatorsToVoices(patchConnections);
   }
 
-  // Connect global LFO nodes to voice modulation targets
-  private connectLFOsToVoices(patchConnections: PatchConnection[]): void {
+  // Connect global node outputs to voice modulation targets
+  private connectGlobalModulatorsToVoices(patchConnections: PatchConnection[]): void {
     if (!this.voiceAllocator) return;
 
-    // Find LFO -> voice modulation connections
+    // Find global node -> voice modulation connections
     for (const conn of patchConnections) {
       const fromNode = this.nodes.get(conn.from.nodeId);
-      if (!fromNode || fromNode.type !== 'lfo') continue;
+      if (!fromNode) continue;
+
+      // Check if this is a global node type
+      if (!GLOBAL_NODE_TYPES.includes(fromNode.type as NodeType)) continue;
 
       // Check if this connects to a modulation target on a voice node
       if (!conn.to.port.endsWith('_mod')) continue;
 
-      const lfoOutput = fromNode.getOutputNode();
-      if (!lfoOutput) continue;
+      const globalOutput = fromNode.getOutputNode();
+      if (!globalOutput) continue;
 
-      // Connect LFO to each voice's corresponding node's modulation target
+      if (DEBUG) console.log('[AudioGraph] Connecting global modulator', conn.from.nodeId, 'to voice mod target', conn.to.nodeId, conn.to.port);
+
+      // Connect global node to each voice's corresponding node's modulation target
       const voices = this.voiceAllocator.getVoices();
       for (const voice of voices) {
         const voiceNode = voice.getNode(conn.to.nodeId);
         if (voiceNode) {
           const modTarget = voiceNode.getModulationTarget(conn.to.port);
           if (modTarget) {
-            lfoOutput.connect(modTarget);
+            globalOutput.connect(modTarget);
+            if (DEBUG) console.log('[AudioGraph] Connected to voice', voice);
           }
         }
       }
