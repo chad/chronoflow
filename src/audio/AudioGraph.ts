@@ -16,18 +16,23 @@ import {
   SynthMixerNode,
   SynthSequencerNode,
   SynthAttenuverterNode,
+  SynthNoiseNode,
+  SynthSampleHoldNode,
+  SynthWavefolderNode,
+  SynthRingModNode,
+  SynthQuantizerNode,
   SynthOutputNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'output';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'delay', 'reverb', 'output'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'wavefolder', 'ringmod', 'quantizer', 'delay', 'reverb', 'output'];
 
 interface Connection {
   fromId: string;
@@ -137,6 +142,21 @@ class AudioGraph {
         break;
       case 'attenuverter':
         node = new SynthAttenuverterNode(context, id, params);
+        break;
+      case 'noise':
+        node = new SynthNoiseNode(context, id, params);
+        break;
+      case 'samplehold':
+        node = new SynthSampleHoldNode(context, id, params);
+        break;
+      case 'wavefolder':
+        node = new SynthWavefolderNode(context, id, params);
+        break;
+      case 'ringmod':
+        node = new SynthRingModNode(context, id, params);
+        break;
+      case 'quantizer':
+        node = new SynthQuantizerNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton

@@ -81,6 +81,11 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
     running: true,
   },
   attenuverter: { amount: 1 },
+  noise: { type: 'white', level: 1 },
+  samplehold: { rate: 4, smooth: 0 },
+  wavefolder: { drive: 1, folds: 2, mix: 1 },
+  ringmod: { carrierFreq: 440, carrierType: 'sine', mix: 1, useExternal: false },
+  quantizer: { scale: 'minor', root: 0, octaves: 2 },
   output: { gain: 0.7 },
 };
 

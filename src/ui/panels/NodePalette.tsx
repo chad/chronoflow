@@ -46,6 +46,36 @@ const NODE_OPTIONS: NodeOption[] = [
     description: 'Invert/scale signal',
   },
   {
+    type: 'noise',
+    label: 'Noise',
+    color: 'bg-stone-500',
+    description: 'White/pink noise',
+  },
+  {
+    type: 'samplehold',
+    label: 'S&H',
+    color: 'bg-lime-500',
+    description: 'Sample & Hold',
+  },
+  {
+    type: 'wavefolder',
+    label: 'Fold',
+    color: 'bg-rose-500',
+    description: 'Wavefolder distortion',
+  },
+  {
+    type: 'ringmod',
+    label: 'Ring',
+    color: 'bg-fuchsia-500',
+    description: 'Ring modulator',
+  },
+  {
+    type: 'quantizer',
+    label: 'Quant',
+    color: 'bg-sky-500',
+    description: 'Scale quantizer',
+  },
+  {
     type: 'sequencer',
     label: 'Seq',
     color: 'bg-emerald-500',
