@@ -208,7 +208,31 @@ class AudioGraph {
       return false;
     }
 
-    const output = fromNode.getOutputNode();
+    // Get the appropriate output based on port name
+    let output: AudioNode | null = null;
+
+    // Handle clock divider's multiple division outputs
+    if (fromNode instanceof SynthClockDividerNode) {
+      switch (fromPort) {
+        case 'div1':
+          output = fromNode.getDiv1Output();
+          break;
+        case 'div2':
+          output = fromNode.getDiv2Output();
+          break;
+        case 'div4':
+          output = fromNode.getDiv4Output();
+          break;
+        case 'div8':
+          output = fromNode.getDiv8Output();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
+    } else {
+      output = fromNode.getOutputNode();
+    }
+
     if (!output) {
       console.error(`AudioGraph: Cannot connect - missing output`);
       return false;
@@ -256,7 +280,31 @@ class AudioGraph {
       return false;
     }
 
-    const output = fromNode.getOutputNode();
+    // Get the appropriate output based on port name
+    let output: AudioNode | null = null;
+
+    // Handle clock divider's multiple division outputs
+    if (fromNode instanceof SynthClockDividerNode) {
+      switch (fromPort) {
+        case 'div1':
+          output = fromNode.getDiv1Output();
+          break;
+        case 'div2':
+          output = fromNode.getDiv2Output();
+          break;
+        case 'div4':
+          output = fromNode.getDiv4Output();
+          break;
+        case 'div8':
+          output = fromNode.getDiv8Output();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
+    } else {
+      output = fromNode.getOutputNode();
+    }
+
     if (!output) {
       return false;
     }
