@@ -224,8 +224,13 @@ export const SEQUENCER_PATCH: Patch = {
         bpm: 140,
         steps: 8,
         gate: 0.4,
+        swing: 50,
         // C minor 7 arpeggio: C, Eb, G, Bb, C+, Bb, G, Eb
-        pattern: 'C-4 D#4 G-4 A#4 C-5 A#4 G-4 D#4',
+        patternA: 'C-4 D#4 G-4 A#4 C-5 A#4 G-4 D#4',
+        patternB: '',
+        patternC: '',
+        patternD: '',
+        chain: 'A',
         running: true,
         extClock: false,
       },
@@ -599,8 +604,13 @@ export const NOISE_DRUMS_PATCH: Patch = {
         bpm: 120,
         steps: 8,
         gate: 0.1,
-        // Trigger on every step for hi-hat rhythm
-        pattern: 'C-4 C-4 C-4 C-4 C-4 C-4 C-4 C-4',
+        swing: 55,
+        // Trigger on every step for hi-hat rhythm with velocity variation
+        patternA: 'C-4:127 C-4:60 C-4:90 C-4:50 C-4:127 C-4:60 C-4:90 C-4:50',
+        patternB: '',
+        patternC: '',
+        patternD: '',
+        chain: 'A',
         running: true,
         extClock: false,
       },
@@ -826,8 +836,13 @@ export const POLYRHYTHM_PATCH: Patch = {
         bpm: 120,
         steps: 8,
         gate: 0.3,
-        // C minor pentatonic melody
-        pattern: 'C-4 D#4 G-4 C-5 A#4 G-4 D#4 F-4',
+        swing: 50,
+        // C minor pentatonic melody with velocity accents
+        patternA: 'C-4:127 D#4:80 G-4:100 C-5:127 A#4:80 G-4:100 D#4:80 F-4:90',
+        patternB: '',
+        patternC: '',
+        patternD: '',
+        chain: 'A',
         running: true,
         extClock: true,
       },
@@ -871,8 +886,13 @@ export const POLYRHYTHM_PATCH: Patch = {
         bpm: 120,
         steps: 4,
         gate: 0.6,
+        swing: 50,
         // Simple bass root movement
-        pattern: 'C-3 C-3 D#3 F-3',
+        patternA: 'C-3:127 C-3:100 D#3:110 F-3:120',
+        patternB: '',
+        patternC: '',
+        patternD: '',
+        chain: 'A',
         running: true,
         extClock: true,
       },
@@ -976,7 +996,7 @@ export const POLYRHYTHM_PATCH: Patch = {
   groups: [],
 };
 
-// Tracker Demo - Showcases tracker notation with rests and 16-step pattern
+// Tracker Demo - Showcases tracker notation with velocity, probability, patterns, and chain
 export const TRACKER_DEMO_PATCH: Patch = {
   version: '1.0',
   meta: {
@@ -985,7 +1005,7 @@ export const TRACKER_DEMO_PATCH: Patch = {
     modified: new Date().toISOString(),
   },
   nodes: [
-    // Sequencer with tracker notation - 16 step pattern with rests
+    // Sequencer with tracker notation - demonstrates all new features
     {
       id: 'seq1',
       type: 'sequencer',
@@ -994,8 +1014,16 @@ export const TRACKER_DEMO_PATCH: Patch = {
         bpm: 130,
         steps: 16,
         gate: 0.5,
-        // Mario-inspired melody with rests for rhythm
-        pattern: 'E-4 E-4 --- E-4 --- C-4 E-4 --- G-4 --- --- --- G-3 --- --- ---',
+        swing: 55,
+        // Pattern A: Main melody with velocity dynamics
+        patternA: 'E-4:127 E-4:80 --- E-4:100 --- C-4:90 E-4:127 --- G-4:127 --- --- --- G-3:100 --- --- ---',
+        // Pattern B: Variation with probability for randomness
+        patternB: 'C-5:127 --- G-4:100?70 --- E-4:90 --- G-4:80?50 --- A-4:100 --- G-4?75 --- --- --- --- ---',
+        // Pattern C: Rhythmic variation
+        patternC: 'E-4:127 E-4:60 E-4:80 E-4:60 G-4:127 G-4:60 G-4:80 G-4:60 A-4:127 --- G-4:100 --- E-4:90 --- C-4:80 ---',
+        patternD: '',
+        // Chain: Play A twice, then B, then C
+        chain: 'AABC',
         running: true,
         extClock: false,
       },

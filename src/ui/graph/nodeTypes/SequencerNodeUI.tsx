@@ -7,22 +7,22 @@ import { ClickableHandle } from '../ClickableHandle';
 import { audioGraph } from '../../../audio/AudioGraph';
 import { parseTrackerPattern, midiToNoteName, type ParsedStep } from '../../../audio/nodes/trackerParser';
 
+type PatternKey = 'A' | 'B' | 'C' | 'D';
+
 type SequencerData = {
   bpm: number;
   steps: number;
   gate: number;
-  pattern: string;
+  swing: number;
+  patternA: string;
+  patternB: string;
+  patternC: string;
+  patternD: string;
+  chain: string;
   running: boolean;
   extClock: boolean;
   // Legacy support
-  step1?: number;
-  step2?: number;
-  step3?: number;
-  step4?: number;
-  step5?: number;
-  step6?: number;
-  step7?: number;
-  step8?: number;
+  pattern?: string;
 };
 
 type SequencerNode = Node<SequencerData, 'sequencer'>;
@@ -30,60 +30,105 @@ type SequencerNode = Node<SequencerData, 'sequencer'>;
 export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<SequencerNode>) => {
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
   const [currentStep, setCurrentStep] = useState(0);
-  const [patternInput, setPatternInput] = useState(data.pattern || '');
-  const [parseError, setParseError] = useState<string | null>(null);
-  const [parsedSteps, setParsedSteps] = useState<ParsedStep[]>([]);
+  const [currentChainIndex, setCurrentChainIndex] = useState(0);
+  const [activePatternKey, setActivePatternKey] = useState<PatternKey>('A');
+  const [selectedTab, setSelectedTab] = useState<PatternKey>('A');
+
+  // Pattern inputs for each lane
+  const [patternInputs, setPatternInputs] = useState({
+    A: data.patternA || '',
+    B: data.patternB || '',
+    C: data.patternC || '',
+    D: data.patternD || '',
+  });
+  const [chainInput, setChainInput] = useState(data.chain || 'A');
+  const [parseErrors, setParseErrors] = useState<Record<PatternKey, string | null>>({
+    A: null, B: null, C: null, D: null,
+  });
+  const [parsedPatterns, setParsedPatterns] = useState<Record<PatternKey, ParsedStep[]>>({
+    A: [], B: [], C: [], D: [],
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to sequencer step changes
   useEffect(() => {
     const sequencer = audioGraph.getNode(id);
     if (sequencer && 'onStep' in sequencer) {
-      (sequencer as { onStep: (cb: (step: number) => void) => void }).onStep((step) => {
-        setCurrentStep(step);
-      });
+      (sequencer as { onStep: (cb: (step: number, chainIndex: number, patternKey: string) => void) => void }).onStep(
+        (step, chainIndex, patternKey) => {
+          setCurrentStep(step);
+          setCurrentChainIndex(chainIndex);
+          setActivePatternKey(patternKey as PatternKey);
+        }
+      );
     }
   }, [id]);
 
-  // Sync pattern input from data when it changes externally
+  // Sync pattern inputs from data when it changes externally
   useEffect(() => {
-    if (data.pattern && data.pattern !== patternInput) {
-      setPatternInput(data.pattern);
-    }
-  }, [data.pattern]);
+    setPatternInputs({
+      A: data.patternA || '',
+      B: data.patternB || '',
+      C: data.patternC || '',
+      D: data.patternD || '',
+    });
+  }, [data.patternA, data.patternB, data.patternC, data.patternD]);
 
-  // Parse pattern on input change
   useEffect(() => {
-    const { steps, errors } = parseTrackerPattern(patternInput);
-    setParsedSteps(steps);
-    setParseError(errors.length > 0 ? errors[0] : null);
-  }, [patternInput]);
+    setChainInput(data.chain || 'A');
+  }, [data.chain]);
+
+  // Parse all patterns on input change
+  useEffect(() => {
+    const newParsed: Record<PatternKey, ParsedStep[]> = { A: [], B: [], C: [], D: [] };
+    const newErrors: Record<PatternKey, string | null> = { A: null, B: null, C: null, D: null };
+
+    for (const key of ['A', 'B', 'C', 'D'] as PatternKey[]) {
+      const { steps, errors } = parseTrackerPattern(patternInputs[key]);
+      newParsed[key] = steps;
+      newErrors[key] = errors.length > 0 ? errors[0] : null;
+    }
+
+    setParsedPatterns(newParsed);
+    setParseErrors(newErrors);
+  }, [patternInputs]);
 
   // Auto-scroll to show current step during playback
   useEffect(() => {
-    if (scrollContainerRef.current && data.running && currentStep >= 0) {
+    if (scrollContainerRef.current && data.running && currentStep >= 0 && activePatternKey === selectedTab) {
       const container = scrollContainerRef.current;
-      const stepWidth = 32; // Approximate width of each step element
+      const stepWidth = 28;
       const scrollTarget = currentStep * stepWidth - container.clientWidth / 2 + stepWidth / 2;
       container.scrollLeft = Math.max(0, scrollTarget);
     }
-  }, [currentStep, data.running]);
+  }, [currentStep, data.running, activePatternKey, selectedTab]);
 
   // Commit pattern on blur or Enter
-  const commitPattern = () => {
-    if (!parseError && patternInput !== data.pattern) {
-      updateNodeParam(id, 'pattern', patternInput);
+  const commitPattern = (key: PatternKey) => {
+    const paramName = `pattern${key}` as const;
+    if (!parseErrors[key] && patternInputs[key] !== data[paramName]) {
+      updateNodeParam(id, paramName, patternInputs[key]);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const commitChain = () => {
+    if (chainInput !== data.chain) {
+      updateNodeParam(id, 'chain', chainInput);
+    }
+  };
+
+  const handlePatternChange = (key: PatternKey, value: string) => {
+    setPatternInputs(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleKeyDown = (key: PatternKey) => (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      commitPattern();
+      commitPattern(key);
     }
   };
 
-  // Get display text for a step
+  // Get display text for a step with velocity indicator
   const getStepDisplay = (step: ParsedStep): string => {
     if (step.type === 'note' && step.midiNote !== undefined) {
       return midiToNoteName(step.midiNote);
@@ -91,9 +136,26 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
     return '--';
   };
 
+  // Get opacity based on velocity (0-127 -> 0.4-1.0)
+  const getVelocityOpacity = (step: ParsedStep): number => {
+    if (step.type !== 'note') return 0.4;
+    return 0.4 + (step.velocity / 127) * 0.6;
+  };
+
+  // Get border style for probability
+  const getProbabilityStyle = (step: ParsedStep): string => {
+    if (step.probability < 100) {
+      return 'border border-dashed border-yellow-500/50';
+    }
+    return '';
+  };
+
+  const currentPattern = parsedPatterns[selectedTab];
+  const isCurrentTabPlaying = selectedTab === activePatternKey && data.running;
+
   return (
     <div
-      className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[300px] max-w-[400px] ${
+      className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[340px] max-w-[420px] ${
         selected ? 'border-cyan-400' : 'border-emerald-500'
       }`}
     >
@@ -114,54 +176,91 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
         </button>
       </div>
 
+      {/* Pattern Tabs */}
+      <div className="flex gap-1 mb-2">
+        {(['A', 'B', 'C', 'D'] as PatternKey[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSelectedTab(key)}
+            className={`flex-1 px-2 py-1 text-[10px] font-bold rounded transition-colors ${
+              selectedTab === key
+                ? 'bg-emerald-600 text-white'
+                : activePatternKey === key && data.running
+                ? 'bg-emerald-800 text-emerald-200'
+                : patternInputs[key].trim()
+                ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                : 'bg-gray-800 text-gray-500 hover:bg-gray-700'
+            }`}
+          >
+            {key}
+            {activePatternKey === key && data.running && (
+              <span className="ml-1 inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            )}
+          </button>
+        ))}
+      </div>
+
       {/* Pattern text input */}
       <div className="mb-2">
-        <label className="text-[10px] text-gray-400 block mb-1">Pattern:</label>
         <textarea
-          value={patternInput}
-          onChange={(e) => setPatternInput(e.target.value)}
-          onBlur={commitPattern}
-          onKeyDown={handleKeyDown}
-          className={`w-full bg-gray-800 text-gray-100 text-xs font-mono p-2 rounded border resize-none h-12 ${
-            parseError ? 'border-red-500' : 'border-gray-600 focus:border-emerald-500'
+          value={patternInputs[selectedTab]}
+          onChange={(e) => handlePatternChange(selectedTab, e.target.value)}
+          onBlur={() => commitPattern(selectedTab)}
+          onKeyDown={handleKeyDown(selectedTab)}
+          className={`w-full bg-gray-800 text-gray-100 text-xs font-mono p-2 rounded border resize-none h-10 ${
+            parseErrors[selectedTab] ? 'border-red-500' : 'border-gray-600 focus:border-emerald-500'
           } focus:outline-none`}
-          placeholder="C-4 D-4 E-4 F-4 G-4 A-4 B-4 C-5"
+          placeholder="C-4:80?50 D-4 E-4:127 ---"
           spellCheck={false}
         />
-        {parseError && (
-          <div className="text-[10px] text-red-400 mt-1">{parseError}</div>
+        {parseErrors[selectedTab] && (
+          <div className="text-[10px] text-red-400 mt-1">{parseErrors[selectedTab]}</div>
         )}
       </div>
 
-      {/* Step display grid - scrollable for many steps */}
+      {/* Step display grid */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-0.5 mb-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-600"
+        className="flex gap-0.5 mb-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-gray-600"
       >
-        {parsedSteps.map((step, i) => (
+        {currentPattern.map((step, i) => (
           <div
             key={i}
-            className={`flex-shrink-0 w-7 text-center py-1 rounded text-[9px] font-mono transition-all ${
-              currentStep === i && data.running
-                ? 'bg-emerald-500 text-white scale-105'
+            className={`flex-shrink-0 w-6 text-center py-1 rounded text-[8px] font-mono transition-all ${getProbabilityStyle(step)} ${
+              isCurrentTabPlaying && currentStep === i
+                ? 'bg-emerald-500 text-white scale-110'
                 : step.type === 'note'
                 ? 'bg-gray-700 text-gray-200'
                 : 'bg-gray-800 text-gray-500'
             }`}
-            title={step.originalToken || ''}
+            style={{ opacity: isCurrentTabPlaying && currentStep === i ? 1 : getVelocityOpacity(step) }}
+            title={`${step.originalToken || ''} vel:${step.velocity} prob:${step.probability}%`}
           >
             {getStepDisplay(step)}
           </div>
         ))}
       </div>
 
-      {/* Step count indicator */}
-      <div className="text-[10px] text-gray-500 text-center mb-2">
-        {parsedSteps.length} step{parsedSteps.length !== 1 ? 's' : ''}
+      {/* Chain input */}
+      <div className="flex items-center gap-2 mb-2">
+        <label className="text-[10px] text-gray-400">Chain:</label>
+        <input
+          type="text"
+          value={chainInput}
+          onChange={(e) => setChainInput(e.target.value.toUpperCase())}
+          onBlur={commitChain}
+          onKeyDown={(e) => e.key === 'Enter' && commitChain()}
+          className="flex-1 bg-gray-800 text-gray-100 text-xs font-mono px-2 py-1 rounded border border-gray-600 focus:border-emerald-500 focus:outline-none"
+          placeholder="AABA"
+          spellCheck={false}
+        />
+        <span className="text-[10px] text-gray-500">
+          {currentChainIndex + 1}/{chainInput.replace(/\s/g, '').length || 1}
+        </span>
       </div>
 
       {/* Controls */}
-      <div className="flex gap-3 justify-center pt-2 border-t border-gray-700">
+      <div className="flex gap-2 justify-center pt-2 border-t border-gray-700">
         {!data.extClock && (
           <Knob
             label="BPM"
@@ -180,6 +279,14 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
           step={0.05}
           onChange={(v) => updateNodeParam(id, 'gate', v)}
         />
+        <Knob
+          label="Swing"
+          value={data.swing ?? 50}
+          min={0}
+          max={100}
+          step={1}
+          onChange={(v) => updateNodeParam(id, 'swing', v)}
+        />
       </div>
 
       {/* Ext Clock toggle */}
@@ -196,7 +303,12 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
         </button>
       </div>
 
-      {/* Clock input handle (left) - for external clock */}
+      {/* Notation hint */}
+      <div className="text-[9px] text-gray-600 text-center mt-2">
+        C-4:80?50 = note:velocity?probability
+      </div>
+
+      {/* Clock input handle (left) */}
       <ClickableHandle
         type="target"
         position={Position.Left}
