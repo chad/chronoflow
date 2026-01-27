@@ -15,6 +15,7 @@ import {
   TRACKER_DEMO_PATCH,
   AMBIENT_GENERATIVE_PATCH,
   PENTATONIC_DREAMS_PATCH,
+  CRYSTAL_BELLS_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -45,6 +46,7 @@ export function PatchManager() {
       tracker: TRACKER_DEMO_PATCH,
       ambientgen: AMBIENT_GENERATIVE_PATCH,
       pentatonic: PENTATONIC_DREAMS_PATCH,
+      crystalbells: CRYSTAL_BELLS_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -212,6 +214,13 @@ export function PatchManager() {
             >
               Pentatonic Dreams
               <span className="block text-violet-200 text-[10px]">Consonant, modal, lush reverb</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('crystalbells')}
+              className="bg-pink-600 hover:bg-pink-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Crystal Bells
+              <span className="block text-pink-200 text-[10px]">Round bell tones, cathedral reverb</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Modules</div>

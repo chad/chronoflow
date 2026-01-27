@@ -1825,3 +1825,344 @@ export const PENTATONIC_DREAMS_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// Crystal Bells - Round, bell-like ambient with harmonic ring modulation
+// Instant attack, long decay envelopes, pentatonic, massive reverb
+export const CRYSTAL_BELLS_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Crystal Bells',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // ═══════════════════════════════════════════════════════════════
+    // HIGH BELLS - Bright, chiming tones
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'seq_high',
+      type: 'sequencer',
+      position: { x: 50, y: 20 },
+      params: {
+        bpm: 28, // Very slow for spacious bells
+        steps: 12,
+        gate: 0.3, // Short gate, envelope does the work
+        swing: 50,
+        // Sparse high bells - pentatonic (C, D, E, G, A)
+        patternA: 'C-6:90?70 --- --- E-6:80?55 --- --- G-6:85?60 --- --- --- --- ---',
+        patternB: 'G-5:85?65 --- --- --- C-6:90?70 --- --- --- E-6:80?50 --- --- ---',
+        patternC: 'E-6:80?55 --- --- G-6:85?60 --- --- C-7:75?40 --- --- --- --- ---',
+        patternD: 'A-5:90?75 --- --- --- --- --- E-6:80?55 --- --- --- --- ---',
+        chain: 'AABBCCDDAADDBBCC',
+        running: true,
+        extClock: false,
+      },
+    },
+    // High bell oscillator - pure sine
+    {
+      id: 'osc_high',
+      type: 'oscillator',
+      position: { x: 280, y: 20 },
+      params: { frequency: 1047, detune: 0, waveform: 'sine' }, // C6
+    },
+    // Ring mod with octave ratio (2:1) for harmonic bell tone
+    {
+      id: 'ring_high',
+      type: 'ringmod',
+      position: { x: 430, y: 20 },
+      params: { carrierFreq: 2093, carrierType: 'sine', mix: 0.35, useExternal: false }, // Octave above
+    },
+    // Gentle highpass to remove mud
+    {
+      id: 'filter_high',
+      type: 'filter',
+      position: { x: 580, y: 20 },
+      params: { mode: 'highpass', cutoff: 800, resonance: 0.3 },
+    },
+    // VCA
+    {
+      id: 'vca_high',
+      type: 'vca',
+      position: { x: 730, y: 20 },
+      params: { gain: 0 },
+    },
+    // Bell envelope - instant attack, very long decay, no sustain
+    {
+      id: 'adsr_high',
+      type: 'adsr',
+      position: { x: 580, y: 130 },
+      params: { attack: 0.001, decay: 4.0, sustain: 0, release: 3.0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MID BELLS - Warm, round tones
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'seq_mid',
+      type: 'sequencer',
+      position: { x: 50, y: 250 },
+      params: {
+        bpm: 28,
+        steps: 8,
+        gate: 0.3,
+        swing: 50,
+        // Mid register bells
+        patternA: 'G-4:95?80 --- --- --- C-5:90?70 --- --- ---',
+        patternB: 'E-4:90?75 --- --- --- G-4:85?65 --- --- ---',
+        patternC: 'C-5:95?85 --- --- --- E-5:85?60 --- --- ---',
+        patternD: 'D-5:90?70 --- --- --- A-4:85?65 --- --- ---',
+        chain: 'AAAABBBBCCCCDDDDAAAABBBB',
+        running: true,
+        extClock: false,
+      },
+    },
+    // Mid bell oscillator
+    {
+      id: 'osc_mid',
+      type: 'oscillator',
+      position: { x: 280, y: 250 },
+      params: { frequency: 392, detune: 0, waveform: 'sine' }, // G4
+    },
+    // Ring mod with perfect fifth ratio (3:2) - warm bell character
+    {
+      id: 'ring_mid',
+      type: 'ringmod',
+      position: { x: 430, y: 250 },
+      params: { carrierFreq: 588, carrierType: 'sine', mix: 0.25, useExternal: false }, // ~fifth above
+    },
+    // Lowpass for warmth
+    {
+      id: 'filter_mid',
+      type: 'filter',
+      position: { x: 580, y: 250 },
+      params: { mode: 'lowpass', cutoff: 3000, resonance: 0.5 },
+    },
+    // VCA
+    {
+      id: 'vca_mid',
+      type: 'vca',
+      position: { x: 730, y: 250 },
+      params: { gain: 0 },
+    },
+    // Longer bell envelope
+    {
+      id: 'adsr_mid',
+      type: 'adsr',
+      position: { x: 580, y: 360 },
+      params: { attack: 0.002, decay: 5.0, sustain: 0, release: 4.0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // GENERATIVE BELLS - S&H driven random bells
+    // ═══════════════════════════════════════════════════════════════
+    // Pink noise for smooth random
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 480 },
+      params: { type: 'pink', level: 0.5 },
+    },
+    // Slow S&H
+    {
+      id: 'sh1',
+      type: 'samplehold',
+      position: { x: 180, y: 480 },
+      params: { rate: 0.2, smooth: 0.6 },
+    },
+    // Quantizer to pentatonic
+    {
+      id: 'quant1',
+      type: 'quantizer',
+      position: { x: 310, y: 480 },
+      params: { scale: 'pentatonic', root: 0, octaves: 3 },
+    },
+    // Gen bell oscillator
+    {
+      id: 'osc_gen',
+      type: 'oscillator',
+      position: { x: 460, y: 480 },
+      params: { frequency: 523, detune: 0, waveform: 'sine' },
+    },
+    // Subtle ring mod for shimmer
+    {
+      id: 'ring_gen',
+      type: 'ringmod',
+      position: { x: 610, y: 480 },
+      params: { carrierFreq: 784, carrierType: 'sine', mix: 0.2, useExternal: false }, // ~fifth
+    },
+    // Filter
+    {
+      id: 'filter_gen',
+      type: 'filter',
+      position: { x: 760, y: 480 },
+      params: { mode: 'lowpass', cutoff: 4000, resonance: 0.3 },
+    },
+    // VCA with LFO swell
+    {
+      id: 'vca_gen',
+      type: 'vca',
+      position: { x: 910, y: 480 },
+      params: { gain: 0.15 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // LOW BELLS - Deep, gong-like foundation
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'seq_low',
+      type: 'sequencer',
+      position: { x: 50, y: 680 },
+      params: {
+        bpm: 28,
+        steps: 16,
+        gate: 0.2,
+        swing: 50,
+        // Very sparse low bells/gongs
+        patternA: 'C-3:100?90 --- --- --- --- --- --- --- G-3:90?70 --- --- --- --- --- --- ---',
+        patternB: 'G-2:100?85 --- --- --- --- --- --- --- --- --- --- --- C-3:95?80 --- --- ---',
+        patternC: 'E-3:95?80 --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---',
+        patternD: 'C-3:100?95 --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---',
+        chain: 'AABBCCDD',
+        running: true,
+        extClock: false,
+      },
+    },
+    // Low bell oscillator
+    {
+      id: 'osc_low',
+      type: 'oscillator',
+      position: { x: 280, y: 680 },
+      params: { frequency: 131, detune: 0, waveform: 'sine' }, // C3
+    },
+    // Ring mod at octave for gong-like depth
+    {
+      id: 'ring_low',
+      type: 'ringmod',
+      position: { x: 430, y: 680 },
+      params: { carrierFreq: 262, carrierType: 'sine', mix: 0.15, useExternal: false },
+    },
+    // Dark filter
+    {
+      id: 'filter_low',
+      type: 'filter',
+      position: { x: 580, y: 680 },
+      params: { mode: 'lowpass', cutoff: 800, resonance: 1 },
+    },
+    // VCA
+    {
+      id: 'vca_low',
+      type: 'vca',
+      position: { x: 730, y: 680 },
+      params: { gain: 0 },
+    },
+    // Very long gong envelope
+    {
+      id: 'adsr_low',
+      type: 'adsr',
+      position: { x: 580, y: 790 },
+      params: { attack: 0.005, decay: 8.0, sustain: 0, release: 6.0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODULATION
+    // ═══════════════════════════════════════════════════════════════
+    // LFO for gen voice swell
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 760, y: 590 },
+      params: { rate: 0.07, depth: 0.1, waveform: 'sine' },
+    },
+    // LFO for high ring mod - subtle shimmer
+    {
+      id: 'lfo2',
+      type: 'lfo',
+      position: { x: 430, y: 130 },
+      params: { rate: 0.03, depth: 30, waveform: 'sine' },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MIX & EFFECTS - Cathedral reverb
+    // ═══════════════════════════════════════════════════════════════
+    // Main mixer
+    {
+      id: 'mixer_main',
+      type: 'mixer',
+      position: { x: 900, y: 300 },
+      params: { level1: 0.5, level2: 0.6, level3: 0.4, level4: 0.7, master: 1 },
+    },
+    // Long, diffuse delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 1050, y: 240 },
+      params: { time: 1.2, feedback: 0.45, mix: 0.35 },
+    },
+    // Second delay - prime number ratio for non-repeating echoes
+    {
+      id: 'delay2',
+      type: 'delay',
+      position: { x: 1050, y: 360 },
+      params: { time: 1.7, feedback: 0.35, mix: 0.25 },
+    },
+    // Massive cathedral reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 1200, y: 300 },
+      params: { decay: 10, mix: 0.7 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 1350, y: 300 },
+      params: { gain: 0.4 },
+    },
+  ],
+  connections: [
+    // ═══ HIGH BELLS ═══
+    { id: 'h1', from: { nodeId: 'seq_high', port: 'output' }, to: { nodeId: 'adsr_high', port: 'trigger' } },
+    { id: 'h2', from: { nodeId: 'osc_high', port: 'output' }, to: { nodeId: 'ring_high', port: 'input' } },
+    { id: 'h3', from: { nodeId: 'ring_high', port: 'output' }, to: { nodeId: 'filter_high', port: 'input' } },
+    { id: 'h4', from: { nodeId: 'filter_high', port: 'output' }, to: { nodeId: 'vca_high', port: 'input' } },
+    { id: 'h5', from: { nodeId: 'adsr_high', port: 'output' }, to: { nodeId: 'vca_high', port: 'gain_mod' } },
+    { id: 'h6', from: { nodeId: 'lfo2', port: 'output' }, to: { nodeId: 'ring_high', port: 'freq_mod' } },
+
+    // ═══ MID BELLS ═══
+    { id: 'm1', from: { nodeId: 'seq_mid', port: 'output' }, to: { nodeId: 'adsr_mid', port: 'trigger' } },
+    { id: 'm2', from: { nodeId: 'osc_mid', port: 'output' }, to: { nodeId: 'ring_mid', port: 'input' } },
+    { id: 'm3', from: { nodeId: 'ring_mid', port: 'output' }, to: { nodeId: 'filter_mid', port: 'input' } },
+    { id: 'm4', from: { nodeId: 'filter_mid', port: 'output' }, to: { nodeId: 'vca_mid', port: 'input' } },
+    { id: 'm5', from: { nodeId: 'adsr_mid', port: 'output' }, to: { nodeId: 'vca_mid', port: 'gain_mod' } },
+
+    // ═══ GENERATIVE BELLS ═══
+    { id: 'g1', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'sh1', port: 'input' } },
+    { id: 'g2', from: { nodeId: 'sh1', port: 'output' }, to: { nodeId: 'quant1', port: 'input' } },
+    { id: 'g3', from: { nodeId: 'quant1', port: 'output' }, to: { nodeId: 'osc_gen', port: 'freq_mod' } },
+    { id: 'g4', from: { nodeId: 'osc_gen', port: 'output' }, to: { nodeId: 'ring_gen', port: 'input' } },
+    { id: 'g5', from: { nodeId: 'ring_gen', port: 'output' }, to: { nodeId: 'filter_gen', port: 'input' } },
+    { id: 'g6', from: { nodeId: 'filter_gen', port: 'output' }, to: { nodeId: 'vca_gen', port: 'input' } },
+    { id: 'g7', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'vca_gen', port: 'gain_mod' } },
+
+    // ═══ LOW BELLS ═══
+    { id: 'l1', from: { nodeId: 'seq_low', port: 'output' }, to: { nodeId: 'adsr_low', port: 'trigger' } },
+    { id: 'l2', from: { nodeId: 'osc_low', port: 'output' }, to: { nodeId: 'ring_low', port: 'input' } },
+    { id: 'l3', from: { nodeId: 'ring_low', port: 'output' }, to: { nodeId: 'filter_low', port: 'input' } },
+    { id: 'l4', from: { nodeId: 'filter_low', port: 'output' }, to: { nodeId: 'vca_low', port: 'input' } },
+    { id: 'l5', from: { nodeId: 'adsr_low', port: 'output' }, to: { nodeId: 'vca_low', port: 'gain_mod' } },
+
+    // ═══ ALL VOICES -> MAIN MIXER ═══
+    { id: 'x1', from: { nodeId: 'vca_high', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input1' } },
+    { id: 'x2', from: { nodeId: 'vca_mid', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input2' } },
+    { id: 'x3', from: { nodeId: 'vca_gen', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input3' } },
+    { id: 'x4', from: { nodeId: 'vca_low', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input4' } },
+
+    // ═══ EFFECTS -> OUTPUT ═══
+    { id: 'e1', from: { nodeId: 'mixer_main', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'e2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+    { id: 'e3', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'e4', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
