@@ -36,6 +36,13 @@ export class SynthKarplusStrongNode implements SynthNode {
   // For internal excitation
   private noiseBuffer: AudioBuffer | null = null;
 
+  // For trigger detection
+  private triggerInput: GainNode;
+  private triggerAnalyser: AnalyserNode;
+  private triggerData: Float32Array;
+  private lastTriggerValue: number = 0;
+  private triggerCheckInterval: number | null = null;
+
   constructor(context: AudioContext, id: string, params?: Partial<KarplusStrongParams>) {
     this.context = context;
     this.id = id;
@@ -75,6 +82,42 @@ export class SynthKarplusStrongNode implements SynthNode {
 
     // Create noise buffer for plucking
     this.createNoiseBuffer();
+
+    // Set up trigger input detection
+    this.triggerInput = context.createGain();
+    this.triggerInput.gain.value = 1;
+    this.triggerAnalyser = context.createAnalyser();
+    this.triggerAnalyser.fftSize = 256;
+    this.triggerData = new Float32Array(this.triggerAnalyser.fftSize);
+    this.triggerInput.connect(this.triggerAnalyser);
+
+    // Start trigger detection
+    this.startTriggerDetection();
+  }
+
+  private startTriggerDetection(): void {
+    // Check for triggers at 120Hz (fast enough for musical timing)
+    this.triggerCheckInterval = window.setInterval(() => {
+      this.checkTrigger();
+    }, 8);
+  }
+
+  private checkTrigger(): void {
+    this.triggerAnalyser.getFloatTimeDomainData(this.triggerData as Float32Array<ArrayBuffer>);
+    const currentValue = this.triggerData[0] || 0;
+
+    // Detect rising edge (crossing threshold from below)
+    const threshold = 0.1;
+    if (currentValue > threshold && this.lastTriggerValue <= threshold) {
+      this.trigger(Math.min(1, currentValue)); // Use signal amplitude as velocity
+    }
+
+    this.lastTriggerValue = currentValue;
+  }
+
+  // Get trigger input node for external connections
+  getTriggerInput(): AudioNode {
+    return this.triggerInput;
   }
 
   private createNoiseBuffer(): void {
@@ -229,10 +272,15 @@ export class SynthKarplusStrongNode implements SynthNode {
   }
 
   dispose(): void {
+    if (this.triggerCheckInterval !== null) {
+      window.clearInterval(this.triggerCheckInterval);
+    }
     this.inputGain.disconnect();
     this.delayNode.disconnect();
     this.dampingFilter.disconnect();
     this.feedbackGain.disconnect();
     this.outputGain.disconnect();
+    this.triggerInput.disconnect();
+    this.triggerAnalyser.disconnect();
   }
 }

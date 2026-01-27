@@ -2580,7 +2580,7 @@ export const ETHEREAL_DRIFT_PATCH: Patch = {
         spray: 0.3,
         pitch: 1.0,
         position: 0.5,
-        freeze: true, // Start frozen for infinite texture
+        freeze: false, // Recording - click FREEZE to capture texture
         mix: 1.0,
         reverse: 0.2,
       },
@@ -2779,7 +2779,7 @@ export const ETHEREAL_DRIFT_PATCH: Patch = {
         spray: 0.6,
         pitch: 2.0, // Octave up
         position: 0.3,
-        freeze: true,
+        freeze: false, // Recording - will create sparkly texture
         mix: 1.0,
         reverse: 0.4,
       },

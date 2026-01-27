@@ -258,6 +258,10 @@ class AudioGraph {
         return false;
       }
       output.connect(modTarget);
+    } else if (toPort === 'trigger' && toNode instanceof SynthKarplusStrongNode) {
+      // Special handling for Karplus-Strong trigger input
+      const triggerInput = toNode.getTriggerInput();
+      output.connect(triggerInput);
     } else {
       // Check if this is a mixer channel input
       const mixerInputMatch = toPort.match(/^input([1-4])$/);
@@ -327,6 +331,10 @@ class AudioGraph {
       if (modTarget) {
         output.disconnect(modTarget);
       }
+    } else if (toPort === 'trigger' && toNode instanceof SynthKarplusStrongNode) {
+      // Special handling for Karplus-Strong trigger input
+      const triggerInput = toNode.getTriggerInput();
+      output.disconnect(triggerInput);
     } else {
       // Check if this is a mixer channel input
       const mixerInputMatch = toPort.match(/^input([1-4])$/);
