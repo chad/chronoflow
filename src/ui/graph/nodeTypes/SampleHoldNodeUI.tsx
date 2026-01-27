@@ -45,12 +45,24 @@ export const SampleHoldNodeUI = memo(({ id, data, selected }: NodeProps<SampleHo
         />
       </div>
 
+      {/* Trigger input */}
+      <ClickableHandle
+        type="target"
+        position={Position.Left}
+        id="trigger"
+        nodeId={id}
+        style={{ top: '30%' }}
+        className="!bg-pink-400 !w-3 !h-3"
+        title="Trigger (ext clock)"
+      />
+
       {/* Signal input */}
       <ClickableHandle
         type="target"
         position={Position.Left}
         id="input"
         nodeId={id}
+        style={{ top: '70%' }}
         className="!bg-lime-400 !w-3 !h-3"
         title="Signal In"
       />

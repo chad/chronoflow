@@ -24,6 +24,14 @@ export class SynthSampleHoldNode implements SynthNode {
   private currentValue: number = 0;
   private dataArray: Float32Array;
 
+  // External trigger detection
+  private triggerInput: GainNode;
+  private triggerAnalyser: AnalyserNode;
+  private triggerData: Float32Array;
+  private lastTriggerValue: number = 0;
+  private triggerCheckInterval: number | null = null;
+  private useExternalTrigger: boolean = false;
+
   constructor(context: AudioContext, id: string, params?: Partial<SampleHoldParams>) {
     this.context = context;
     this.id = id;
@@ -45,16 +53,71 @@ export class SynthSampleHoldNode implements SynthNode {
     // Connect input through analyser for sampling
     this.inputGain.connect(this.analyser);
 
+    // Set up external trigger detection
+    this.triggerInput = context.createGain();
+    this.triggerInput.gain.value = 1;
+    this.triggerAnalyser = context.createAnalyser();
+    this.triggerAnalyser.fftSize = 256;
+    this.triggerData = new Float32Array(this.triggerAnalyser.fftSize);
+    this.triggerInput.connect(this.triggerAnalyser);
+
     // Start internal clock
     this.startClock();
+    // Start trigger detection (will only sample if external trigger connected)
+    this.startTriggerDetection();
   }
 
   private startClock(): void {
     if (this.clockInterval !== null) {
       window.clearInterval(this.clockInterval);
     }
-    const intervalMs = (1 / this.params.rate) * 1000;
-    this.clockInterval = window.setInterval(() => this.sample(), intervalMs);
+    // Only use internal clock if no external trigger is connected
+    if (!this.useExternalTrigger) {
+      const intervalMs = (1 / this.params.rate) * 1000;
+      this.clockInterval = window.setInterval(() => this.sample(), intervalMs);
+    }
+  }
+
+  private startTriggerDetection(): void {
+    // Check for triggers at 120Hz (fast enough for musical timing)
+    this.triggerCheckInterval = window.setInterval(() => {
+      this.checkTrigger();
+    }, 8);
+  }
+
+  private checkTrigger(): void {
+    if (!this.useExternalTrigger) return;
+
+    this.triggerAnalyser.getFloatTimeDomainData(this.triggerData as Float32Array<ArrayBuffer>);
+    const currentValue = this.triggerData[0] || 0;
+
+    // Detect rising edge (crossing threshold from below)
+    const threshold = 0.1;
+    if (currentValue > threshold && this.lastTriggerValue <= threshold) {
+      this.sample();
+    }
+
+    this.lastTriggerValue = currentValue;
+  }
+
+  // Get trigger input node for external connections
+  getTriggerInput(): AudioNode {
+    return this.triggerInput;
+  }
+
+  // Enable external trigger mode (disables internal clock)
+  setExternalTrigger(enabled: boolean): void {
+    this.useExternalTrigger = enabled;
+    if (enabled) {
+      // Stop internal clock when using external trigger
+      if (this.clockInterval !== null) {
+        window.clearInterval(this.clockInterval);
+        this.clockInterval = null;
+      }
+    } else {
+      // Restart internal clock when not using external trigger
+      this.startClock();
+    }
   }
 
   private sample(): void {
@@ -128,10 +191,15 @@ export class SynthSampleHoldNode implements SynthNode {
     if (this.clockInterval !== null) {
       window.clearInterval(this.clockInterval);
     }
+    if (this.triggerCheckInterval !== null) {
+      window.clearInterval(this.triggerCheckInterval);
+    }
     this.constantSource.stop();
     this.constantSource.disconnect();
     this.inputGain.disconnect();
     this.analyser.disconnect();
     this.outputGain.disconnect();
+    this.triggerInput.disconnect();
+    this.triggerAnalyser.disconnect();
   }
 }
