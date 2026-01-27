@@ -467,6 +467,18 @@ class AudioGraph {
     });
   }
 
+  // Trigger external clock on all sequencers with extClock enabled
+  triggerExternalClock(): void {
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthSequencerNode) {
+        const params = node.getParams();
+        if (params.extClock) {
+          node.externalTrigger();
+        }
+      }
+    });
+  }
+
   // === LEGACY ADSR METHODS (for mono mode compatibility) ===
 
   triggerADSR(id: string, velocity: number = 1): void {

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { GraphCanvas } from './ui/graph/GraphCanvas';
 import { NodePalette } from './ui/panels/NodePalette';
 import { MidiPanel } from './ui/panels/MidiPanel';
+import { MidiClockPanel } from './ui/panels/MidiClockPanel';
 import { PatchManager } from './ui/panels/PatchManager';
 import { KeyboardInput } from './ui/panels/KeyboardInput';
 import { RecordingPanel } from './ui/panels/RecordingPanel';
@@ -99,6 +100,7 @@ function App() {
           <NodePalette />
           <RecordingPanel />
           <MidiPanel />
+          <MidiClockPanel />
           <KeyboardInput />
           <PatchManager />
         </aside>

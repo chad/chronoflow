@@ -1,6 +1,7 @@
 // MidiRouter - routes MIDI messages to synth parameters
 
 import { midiEngine } from './MidiEngine';
+import { midiClock } from './MidiClock';
 import { audioGraph } from '../audio/AudioGraph';
 import { usePatchStore } from '../patch/patchStore';
 
@@ -19,14 +20,36 @@ interface CCMapping {
 
 class MidiRouter {
   private unsubscribe: (() => void) | null = null;
+  private clockUnsubscribe: (() => void) | null = null;
   private currentNote: number | null = null;
   private ccMappings: CCMapping[] = [];
   private learningCallback: ((controller: number) => void) | null = null;
+  private clockPulseCount: number = 0;
 
   init(): void {
     this.unsubscribe = midiEngine.onMessage((event) => {
       this.handleMidiMessage(event);
     });
+
+    // Subscribe to MIDI clock pulses and forward to sequencers
+    this.clockUnsubscribe = midiClock.onClock(() => {
+      this.handleClockPulse();
+    });
+  }
+
+  private handleClockPulse(): void {
+    this.clockPulseCount++;
+
+    // Forward clock pulse to all sequencers with extClock enabled
+    // We trigger on every 6th pulse (4 pulses per 16th note at 24 PPQN)
+    // This gives us 16th note resolution which matches typical sequencer step rate
+    if (this.clockPulseCount % 6 === 0) {
+      audioGraph.triggerExternalClock();
+    }
+  }
+
+  resetClockPosition(): void {
+    this.clockPulseCount = 0;
   }
 
   private handleMidiMessage(event: MIDIMessageEvent): void {
@@ -131,6 +154,9 @@ class MidiRouter {
   destroy(): void {
     if (this.unsubscribe) {
       this.unsubscribe();
+    }
+    if (this.clockUnsubscribe) {
+      this.clockUnsubscribe();
     }
   }
 }

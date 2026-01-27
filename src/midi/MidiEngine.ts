@@ -138,6 +138,30 @@ class MidiEngine {
     this.send([0xb0 | (channel & 0x0f), controller & 0x7f, value & 0x7f]);
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // MIDI Clock Messages (System Real-Time)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Send timing clock pulse (24 pulses per quarter note)
+  sendClock(): void {
+    this.send([0xf8]);
+  }
+
+  // Send start message (start from beginning)
+  sendStart(): void {
+    this.send([0xfa]);
+  }
+
+  // Send continue message (resume from current position)
+  sendContinue(): void {
+    this.send([0xfb]);
+  }
+
+  // Send stop message
+  sendStop(): void {
+    this.send([0xfc]);
+  }
+
   // Subscribe to MIDI messages
   onMessage(callback: MidiMessageCallback): () => void {
     this.messageCallbacks.add(callback);
