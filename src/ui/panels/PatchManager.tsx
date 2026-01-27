@@ -14,6 +14,7 @@ import {
   POLYRHYTHM_PATCH,
   TRACKER_DEMO_PATCH,
   AMBIENT_GENERATIVE_PATCH,
+  PENTATONIC_DREAMS_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -43,6 +44,7 @@ export function PatchManager() {
       polyrhythm: POLYRHYTHM_PATCH,
       tracker: TRACKER_DEMO_PATCH,
       ambientgen: AMBIENT_GENERATIVE_PATCH,
+      pentatonic: PENTATONIC_DREAMS_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -203,6 +205,13 @@ export function PatchManager() {
             >
               Ambient Generative
               <span className="block text-indigo-200 text-[10px]">Probability + S&H + drone layers</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('pentatonic')}
+              className="bg-violet-600 hover:bg-violet-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Pentatonic Dreams
+              <span className="block text-violet-200 text-[10px]">Consonant, modal, lush reverb</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Modules</div>

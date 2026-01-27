@@ -1492,3 +1492,336 @@ export const AMBIENT_GENERATIVE_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// Pentatonic Dreams - Gentle, consonant ambient using C major pentatonic
+// No dissonance, pure timbres, lush reverb - Brian Eno inspired
+export const PENTATONIC_DREAMS_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Pentatonic Dreams',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // ═══════════════════════════════════════════════════════════════
+    // HIGH VOICE - Gentle melody in upper register
+    // C major pentatonic: C, D, E, G, A (no dissonance possible)
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'seq_high',
+      type: 'sequencer',
+      position: { x: 50, y: 20 },
+      params: {
+        bpm: 32, // Very slow, meditative
+        steps: 12,
+        gate: 0.9, // Long, overlapping notes
+        swing: 50,
+        // Pattern A: Ascending gesture, high probability on roots
+        patternA: 'C-5:80?85 --- E-5:70?60 --- G-5:85?90 --- --- A-5:75?50 --- ---',
+        // Pattern B: Descending response
+        patternB: 'G-5:75?80 --- E-5:70?65 --- D-5:80?70 --- C-5:85?85 --- --- ---',
+        // Pattern C: Octave jumps - very spacious
+        patternC: 'C-5:90?90 --- --- --- G-5:80?60 --- --- --- C-6:70?45 --- --- ---',
+        // Pattern D: Gentle movement around the 5th
+        patternD: 'G-5:85?85 --- A-5:70?55 --- G-5:80?80 --- E-5:75?65 --- D-5:70?50 ---',
+        chain: 'AABBCCDDAACCBBDD',
+        running: true,
+        extClock: false,
+      },
+    },
+    // High voice oscillator - pure sine for bell-like clarity
+    {
+      id: 'osc_high',
+      type: 'oscillator',
+      position: { x: 280, y: 20 },
+      params: { frequency: 523, detune: 0, waveform: 'sine' },
+    },
+    // Gentle filter for warmth
+    {
+      id: 'filter_high',
+      type: 'filter',
+      position: { x: 430, y: 20 },
+      params: { mode: 'lowpass', cutoff: 4000, resonance: 0.5 },
+    },
+    // VCA
+    {
+      id: 'vca_high',
+      type: 'vca',
+      position: { x: 580, y: 20 },
+      params: { gain: 0 },
+    },
+    // Soft, slow envelope
+    {
+      id: 'adsr_high',
+      type: 'adsr',
+      position: { x: 430, y: 130 },
+      params: { attack: 1.5, decay: 0.8, sustain: 0.6, release: 3.0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MID VOICE - Warm pad in middle register
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'seq_mid',
+      type: 'sequencer',
+      position: { x: 50, y: 250 },
+      params: {
+        bpm: 32,
+        steps: 8,
+        gate: 0.95,
+        swing: 50,
+        // Slower harmonic movement - mostly 5ths and octaves
+        patternA: 'C-4:90?90 --- --- --- G-4:80?75 --- --- ---',
+        patternB: 'G-4:85?85 --- --- --- E-4:75?70 --- --- ---',
+        patternC: 'A-4:80?80 --- --- --- E-4:85?85 --- --- ---',
+        patternD: 'D-4:85?80 --- --- --- G-4:80?75 --- --- ---',
+        chain: 'AAAABBBBCCCCDDDDAAAABBBB',
+        running: true,
+        extClock: false,
+      },
+    },
+    // Mid voice - triangle for warmth
+    {
+      id: 'osc_mid1',
+      type: 'oscillator',
+      position: { x: 280, y: 250 },
+      params: { frequency: 262, detune: 0, waveform: 'triangle' },
+    },
+    // Second oscillator - slightly detuned for chorus
+    {
+      id: 'osc_mid2',
+      type: 'oscillator',
+      position: { x: 280, y: 350 },
+      params: { frequency: 262, detune: 6, waveform: 'sine' },
+    },
+    // Mixer for mid oscillators
+    {
+      id: 'mixer_mid',
+      type: 'mixer',
+      position: { x: 430, y: 280 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
+    },
+    // Warm filter
+    {
+      id: 'filter_mid',
+      type: 'filter',
+      position: { x: 580, y: 280 },
+      params: { mode: 'lowpass', cutoff: 1800, resonance: 1 },
+    },
+    // VCA
+    {
+      id: 'vca_mid',
+      type: 'vca',
+      position: { x: 730, y: 280 },
+      params: { gain: 0 },
+    },
+    // Very slow, pad-like envelope
+    {
+      id: 'adsr_mid',
+      type: 'adsr',
+      position: { x: 580, y: 400 },
+      params: { attack: 2.0, decay: 1.0, sustain: 0.7, release: 4.0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // GENERATIVE VOICE - S&H quantized to pentatonic
+    // ═══════════════════════════════════════════════════════════════
+    // Pink noise for smooth random
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 500 },
+      params: { type: 'pink', level: 0.6 },
+    },
+    // Very slow S&H with heavy smoothing
+    {
+      id: 'sh1',
+      type: 'samplehold',
+      position: { x: 180, y: 500 },
+      params: { rate: 0.15, smooth: 0.85 }, // Glacial, very smooth
+    },
+    // Quantizer to pentatonic - always consonant
+    {
+      id: 'quant1',
+      type: 'quantizer',
+      position: { x: 310, y: 500 },
+      params: { scale: 'pentatonic', root: 0, octaves: 2 }, // C pentatonic
+    },
+    // Generative oscillator - pure sine
+    {
+      id: 'osc_gen',
+      type: 'oscillator',
+      position: { x: 460, y: 500 },
+      params: { frequency: 440, detune: 0, waveform: 'sine' },
+    },
+    // Gentle filter
+    {
+      id: 'filter_gen',
+      type: 'filter',
+      position: { x: 610, y: 500 },
+      params: { mode: 'lowpass', cutoff: 2500, resonance: 0.8 },
+    },
+    // VCA with constant level + LFO swell
+    {
+      id: 'vca_gen',
+      type: 'vca',
+      position: { x: 760, y: 500 },
+      params: { gain: 0.2 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // DRONE - Sustained fifth (C + G) for harmonic foundation
+    // ═══════════════════════════════════════════════════════════════
+    // Root drone - C2
+    {
+      id: 'osc_drone_root',
+      type: 'oscillator',
+      position: { x: 50, y: 650 },
+      params: { frequency: 65.41, detune: 0, waveform: 'sine' }, // C2
+    },
+    // Fifth drone - G2
+    {
+      id: 'osc_drone_fifth',
+      type: 'oscillator',
+      position: { x: 50, y: 750 },
+      params: { frequency: 98.0, detune: 0, waveform: 'sine' }, // G2
+    },
+    // Drone mixer
+    {
+      id: 'mixer_drone',
+      type: 'mixer',
+      position: { x: 200, y: 680 },
+      params: { level1: 0.5, level2: 0.35, level3: 0, level4: 0, master: 1 },
+    },
+    // Very dark filter for sub-bass warmth
+    {
+      id: 'filter_drone',
+      type: 'filter',
+      position: { x: 350, y: 680 },
+      params: { mode: 'lowpass', cutoff: 300, resonance: 1.5 },
+    },
+    // Drone VCA
+    {
+      id: 'vca_drone',
+      type: 'vca',
+      position: { x: 500, y: 680 },
+      params: { gain: 0.18 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODULATION - Gentle, slow LFOs
+    // ═══════════════════════════════════════════════════════════════
+    // LFO 1 - Filter for high voice (very subtle)
+    {
+      id: 'lfo1',
+      type: 'lfo',
+      position: { x: 280, y: 130 },
+      params: { rate: 0.06, depth: 400, waveform: 'sine' },
+    },
+    // LFO 2 - Filter for mid voice
+    {
+      id: 'lfo2',
+      type: 'lfo',
+      position: { x: 430, y: 400 },
+      params: { rate: 0.04, depth: 300, waveform: 'sine' },
+    },
+    // LFO 3 - Gen voice amplitude swell
+    {
+      id: 'lfo3',
+      type: 'lfo',
+      position: { x: 610, y: 620 },
+      params: { rate: 0.08, depth: 0.12, waveform: 'sine' },
+    },
+    // LFO 4 - Drone filter breathing
+    {
+      id: 'lfo4',
+      type: 'lfo',
+      position: { x: 200, y: 780 },
+      params: { rate: 0.025, depth: 100, waveform: 'sine' },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MIX & EFFECTS - Lush, spacious
+    // ═══════════════════════════════════════════════════════════════
+    // Main mixer
+    {
+      id: 'mixer_main',
+      type: 'mixer',
+      position: { x: 900, y: 300 },
+      params: { level1: 0.6, level2: 0.7, level3: 0.5, level4: 0.6, master: 1 },
+    },
+    // Long, diffuse delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 1050, y: 240 },
+      params: { time: 0.9, feedback: 0.5, mix: 0.35 },
+    },
+    // Second delay - golden ratio timing
+    {
+      id: 'delay2',
+      type: 'delay',
+      position: { x: 1050, y: 360 },
+      params: { time: 1.45, feedback: 0.4, mix: 0.3 },
+    },
+    // Large, lush reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 1200, y: 300 },
+      params: { decay: 8, mix: 0.6 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 1350, y: 300 },
+      params: { gain: 0.45 },
+    },
+  ],
+  connections: [
+    // ═══ HIGH VOICE ═══
+    { id: 'h1', from: { nodeId: 'seq_high', port: 'output' }, to: { nodeId: 'adsr_high', port: 'trigger' } },
+    { id: 'h2', from: { nodeId: 'osc_high', port: 'output' }, to: { nodeId: 'filter_high', port: 'input' } },
+    { id: 'h3', from: { nodeId: 'filter_high', port: 'output' }, to: { nodeId: 'vca_high', port: 'input' } },
+    { id: 'h4', from: { nodeId: 'adsr_high', port: 'output' }, to: { nodeId: 'vca_high', port: 'gain_mod' } },
+    { id: 'h5', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'filter_high', port: 'cutoff_mod' } },
+
+    // ═══ MID VOICE ═══
+    { id: 'm1', from: { nodeId: 'seq_mid', port: 'output' }, to: { nodeId: 'adsr_mid', port: 'trigger' } },
+    { id: 'm2', from: { nodeId: 'osc_mid1', port: 'output' }, to: { nodeId: 'mixer_mid', port: 'input1' } },
+    { id: 'm3', from: { nodeId: 'osc_mid2', port: 'output' }, to: { nodeId: 'mixer_mid', port: 'input2' } },
+    { id: 'm4', from: { nodeId: 'mixer_mid', port: 'output' }, to: { nodeId: 'filter_mid', port: 'input' } },
+    { id: 'm5', from: { nodeId: 'filter_mid', port: 'output' }, to: { nodeId: 'vca_mid', port: 'input' } },
+    { id: 'm6', from: { nodeId: 'adsr_mid', port: 'output' }, to: { nodeId: 'vca_mid', port: 'gain_mod' } },
+    { id: 'm7', from: { nodeId: 'lfo2', port: 'output' }, to: { nodeId: 'filter_mid', port: 'cutoff_mod' } },
+
+    // ═══ GENERATIVE VOICE ═══
+    { id: 'g1', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'sh1', port: 'input' } },
+    { id: 'g2', from: { nodeId: 'sh1', port: 'output' }, to: { nodeId: 'quant1', port: 'input' } },
+    { id: 'g3', from: { nodeId: 'quant1', port: 'output' }, to: { nodeId: 'osc_gen', port: 'freq_mod' } },
+    { id: 'g4', from: { nodeId: 'osc_gen', port: 'output' }, to: { nodeId: 'filter_gen', port: 'input' } },
+    { id: 'g5', from: { nodeId: 'filter_gen', port: 'output' }, to: { nodeId: 'vca_gen', port: 'input' } },
+    { id: 'g6', from: { nodeId: 'lfo3', port: 'output' }, to: { nodeId: 'vca_gen', port: 'gain_mod' } },
+
+    // ═══ DRONE ═══
+    { id: 'd1', from: { nodeId: 'osc_drone_root', port: 'output' }, to: { nodeId: 'mixer_drone', port: 'input1' } },
+    { id: 'd2', from: { nodeId: 'osc_drone_fifth', port: 'output' }, to: { nodeId: 'mixer_drone', port: 'input2' } },
+    { id: 'd3', from: { nodeId: 'mixer_drone', port: 'output' }, to: { nodeId: 'filter_drone', port: 'input' } },
+    { id: 'd4', from: { nodeId: 'filter_drone', port: 'output' }, to: { nodeId: 'vca_drone', port: 'input' } },
+    { id: 'd5', from: { nodeId: 'lfo4', port: 'output' }, to: { nodeId: 'filter_drone', port: 'cutoff_mod' } },
+
+    // ═══ ALL VOICES -> MAIN MIXER ═══
+    { id: 'x1', from: { nodeId: 'vca_high', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input1' } },
+    { id: 'x2', from: { nodeId: 'vca_mid', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input2' } },
+    { id: 'x3', from: { nodeId: 'vca_gen', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input3' } },
+    { id: 'x4', from: { nodeId: 'vca_drone', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input4' } },
+
+    // ═══ EFFECTS -> OUTPUT ═══
+    { id: 'e1', from: { nodeId: 'mixer_main', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'e2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+    { id: 'e3', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'e4', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
