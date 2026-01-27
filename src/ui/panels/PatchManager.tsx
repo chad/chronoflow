@@ -205,8 +205,8 @@ export function PatchManager() {
               onClick={() => loadSamplePatch('midnight')}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
             >
-              Midnight Drive
-              <span className="block text-purple-200 text-[10px]">Epic groove - bass, lead, arp, pad</span>
+              Midnight Machine
+              <span className="block text-purple-200 text-[10px]">Generative groove - S&H melodies, driving bass</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">Generative</div>

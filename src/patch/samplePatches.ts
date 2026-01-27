@@ -2171,361 +2171,369 @@ export const CRYSTAL_BELLS_PATCH: Patch = {
 // MIDNIGHT DRIVE - Epic head-bobbing groove
 // Dark, driving electronic track with layered synths and punchy bass
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MIDNIGHT MACHINE - Epic generative groove
+// Driving bass, generative melodies, evolving textures
+// ═══════════════════════════════════════════════════════════════════════════
 export const MIDNIGHT_DRIVE_PATCH: Patch = {
   version: '1.0',
   meta: {
-    name: 'Midnight Drive',
+    name: 'Midnight Machine',
     created: new Date().toISOString(),
     modified: new Date().toISOString(),
   },
   nodes: [
     // ═══════════════════════════════════════════════════════════════
-    // BASS VOICE - Punchy, driving foundation (E minor)
+    // BASS - Driving foundation with probability hits
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'seq_bass',
       type: 'sequencer',
-      position: { x: 50, y: 100 },
+      position: { x: 50, y: 50 },
       params: {
-        bpm: 126,
+        bpm: 124,
         steps: 16,
         gate: 0.4,
-        pattern: 'E-2:127 --- E-2:80 --- G-2:100 --- E-2:90 --- E-2:127 --- G-2:70 A-2:110 G-2:90 --- E-2:100 ---',
-        swing: 8,
+        swing: 55,
+        patternA: 'E-2:127 --- E-2:80?70 --- G-2:100 --- E-2:90?60 --- E-2:127 --- G-2:70?50 A-2:110 G-2:90?65 --- E-2:100 ---',
+        patternB: 'E-2:127 --- --- E-2:90 G-2:100?70 --- A-2:110 --- E-2:127 A-2:80?55 G-2:95 --- E-2:100 --- G-2:85?60 ---',
+        chain: 'AABBABBA',
         running: true,
         extClock: false,
-        currentPattern: 0,
-        chainMode: 'off',
       },
     },
     {
       id: 'osc_bass1',
       type: 'oscillator',
-      position: { x: 200, y: 50 },
+      position: { x: 220, y: 20 },
       params: { frequency: 82.41, detune: 0, waveform: 'sawtooth' },
     },
     {
       id: 'osc_bass2',
       type: 'oscillator',
-      position: { x: 200, y: 150 },
+      position: { x: 220, y: 100 },
       params: { frequency: 82.41, detune: 7, waveform: 'square' },
     },
     {
       id: 'mixer_bass',
       type: 'mixer',
-      position: { x: 350, y: 100 },
-      params: { level1: 0.7, level2: 0.4, level3: 0, level4: 0, master: 1 },
+      position: { x: 370, y: 50 },
+      params: { level1: 0.7, level2: 0.3, level3: 0, level4: 0, master: 1 },
     },
     {
       id: 'filter_bass',
       type: 'filter',
-      position: { x: 500, y: 100 },
-      params: { mode: 'lowpass', cutoff: 400, resonance: 4 },
+      position: { x: 520, y: 50 },
+      params: { mode: 'lowpass', cutoff: 350, resonance: 5 },
     },
     {
       id: 'adsr_bass',
       type: 'adsr',
-      position: { x: 350, y: 220 },
-      params: { attack: 0.005, decay: 0.15, sustain: 0.5, release: 0.1 },
+      position: { x: 370, y: 160 },
+      params: { attack: 0.003, decay: 0.12, sustain: 0.4, release: 0.08 },
     },
     {
-      id: 'adsr_bass_filter',
+      id: 'adsr_bass_filt',
       type: 'adsr',
-      position: { x: 500, y: 220 },
-      params: { attack: 0.001, decay: 0.2, sustain: 0.2, release: 0.15 },
+      position: { x: 520, y: 160 },
+      params: { attack: 0.001, decay: 0.18, sustain: 0.15, release: 0.1 },
     },
     {
       id: 'vca_bass',
       type: 'vca',
-      position: { x: 650, y: 100 },
+      position: { x: 670, y: 50 },
       params: { gain: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // LEAD VOICE - Catchy melodic hook with pattern chaining
+    // GENERATIVE LEAD - Noise → S&H → Quantizer → Oscillator
     // ═══════════════════════════════════════════════════════════════
     {
-      id: 'seq_lead',
-      type: 'sequencer',
-      position: { x: 50, y: 380 },
-      params: {
-        bpm: 126,
-        steps: 16,
-        gate: 0.6,
-        // Pattern A: Main hook
-        pattern: 'B-4:100 --- E-5:110 --- D-5:90 --- B-4:80 --- G-4:100?70 --- A-4:95 --- B-4:110 ---',
-        // Pattern B stored for chaining
-        patternB: 'E-5:110 --- D-5:100 --- B-4:90 --- A-4:85 --- G-4:100 --- E-4:90 G-4:95 A-4:100',
-        // Pattern C: Variation
-        patternC: 'B-4:100 D-5:90?60 E-5:110 --- --- G-4:80 A-4:90 B-4:100 --- E-5:120 --- D-5:95 --- B-4:85 ---',
-        // Pattern D: Build up
-        patternD: 'E-5:127 E-5:100 E-5:80 E-5:60 D-5:127 D-5:100 D-5:80 D-5:60 B-4:127 B-4:100 B-4:80 B-4:60 G-4:127 A-4:110 B-4:120 E-5:127',
-        swing: 5,
-        running: true,
-        extClock: false,
-        currentPattern: 0,
-        chainMode: 'loop',
-        chainSequence: 'AABBCCDD',
-      },
+      id: 'clock_lead',
+      type: 'clock',
+      position: { x: 50, y: 280 },
+      params: { bpm: 124, division: 4, swing: 55 },
+    },
+    {
+      id: 'noise_lead',
+      type: 'noise',
+      position: { x: 50, y: 360 },
+      params: { type: 'white', level: 1 },
+    },
+    {
+      id: 'sh_lead',
+      type: 'samplehold',
+      position: { x: 180, y: 320 },
+      params: { rate: 2, smooth: 0.15 },
+    },
+    {
+      id: 'quant_lead',
+      type: 'quantizer',
+      position: { x: 310, y: 320 },
+      params: { scale: 'minor', root: 4, octaves: 2 },
     },
     {
       id: 'osc_lead1',
       type: 'oscillator',
-      position: { x: 200, y: 330 },
-      params: { frequency: 493.88, detune: 5, waveform: 'sawtooth' },
+      position: { x: 460, y: 280 },
+      params: { frequency: 330, detune: 5, waveform: 'sawtooth' },
     },
     {
       id: 'osc_lead2',
       type: 'oscillator',
-      position: { x: 200, y: 430 },
-      params: { frequency: 493.88, detune: -5, waveform: 'sawtooth' },
+      position: { x: 460, y: 370 },
+      params: { frequency: 330, detune: -5, waveform: 'sawtooth' },
     },
     {
       id: 'mixer_lead',
       type: 'mixer',
-      position: { x: 350, y: 380 },
-      params: { level1: 0.6, level2: 0.6, level3: 0, level4: 0, master: 1 },
+      position: { x: 610, y: 320 },
+      params: { level1: 0.5, level2: 0.5, level3: 0, level4: 0, master: 1 },
     },
     {
       id: 'filter_lead',
       type: 'filter',
-      position: { x: 500, y: 380 },
-      params: { mode: 'lowpass', cutoff: 2500, resonance: 3 },
+      position: { x: 760, y: 320 },
+      params: { mode: 'lowpass', cutoff: 2000, resonance: 4 },
     },
     {
       id: 'adsr_lead',
       type: 'adsr',
-      position: { x: 350, y: 500 },
-      params: { attack: 0.01, decay: 0.25, sustain: 0.4, release: 0.3 },
+      position: { x: 610, y: 440 },
+      params: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.25 },
     },
     {
-      id: 'adsr_lead_filter',
+      id: 'adsr_lead_filt',
       type: 'adsr',
-      position: { x: 500, y: 500 },
-      params: { attack: 0.01, decay: 0.3, sustain: 0.3, release: 0.2 },
+      position: { x: 760, y: 440 },
+      params: { attack: 0.005, decay: 0.25, sustain: 0.2, release: 0.15 },
     },
     {
       id: 'vca_lead',
       type: 'vca',
-      position: { x: 650, y: 380 },
+      position: { x: 910, y: 320 },
       params: { gain: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // ARP VOICE - Fast rhythmic movement (16th notes)
+    // GENERATIVE ARP - Fast S&H for rhythmic movement
     // ═══════════════════════════════════════════════════════════════
     {
-      id: 'seq_arp',
-      type: 'sequencer',
-      position: { x: 50, y: 660 },
-      params: {
-        bpm: 252, // Double time for 16th notes
-        steps: 16,
-        gate: 0.3,
-        pattern: 'E-4:60 G-4:50 B-4:70 E-5:80 B-4:60 G-4:50 E-4:40 G-4:50 B-4:70 E-5:90 G-5:100 E-5:80 B-4:60 G-4:50 E-4:40 B-3:30',
-        patternB: 'G-4:60 B-4:50 D-5:70 G-5:80 D-5:60 B-4:50 G-4:40 B-4:50 D-5:70 G-5:90 B-5:100 G-5:80 D-5:60 B-4:50 G-4:40 D-4:30',
-        swing: 0,
-        running: true,
-        extClock: false,
-        currentPattern: 0,
-        chainMode: 'loop',
-        chainSequence: 'AAAABBBB',
-      },
+      id: 'clock_arp',
+      type: 'clock',
+      position: { x: 50, y: 550 },
+      params: { bpm: 124, division: 16, swing: 0 },
+    },
+    {
+      id: 'noise_arp',
+      type: 'noise',
+      position: { x: 50, y: 630 },
+      params: { type: 'white', level: 1 },
+    },
+    {
+      id: 'sh_arp',
+      type: 'samplehold',
+      position: { x: 180, y: 590 },
+      params: { rate: 8, smooth: 0 },
+    },
+    {
+      id: 'quant_arp',
+      type: 'quantizer',
+      position: { x: 310, y: 590 },
+      params: { scale: 'minor_pent', root: 4, octaves: 3 },
     },
     {
       id: 'osc_arp',
       type: 'oscillator',
-      position: { x: 200, y: 660 },
-      params: { frequency: 329.63, detune: 0, waveform: 'square' },
+      position: { x: 460, y: 590 },
+      params: { frequency: 660, detune: 0, waveform: 'square' },
     },
     {
       id: 'filter_arp',
       type: 'filter',
-      position: { x: 350, y: 660 },
-      params: { mode: 'lowpass', cutoff: 3000, resonance: 6 },
+      position: { x: 610, y: 590 },
+      params: { mode: 'lowpass', cutoff: 3500, resonance: 6 },
     },
     {
       id: 'adsr_arp',
       type: 'adsr',
-      position: { x: 350, y: 780 },
-      params: { attack: 0.001, decay: 0.08, sustain: 0.1, release: 0.05 },
+      position: { x: 460, y: 710 },
+      params: { attack: 0.001, decay: 0.06, sustain: 0.1, release: 0.04 },
     },
     {
       id: 'vca_arp',
       type: 'vca',
-      position: { x: 500, y: 660 },
+      position: { x: 760, y: 590 },
       params: { gain: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // PAD VOICE - Atmospheric wash for depth
+    // PAD - Slow evolving drone via generative
     // ═══════════════════════════════════════════════════════════════
     {
-      id: 'seq_pad',
-      type: 'sequencer',
-      position: { x: 50, y: 940 },
-      params: {
-        bpm: 15.75, // Very slow - one note every 4 bars
-        steps: 4,
-        gate: 0.95,
-        pattern: 'E-3 G-3 B-3 E-3',
-        swing: 0,
-        running: true,
-        extClock: false,
-      },
+      id: 'noise_pad',
+      type: 'noise',
+      position: { x: 50, y: 820 },
+      params: { type: 'pink', level: 0.8 },
+    },
+    {
+      id: 'sh_pad',
+      type: 'samplehold',
+      position: { x: 180, y: 820 },
+      params: { rate: 0.1, smooth: 0.9 },
+    },
+    {
+      id: 'quant_pad',
+      type: 'quantizer',
+      position: { x: 310, y: 820 },
+      params: { scale: 'minor', root: 4, octaves: 1 },
     },
     {
       id: 'osc_pad1',
       type: 'oscillator',
-      position: { x: 200, y: 890 },
-      params: { frequency: 164.81, detune: 3, waveform: 'sine' },
+      position: { x: 460, y: 780 },
+      params: { frequency: 165, detune: 3, waveform: 'sine' },
     },
     {
       id: 'osc_pad2',
       type: 'oscillator',
-      position: { x: 200, y: 990 },
-      params: { frequency: 164.81, detune: -3, waveform: 'sine' },
+      position: { x: 460, y: 860 },
+      params: { frequency: 165, detune: -3, waveform: 'triangle' },
     },
     {
       id: 'mixer_pad',
       type: 'mixer',
-      position: { x: 350, y: 940 },
-      params: { level1: 0.5, level2: 0.5, level3: 0, level4: 0, master: 1 },
+      position: { x: 610, y: 820 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
     },
     {
       id: 'filter_pad',
       type: 'filter',
-      position: { x: 500, y: 940 },
-      params: { mode: 'lowpass', cutoff: 800, resonance: 1 },
-    },
-    {
-      id: 'adsr_pad',
-      type: 'adsr',
-      position: { x: 500, y: 1060 },
-      params: { attack: 1.5, decay: 0.5, sustain: 0.7, release: 2.0 },
+      position: { x: 760, y: 820 },
+      params: { mode: 'lowpass', cutoff: 600, resonance: 1 },
     },
     {
       id: 'vca_pad',
       type: 'vca',
-      position: { x: 650, y: 940 },
-      params: { gain: 0 },
+      position: { x: 910, y: 820 },
+      params: { gain: 0.35 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // MODULATION - LFOs for movement
+    // MODULATION
     // ═══════════════════════════════════════════════════════════════
-    // LFO for lead filter wobble
     {
       id: 'lfo_lead',
       type: 'lfo',
-      position: { x: 650, y: 500 },
-      params: { rate: 0.25, depth: 800, waveform: 'sine' },
+      position: { x: 910, y: 440 },
+      params: { rate: 0.2, depth: 600, waveform: 'sine' },
     },
-    // LFO for arp filter sweep
     {
       id: 'lfo_arp',
       type: 'lfo',
-      position: { x: 500, y: 780 },
-      params: { rate: 0.125, depth: 1500, waveform: 'triangle' },
+      position: { x: 610, y: 710 },
+      params: { rate: 0.08, depth: 2000, waveform: 'triangle' },
     },
-    // LFO for pad filter gentle movement
     {
       id: 'lfo_pad',
       type: 'lfo',
-      position: { x: 650, y: 1060 },
-      params: { rate: 0.05, depth: 300, waveform: 'sine' },
+      position: { x: 760, y: 930 },
+      params: { rate: 0.04, depth: 200, waveform: 'sine' },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // MIX BUS & EFFECTS
+    // MIX & EFFECTS
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'mixer_main',
       type: 'mixer',
-      position: { x: 800, y: 400 },
-      params: { level1: 0.9, level2: 0.55, level3: 0.35, level4: 0.5, master: 1 },
+      position: { x: 1060, y: 400 },
+      params: { level1: 0.85, level2: 0.5, level3: 0.3, level4: 0.45, master: 1 },
     },
-    // Slapback delay for groove
     {
       id: 'delay1',
       type: 'delay',
-      position: { x: 950, y: 340 },
-      params: { time: 0.238, feedback: 0.35, mix: 0.25 }, // Dotted 8th at 126 BPM
+      position: { x: 1210, y: 340 },
+      params: { time: 0.242, feedback: 0.4, mix: 0.3 },
     },
-    // Ping-pong style second delay
     {
       id: 'delay2',
       type: 'delay',
-      position: { x: 950, y: 460 },
-      params: { time: 0.476, feedback: 0.3, mix: 0.2 }, // Quarter note
+      position: { x: 1210, y: 460 },
+      params: { time: 0.484, feedback: 0.3, mix: 0.2 },
     },
-    // Room reverb for glue
     {
       id: 'reverb1',
       type: 'reverb',
-      position: { x: 1100, y: 400 },
-      params: { decay: 1.8, mix: 0.25 },
+      position: { x: 1360, y: 400 },
+      params: { decay: 2.2, mix: 0.3 },
     },
-    // Output
     {
       id: 'output',
       type: 'output',
-      position: { x: 1250, y: 400 },
-      params: { gain: 0.6 },
+      position: { x: 1510, y: 400 },
+      params: { gain: 0.55 },
     },
   ],
   connections: [
-    // ═══ BASS VOICE ═══
+    // ═══ BASS ═══
     { id: 'b1', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'osc_bass1', port: 'freq_mod' } },
     { id: 'b2', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'osc_bass2', port: 'freq_mod' } },
     { id: 'b3', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'adsr_bass', port: 'trigger' } },
-    { id: 'b4', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'adsr_bass_filter', port: 'trigger' } },
+    { id: 'b4', from: { nodeId: 'seq_bass', port: 'output' }, to: { nodeId: 'adsr_bass_filt', port: 'trigger' } },
     { id: 'b5', from: { nodeId: 'osc_bass1', port: 'output' }, to: { nodeId: 'mixer_bass', port: 'input1' } },
     { id: 'b6', from: { nodeId: 'osc_bass2', port: 'output' }, to: { nodeId: 'mixer_bass', port: 'input2' } },
     { id: 'b7', from: { nodeId: 'mixer_bass', port: 'output' }, to: { nodeId: 'filter_bass', port: 'input' } },
-    { id: 'b8', from: { nodeId: 'adsr_bass_filter', port: 'output' }, to: { nodeId: 'filter_bass', port: 'cutoff_mod' } },
+    { id: 'b8', from: { nodeId: 'adsr_bass_filt', port: 'output' }, to: { nodeId: 'filter_bass', port: 'cutoff_mod' } },
     { id: 'b9', from: { nodeId: 'filter_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'input' } },
     { id: 'b10', from: { nodeId: 'adsr_bass', port: 'output' }, to: { nodeId: 'vca_bass', port: 'gain_mod' } },
 
-    // ═══ LEAD VOICE ═══
-    { id: 'l1', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'osc_lead1', port: 'freq_mod' } },
-    { id: 'l2', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'osc_lead2', port: 'freq_mod' } },
-    { id: 'l3', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'adsr_lead', port: 'trigger' } },
-    { id: 'l4', from: { nodeId: 'seq_lead', port: 'output' }, to: { nodeId: 'adsr_lead_filter', port: 'trigger' } },
-    { id: 'l5', from: { nodeId: 'osc_lead1', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input1' } },
-    { id: 'l6', from: { nodeId: 'osc_lead2', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input2' } },
-    { id: 'l7', from: { nodeId: 'mixer_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'input' } },
-    { id: 'l8', from: { nodeId: 'adsr_lead_filter', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
-    { id: 'l9', from: { nodeId: 'lfo_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
-    { id: 'l10', from: { nodeId: 'filter_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'input' } },
-    { id: 'l11', from: { nodeId: 'adsr_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'gain_mod' } },
+    // ═══ GENERATIVE LEAD ═══
+    { id: 'gl1', from: { nodeId: 'clock_lead', port: 'output' }, to: { nodeId: 'sh_lead', port: 'trigger' } },
+    { id: 'gl2', from: { nodeId: 'clock_lead', port: 'output' }, to: { nodeId: 'adsr_lead', port: 'trigger' } },
+    { id: 'gl3', from: { nodeId: 'clock_lead', port: 'output' }, to: { nodeId: 'adsr_lead_filt', port: 'trigger' } },
+    { id: 'gl4', from: { nodeId: 'noise_lead', port: 'output' }, to: { nodeId: 'sh_lead', port: 'input' } },
+    { id: 'gl5', from: { nodeId: 'sh_lead', port: 'output' }, to: { nodeId: 'quant_lead', port: 'input' } },
+    { id: 'gl6', from: { nodeId: 'quant_lead', port: 'output' }, to: { nodeId: 'osc_lead1', port: 'freq_mod' } },
+    { id: 'gl7', from: { nodeId: 'quant_lead', port: 'output' }, to: { nodeId: 'osc_lead2', port: 'freq_mod' } },
+    { id: 'gl8', from: { nodeId: 'osc_lead1', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input1' } },
+    { id: 'gl9', from: { nodeId: 'osc_lead2', port: 'output' }, to: { nodeId: 'mixer_lead', port: 'input2' } },
+    { id: 'gl10', from: { nodeId: 'mixer_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'input' } },
+    { id: 'gl11', from: { nodeId: 'adsr_lead_filt', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
+    { id: 'gl12', from: { nodeId: 'lfo_lead', port: 'output' }, to: { nodeId: 'filter_lead', port: 'cutoff_mod' } },
+    { id: 'gl13', from: { nodeId: 'filter_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'input' } },
+    { id: 'gl14', from: { nodeId: 'adsr_lead', port: 'output' }, to: { nodeId: 'vca_lead', port: 'gain_mod' } },
 
-    // ═══ ARP VOICE ═══
-    { id: 'a1', from: { nodeId: 'seq_arp', port: 'output' }, to: { nodeId: 'osc_arp', port: 'freq_mod' } },
-    { id: 'a2', from: { nodeId: 'seq_arp', port: 'output' }, to: { nodeId: 'adsr_arp', port: 'trigger' } },
-    { id: 'a3', from: { nodeId: 'osc_arp', port: 'output' }, to: { nodeId: 'filter_arp', port: 'input' } },
-    { id: 'a4', from: { nodeId: 'lfo_arp', port: 'output' }, to: { nodeId: 'filter_arp', port: 'cutoff_mod' } },
-    { id: 'a5', from: { nodeId: 'filter_arp', port: 'output' }, to: { nodeId: 'vca_arp', port: 'input' } },
-    { id: 'a6', from: { nodeId: 'adsr_arp', port: 'output' }, to: { nodeId: 'vca_arp', port: 'gain_mod' } },
+    // ═══ GENERATIVE ARP ═══
+    { id: 'ga1', from: { nodeId: 'clock_arp', port: 'output' }, to: { nodeId: 'sh_arp', port: 'trigger' } },
+    { id: 'ga2', from: { nodeId: 'clock_arp', port: 'output' }, to: { nodeId: 'adsr_arp', port: 'trigger' } },
+    { id: 'ga3', from: { nodeId: 'noise_arp', port: 'output' }, to: { nodeId: 'sh_arp', port: 'input' } },
+    { id: 'ga4', from: { nodeId: 'sh_arp', port: 'output' }, to: { nodeId: 'quant_arp', port: 'input' } },
+    { id: 'ga5', from: { nodeId: 'quant_arp', port: 'output' }, to: { nodeId: 'osc_arp', port: 'freq_mod' } },
+    { id: 'ga6', from: { nodeId: 'osc_arp', port: 'output' }, to: { nodeId: 'filter_arp', port: 'input' } },
+    { id: 'ga7', from: { nodeId: 'lfo_arp', port: 'output' }, to: { nodeId: 'filter_arp', port: 'cutoff_mod' } },
+    { id: 'ga8', from: { nodeId: 'filter_arp', port: 'output' }, to: { nodeId: 'vca_arp', port: 'input' } },
+    { id: 'ga9', from: { nodeId: 'adsr_arp', port: 'output' }, to: { nodeId: 'vca_arp', port: 'gain_mod' } },
 
-    // ═══ PAD VOICE ═══
-    { id: 'p1', from: { nodeId: 'seq_pad', port: 'output' }, to: { nodeId: 'osc_pad1', port: 'freq_mod' } },
-    { id: 'p2', from: { nodeId: 'seq_pad', port: 'output' }, to: { nodeId: 'osc_pad2', port: 'freq_mod' } },
-    { id: 'p3', from: { nodeId: 'seq_pad', port: 'output' }, to: { nodeId: 'adsr_pad', port: 'trigger' } },
-    { id: 'p4', from: { nodeId: 'osc_pad1', port: 'output' }, to: { nodeId: 'mixer_pad', port: 'input1' } },
-    { id: 'p5', from: { nodeId: 'osc_pad2', port: 'output' }, to: { nodeId: 'mixer_pad', port: 'input2' } },
-    { id: 'p6', from: { nodeId: 'mixer_pad', port: 'output' }, to: { nodeId: 'filter_pad', port: 'input' } },
-    { id: 'p7', from: { nodeId: 'lfo_pad', port: 'output' }, to: { nodeId: 'filter_pad', port: 'cutoff_mod' } },
-    { id: 'p8', from: { nodeId: 'filter_pad', port: 'output' }, to: { nodeId: 'vca_pad', port: 'input' } },
-    { id: 'p9', from: { nodeId: 'adsr_pad', port: 'output' }, to: { nodeId: 'vca_pad', port: 'gain_mod' } },
+    // ═══ GENERATIVE PAD ═══
+    { id: 'gp1', from: { nodeId: 'noise_pad', port: 'output' }, to: { nodeId: 'sh_pad', port: 'input' } },
+    { id: 'gp2', from: { nodeId: 'sh_pad', port: 'output' }, to: { nodeId: 'quant_pad', port: 'input' } },
+    { id: 'gp3', from: { nodeId: 'quant_pad', port: 'output' }, to: { nodeId: 'osc_pad1', port: 'freq_mod' } },
+    { id: 'gp4', from: { nodeId: 'quant_pad', port: 'output' }, to: { nodeId: 'osc_pad2', port: 'freq_mod' } },
+    { id: 'gp5', from: { nodeId: 'osc_pad1', port: 'output' }, to: { nodeId: 'mixer_pad', port: 'input1' } },
+    { id: 'gp6', from: { nodeId: 'osc_pad2', port: 'output' }, to: { nodeId: 'mixer_pad', port: 'input2' } },
+    { id: 'gp7', from: { nodeId: 'mixer_pad', port: 'output' }, to: { nodeId: 'filter_pad', port: 'input' } },
+    { id: 'gp8', from: { nodeId: 'lfo_pad', port: 'output' }, to: { nodeId: 'filter_pad', port: 'cutoff_mod' } },
+    { id: 'gp9', from: { nodeId: 'filter_pad', port: 'output' }, to: { nodeId: 'vca_pad', port: 'input' } },
 
-    // ═══ MIX BUS ═══
+    // ═══ MIX ═══
     { id: 'm1', from: { nodeId: 'vca_bass', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input1' } },
     { id: 'm2', from: { nodeId: 'vca_lead', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input2' } },
     { id: 'm3', from: { nodeId: 'vca_arp', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input3' } },
     { id: 'm4', from: { nodeId: 'vca_pad', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input4' } },
 
-    // ═══ EFFECTS CHAIN ═══
+    // ═══ EFFECTS ═══
     { id: 'e1', from: { nodeId: 'mixer_main', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
     { id: 'e2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
     { id: 'e3', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
