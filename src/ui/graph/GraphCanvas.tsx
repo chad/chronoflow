@@ -319,11 +319,11 @@ function GraphCanvasInner() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Sync nodes from patch when it changes
-  useMemo(() => {
+  useEffect(() => {
     setNodes(patchNodesToFlowNodes(patch.nodes, patch.groups, focusedGroupId));
   }, [patch.nodes, patch.groups, focusedGroupId, setNodes]);
 
-  useMemo(() => {
+  useEffect(() => {
     setEdges(patchConnectionsToFlowEdges(patch.connections, patch.groups, focusedGroupId));
   }, [patch.connections, patch.groups, focusedGroupId, setEdges]);
 
