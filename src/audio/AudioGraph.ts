@@ -252,12 +252,22 @@ class AudioGraph {
 
     // Check if this is a modulation connection
     if (this.isModulationPort(toPort)) {
-      const modTarget = toNode.getModulationTarget(toPort);
-      if (!modTarget) {
-        console.error(`AudioGraph: Cannot connect - modulation target not found: ${toPort}`);
-        return false;
+      // For oscillators, use the modulation input node (works even before oscillator starts)
+      if (toNode instanceof SynthOscillatorNode) {
+        const modInputNode = toNode.getModulationInputNode(toPort);
+        if (!modInputNode) {
+          console.error(`AudioGraph: Cannot connect - modulation input not found: ${toPort}`);
+          return false;
+        }
+        output.connect(modInputNode);
+      } else {
+        const modTarget = toNode.getModulationTarget(toPort);
+        if (!modTarget) {
+          console.error(`AudioGraph: Cannot connect - modulation target not found: ${toPort}`);
+          return false;
+        }
+        output.connect(modTarget);
       }
-      output.connect(modTarget);
     } else if (toPort === 'trigger' && toNode instanceof SynthKarplusStrongNode) {
       // Special handling for Karplus-Strong trigger input
       const triggerInput = toNode.getTriggerInput();
@@ -332,9 +342,17 @@ class AudioGraph {
 
     // Check if this is a modulation connection
     if (this.isModulationPort(toPort)) {
-      const modTarget = toNode.getModulationTarget(toPort);
-      if (modTarget) {
-        output.disconnect(modTarget);
+      // For oscillators, use the modulation input node
+      if (toNode instanceof SynthOscillatorNode) {
+        const modInputNode = toNode.getModulationInputNode(toPort);
+        if (modInputNode) {
+          output.disconnect(modInputNode);
+        }
+      } else {
+        const modTarget = toNode.getModulationTarget(toPort);
+        if (modTarget) {
+          output.disconnect(modTarget);
+        }
       }
     } else if (toPort === 'trigger' && toNode instanceof SynthKarplusStrongNode) {
       // Special handling for Karplus-Strong trigger input

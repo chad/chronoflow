@@ -22,6 +22,10 @@ export class SynthOscillatorNode implements SynthNode {
   private params: OscillatorParams;
   private isPlaying = false;
 
+  // Persistent modulation inputs (always available for connections)
+  private freqModGain: GainNode;
+  private detuneModGain: GainNode;
+
   constructor(context: AudioContext, id: string, params?: Partial<OscillatorParams>) {
     this.context = context;
     this.id = id;
@@ -30,6 +34,13 @@ export class SynthOscillatorNode implements SynthNode {
     // Output gain node (always exists for connections)
     this.gainNode = context.createGain();
     this.gainNode.gain.value = 1;
+
+    // Create persistent modulation input nodes
+    // These collect modulation signals and forward to oscillator when it exists
+    this.freqModGain = context.createGain();
+    this.freqModGain.gain.value = 1;
+    this.detuneModGain = context.createGain();
+    this.detuneModGain.gain.value = 1;
   }
 
   private createOscillator(): void {
@@ -43,6 +54,10 @@ export class SynthOscillatorNode implements SynthNode {
     this.oscillator.frequency.value = this.params.frequency;
     this.oscillator.detune.value = this.params.detune;
     this.oscillator.connect(this.gainNode);
+
+    // Connect persistent modulation inputs to the oscillator
+    this.freqModGain.connect(this.oscillator.frequency);
+    this.detuneModGain.connect(this.oscillator.detune);
   }
 
   start(): void {
@@ -79,11 +94,26 @@ export class SynthOscillatorNode implements SynthNode {
   }
 
   getModulationTarget(paramName: string): AudioParam | null {
+    // For oscillator, modulation goes through intermediate nodes
+    // Use getModulationInputNode instead for audio-rate modulation
     switch (paramName) {
       case 'freq_mod':
         return this.oscillator?.frequency ?? null;
       case 'detune_mod':
         return this.oscillator?.detune ?? null;
+      default:
+        return null;
+    }
+  }
+
+  // Get the modulation input node for audio-rate modulation
+  // This allows connections even before the oscillator starts
+  getModulationInputNode(paramName: string): AudioNode | null {
+    switch (paramName) {
+      case 'freq_mod':
+        return this.freqModGain;
+      case 'detune_mod':
+        return this.detuneModGain;
       default:
         return null;
     }
@@ -134,5 +164,7 @@ export class SynthOscillatorNode implements SynthNode {
   dispose(): void {
     this.stop();
     this.gainNode.disconnect();
+    this.freqModGain.disconnect();
+    this.detuneModGain.disconnect();
   }
 }
