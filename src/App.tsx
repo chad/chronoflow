@@ -4,6 +4,7 @@ import { NodePalette } from './ui/panels/NodePalette';
 import { MidiPanel } from './ui/panels/MidiPanel';
 import { PatchManager } from './ui/panels/PatchManager';
 import { KeyboardInput } from './ui/panels/KeyboardInput';
+import { RecordingPanel } from './ui/panels/RecordingPanel';
 import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
@@ -96,6 +97,7 @@ function App() {
         {/* Left Sidebar */}
         <aside className="w-64 bg-gray-900 border-r border-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
           <NodePalette />
+          <RecordingPanel />
           <MidiPanel />
           <KeyboardInput />
           <PatchManager />
