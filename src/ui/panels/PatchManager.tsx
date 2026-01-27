@@ -16,6 +16,7 @@ import {
   AMBIENT_GENERATIVE_PATCH,
   PENTATONIC_DREAMS_PATCH,
   CRYSTAL_BELLS_PATCH,
+  MIDNIGHT_DRIVE_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -47,6 +48,7 @@ export function PatchManager() {
       ambientgen: AMBIENT_GENERATIVE_PATCH,
       pentatonic: PENTATONIC_DREAMS_PATCH,
       crystalbells: CRYSTAL_BELLS_PATCH,
+      midnight: MIDNIGHT_DRIVE_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -198,6 +200,13 @@ export function PatchManager() {
             >
               Tracker Showcase
               <span className="block text-cyan-200 text-[10px]">Velocity, probability, patterns, chain</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('midnight')}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Midnight Drive
+              <span className="block text-purple-200 text-[10px]">Epic groove - bass, lead, arp, pad</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">Generative</div>
