@@ -17,6 +17,9 @@ import { ClockNodeUI } from './ClockNodeUI';
 import { ClockDividerNodeUI } from './ClockDividerNodeUI';
 import { OutputNodeUI } from './OutputNodeUI';
 import { GroupNodeUI } from './GroupNodeUI';
+import { SmoothRandomNodeUI } from './SmoothRandomNodeUI';
+import { KarplusStrongNodeUI } from './KarplusStrongNodeUI';
+import { GranularNodeUI } from './GranularNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -38,4 +41,7 @@ export const nodeTypes = {
   clockdiv: ClockDividerNodeUI,
   output: OutputNodeUI,
   group: GroupNodeUI,
+  smoothrandom: SmoothRandomNodeUI,
+  karplusstrong: KarplusStrongNodeUI,
+  granular: GranularNodeUI,
 };

@@ -18,3 +18,6 @@ export * from './QuantizerNode';
 export * from './ClockNode';
 export * from './ClockDividerNode';
 export * from './OutputNode';
+export * from './SmoothRandomNode';
+export * from './KarplusStrongNode';
+export * from './GranularNode';

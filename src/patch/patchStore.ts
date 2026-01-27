@@ -94,6 +94,9 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   clock: { bpm: 120, running: true, swing: 0 },
   clockdiv: {},
   output: { gain: 0.7 },
+  smoothrandom: { rate: 0.1, range: 1, smooth: 0.8 },
+  karplusstrong: { frequency: 220, damping: 0.5, feedback: 0.99, brightness: 0.7, pluck: 0.5 },
+  granular: { grainSize: 100, density: 10, spray: 0.1, pitch: 1.0, position: 0.5, freeze: false, mix: 1.0, reverse: 0 },
 };
 
 export const usePatchStore = create<PatchState>((set, get) => ({

@@ -111,6 +111,24 @@ const NODE_OPTIONS: NodeOption[] = [
     color: 'bg-amber-500',
     description: '4-channel mixer',
   },
+  {
+    type: 'smoothrandom',
+    label: 'SRnd',
+    color: 'bg-teal-500',
+    description: 'Smooth random walk',
+  },
+  {
+    type: 'karplusstrong',
+    label: 'String',
+    color: 'bg-amber-600',
+    description: 'Karplus-Strong string',
+  },
+  {
+    type: 'granular',
+    label: 'Grain',
+    color: 'bg-violet-500',
+    description: 'Granular processor',
+  },
 ];
 
 export function NodePalette() {

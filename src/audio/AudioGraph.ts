@@ -24,17 +24,20 @@ import {
   SynthClockNode,
   SynthClockDividerNode,
   SynthOutputNode,
+  SynthSmoothRandomNode,
+  SynthKarplusStrongNode,
+  SynthGranularNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular'];
 
 interface Connection {
   fromId: string;
@@ -165,6 +168,15 @@ class AudioGraph {
         break;
       case 'clockdiv':
         node = new SynthClockDividerNode(context, id, params);
+        break;
+      case 'smoothrandom':
+        node = new SynthSmoothRandomNode(context, id, params);
+        break;
+      case 'karplusstrong':
+        node = new SynthKarplusStrongNode(context, id, params);
+        break;
+      case 'granular':
+        node = new SynthGranularNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
