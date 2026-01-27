@@ -17,6 +17,7 @@ import {
   PENTATONIC_DREAMS_PATCH,
   CRYSTAL_BELLS_PATCH,
   MIDNIGHT_DRIVE_PATCH,
+  ETHEREAL_DRIFT_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -49,6 +50,7 @@ export function PatchManager() {
       pentatonic: PENTATONIC_DREAMS_PATCH,
       crystalbells: CRYSTAL_BELLS_PATCH,
       midnight: MIDNIGHT_DRIVE_PATCH,
+      ethereal: ETHEREAL_DRIFT_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -230,6 +232,13 @@ export function PatchManager() {
             >
               Crystal Bells
               <span className="block text-pink-200 text-[10px]">Round bell tones, cathedral reverb</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('ethereal')}
+              className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-500 hover:via-purple-500 hover:to-pink-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left animate-pulse"
+            >
+              ★ Ethereal Drift ★
+              <span className="block text-purple-200 text-[10px]">Epic ambient: Granular + Strings + SmoothRnd</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Modules</div>

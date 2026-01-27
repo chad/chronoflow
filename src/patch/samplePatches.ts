@@ -2541,3 +2541,384 @@ export const MIDNIGHT_DRIVE_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ETHEREAL DRIFT - Epic generative ambient showcasing new modules
+// SmoothRandom + KarplusStrong + Granular working together
+// ═══════════════════════════════════════════════════════════════════════════
+export const ETHEREAL_DRIFT_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Ethereal Drift',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // ═══════════════════════════════════════════════════════════════
+    // GRANULAR CLOUD LAYER - Frozen oscillator texture
+    // Feed oscillator into granular, freeze it, sweep through
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'osc_grain_src',
+      type: 'oscillator',
+      position: { x: 50, y: 50 },
+      params: { frequency: 220, detune: 0, waveform: 'sawtooth' },
+    },
+    {
+      id: 'filter_grain_src',
+      type: 'filter',
+      position: { x: 180, y: 50 },
+      params: { mode: 'lowpass', cutoff: 1200, resonance: 2 },
+    },
+    {
+      id: 'granular1',
+      type: 'granular',
+      position: { x: 330, y: 50 },
+      params: {
+        grainSize: 150,
+        density: 12,
+        spray: 0.3,
+        pitch: 1.0,
+        position: 0.5,
+        freeze: true, // Start frozen for infinite texture
+        mix: 1.0,
+        reverse: 0.2,
+      },
+    },
+    {
+      id: 'vca_grain',
+      type: 'vca',
+      position: { x: 500, y: 50 },
+      params: { gain: 0.4 },
+    },
+    // Smooth random for granular position drift
+    {
+      id: 'srnd_grain_pos',
+      type: 'smoothrandom',
+      position: { x: 330, y: 180 },
+      params: { rate: 0.05, range: 0.4, smooth: 0.9 },
+    },
+    // Smooth random for granular pitch drift
+    {
+      id: 'srnd_grain_pitch',
+      type: 'smoothrandom',
+      position: { x: 180, y: 180 },
+      params: { rate: 0.02, range: 0.15, smooth: 0.95 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // STRING BELLS LAYER - Karplus-Strong with generative melody
+    // Slow sequencer triggers plucked strings through quantizer
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'noise_string',
+      type: 'noise',
+      position: { x: 50, y: 320 },
+      params: { type: 'pink', level: 1 },
+    },
+    {
+      id: 'sh_string',
+      type: 'samplehold',
+      position: { x: 180, y: 320 },
+      params: { rate: 0.5, smooth: 0.3 },
+    },
+    {
+      id: 'quant_string',
+      type: 'quantizer',
+      position: { x: 310, y: 320 },
+      params: { scale: 'major_pent', root: 4, octaves: 2 }, // E major pentatonic
+    },
+    {
+      id: 'string1',
+      type: 'karplusstrong',
+      position: { x: 460, y: 320 },
+      params: {
+        frequency: 330,
+        damping: 0.4,
+        feedback: 0.995,
+        brightness: 0.6,
+        pluck: 0.3,
+      },
+    },
+    {
+      id: 'vca_string',
+      type: 'vca',
+      position: { x: 620, y: 320 },
+      params: { gain: 0.5 },
+    },
+    // Clock for string triggers
+    {
+      id: 'clock_string',
+      type: 'clock',
+      position: { x: 50, y: 420 },
+      params: { bpm: 15, division: 1, swing: 0 }, // Very slow - one every 4 seconds
+    },
+    // Smooth random for string brightness variation
+    {
+      id: 'srnd_string_bright',
+      type: 'smoothrandom',
+      position: { x: 460, y: 450 },
+      params: { rate: 0.08, range: 0.3, smooth: 0.85 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // SECOND STRING LAYER - Higher register, different timing
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'noise_string2',
+      type: 'noise',
+      position: { x: 50, y: 560 },
+      params: { type: 'white', level: 1 },
+    },
+    {
+      id: 'sh_string2',
+      type: 'samplehold',
+      position: { x: 180, y: 560 },
+      params: { rate: 0.3, smooth: 0.5 },
+    },
+    {
+      id: 'quant_string2',
+      type: 'quantizer',
+      position: { x: 310, y: 560 },
+      params: { scale: 'major_pent', root: 4, octaves: 2 },
+    },
+    {
+      id: 'string2',
+      type: 'karplusstrong',
+      position: { x: 460, y: 560 },
+      params: {
+        frequency: 660,
+        damping: 0.55,
+        feedback: 0.992,
+        brightness: 0.8,
+        pluck: 0.5,
+      },
+    },
+    {
+      id: 'vca_string2',
+      type: 'vca',
+      position: { x: 620, y: 560 },
+      params: { gain: 0.35 },
+    },
+    {
+      id: 'clock_string2',
+      type: 'clock',
+      position: { x: 50, y: 660 },
+      params: { bpm: 22, division: 1, swing: 0 }, // Slightly faster, creates polyrhythm
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // DRONE PAD LAYER - Smooth random pitch, filtered warmth
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'srnd_drone',
+      type: 'smoothrandom',
+      position: { x: 50, y: 780 },
+      params: { rate: 0.03, range: 0.8, smooth: 0.95 },
+    },
+    {
+      id: 'quant_drone',
+      type: 'quantizer',
+      position: { x: 180, y: 780 },
+      params: { scale: 'major_pent', root: 4, octaves: 1 },
+    },
+    {
+      id: 'osc_drone1',
+      type: 'oscillator',
+      position: { x: 330, y: 740 },
+      params: { frequency: 82.41, detune: 3, waveform: 'sine' },
+    },
+    {
+      id: 'osc_drone2',
+      type: 'oscillator',
+      position: { x: 330, y: 820 },
+      params: { frequency: 82.41, detune: -3, waveform: 'triangle' },
+    },
+    {
+      id: 'mixer_drone',
+      type: 'mixer',
+      position: { x: 480, y: 780 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
+    },
+    {
+      id: 'filter_drone',
+      type: 'filter',
+      position: { x: 620, y: 780 },
+      params: { mode: 'lowpass', cutoff: 400, resonance: 1.5 },
+    },
+    {
+      id: 'vca_drone',
+      type: 'vca',
+      position: { x: 770, y: 780 },
+      params: { gain: 0.3 },
+    },
+    // Smooth random for drone filter
+    {
+      id: 'srnd_drone_filter',
+      type: 'smoothrandom',
+      position: { x: 620, y: 900 },
+      params: { rate: 0.04, range: 200, smooth: 0.9 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // SHIMMER LAYER - High sine through granular for sparkle
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'osc_shimmer',
+      type: 'oscillator',
+      position: { x: 50, y: 980 },
+      params: { frequency: 880, detune: 0, waveform: 'sine' },
+    },
+    {
+      id: 'granular2',
+      type: 'granular',
+      position: { x: 200, y: 980 },
+      params: {
+        grainSize: 50,
+        density: 25,
+        spray: 0.6,
+        pitch: 2.0, // Octave up
+        position: 0.3,
+        freeze: true,
+        mix: 1.0,
+        reverse: 0.4,
+      },
+    },
+    {
+      id: 'filter_shimmer',
+      type: 'filter',
+      position: { x: 380, y: 980 },
+      params: { mode: 'highpass', cutoff: 2000, resonance: 1 },
+    },
+    {
+      id: 'vca_shimmer',
+      type: 'vca',
+      position: { x: 530, y: 980 },
+      params: { gain: 0.15 },
+    },
+    // Smooth random for shimmer amplitude swell
+    {
+      id: 'srnd_shimmer',
+      type: 'smoothrandom',
+      position: { x: 530, y: 1100 },
+      params: { rate: 0.06, range: 0.1, smooth: 0.85 },
+    },
+    // Smooth random for shimmer position
+    {
+      id: 'srnd_shimmer_pos',
+      type: 'smoothrandom',
+      position: { x: 200, y: 1100 },
+      params: { rate: 0.1, range: 0.5, smooth: 0.8 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // GLOBAL MODULATION - LFOs for macro movement
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'lfo_global',
+      type: 'lfo',
+      position: { x: 800, y: 50 },
+      params: { rate: 0.02, depth: 100, waveform: 'sine' },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // MASTER MIX & EFFECTS - Lush reverb and delay
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'mixer_main',
+      type: 'mixer',
+      position: { x: 900, y: 400 },
+      params: { level1: 0.7, level2: 0.5, level3: 0.4, level4: 0.5, master: 1 },
+    },
+    {
+      id: 'mixer_sub',
+      type: 'mixer',
+      position: { x: 900, y: 600 },
+      params: { level1: 0.6, level2: 0.4, level3: 0, level4: 0, master: 1 },
+    },
+    // Long modulated delay
+    {
+      id: 'delay1',
+      type: 'delay',
+      position: { x: 1050, y: 400 },
+      params: { time: 1.5, feedback: 0.45, mix: 0.35 },
+    },
+    // Second delay at different ratio
+    {
+      id: 'delay2',
+      type: 'delay',
+      position: { x: 1050, y: 520 },
+      params: { time: 2.3, feedback: 0.35, mix: 0.25 },
+    },
+    // Massive hall reverb
+    {
+      id: 'reverb1',
+      type: 'reverb',
+      position: { x: 1200, y: 460 },
+      params: { decay: 12, mix: 0.65 },
+    },
+    // Output
+    {
+      id: 'output',
+      type: 'output',
+      position: { x: 1350, y: 460 },
+      params: { gain: 0.45 },
+    },
+  ],
+  connections: [
+    // ═══ GRANULAR CLOUD LAYER ═══
+    { id: 'gc1', from: { nodeId: 'osc_grain_src', port: 'output' }, to: { nodeId: 'filter_grain_src', port: 'input' } },
+    { id: 'gc2', from: { nodeId: 'filter_grain_src', port: 'output' }, to: { nodeId: 'granular1', port: 'input' } },
+    { id: 'gc3', from: { nodeId: 'granular1', port: 'output' }, to: { nodeId: 'vca_grain', port: 'input' } },
+    // Smooth random -> granular position (manual connection - position is not audio-rate modulatable)
+    // We use LFO for filter instead
+    { id: 'gc4', from: { nodeId: 'lfo_global', port: 'output' }, to: { nodeId: 'filter_grain_src', port: 'cutoff_mod' } },
+
+    // ═══ STRING BELLS LAYER 1 ═══
+    { id: 'sb1', from: { nodeId: 'clock_string', port: 'output' }, to: { nodeId: 'sh_string', port: 'trigger' } },
+    { id: 'sb2', from: { nodeId: 'noise_string', port: 'output' }, to: { nodeId: 'sh_string', port: 'input' } },
+    { id: 'sb3', from: { nodeId: 'sh_string', port: 'output' }, to: { nodeId: 'quant_string', port: 'input' } },
+    { id: 'sb4', from: { nodeId: 'quant_string', port: 'output' }, to: { nodeId: 'string1', port: 'freq_mod' } },
+    { id: 'sb5', from: { nodeId: 'clock_string', port: 'output' }, to: { nodeId: 'string1', port: 'trigger' } },
+    { id: 'sb6', from: { nodeId: 'string1', port: 'output' }, to: { nodeId: 'vca_string', port: 'input' } },
+
+    // ═══ STRING BELLS LAYER 2 ═══
+    { id: 'sb7', from: { nodeId: 'clock_string2', port: 'output' }, to: { nodeId: 'sh_string2', port: 'trigger' } },
+    { id: 'sb8', from: { nodeId: 'noise_string2', port: 'output' }, to: { nodeId: 'sh_string2', port: 'input' } },
+    { id: 'sb9', from: { nodeId: 'sh_string2', port: 'output' }, to: { nodeId: 'quant_string2', port: 'input' } },
+    { id: 'sb10', from: { nodeId: 'quant_string2', port: 'output' }, to: { nodeId: 'string2', port: 'freq_mod' } },
+    { id: 'sb11', from: { nodeId: 'clock_string2', port: 'output' }, to: { nodeId: 'string2', port: 'trigger' } },
+    { id: 'sb12', from: { nodeId: 'string2', port: 'output' }, to: { nodeId: 'vca_string2', port: 'input' } },
+
+    // ═══ DRONE PAD LAYER ═══
+    { id: 'dp1', from: { nodeId: 'srnd_drone', port: 'output' }, to: { nodeId: 'quant_drone', port: 'input' } },
+    { id: 'dp2', from: { nodeId: 'quant_drone', port: 'output' }, to: { nodeId: 'osc_drone1', port: 'freq_mod' } },
+    { id: 'dp3', from: { nodeId: 'quant_drone', port: 'output' }, to: { nodeId: 'osc_drone2', port: 'freq_mod' } },
+    { id: 'dp4', from: { nodeId: 'osc_drone1', port: 'output' }, to: { nodeId: 'mixer_drone', port: 'input1' } },
+    { id: 'dp5', from: { nodeId: 'osc_drone2', port: 'output' }, to: { nodeId: 'mixer_drone', port: 'input2' } },
+    { id: 'dp6', from: { nodeId: 'mixer_drone', port: 'output' }, to: { nodeId: 'filter_drone', port: 'input' } },
+    { id: 'dp7', from: { nodeId: 'srnd_drone_filter', port: 'output' }, to: { nodeId: 'filter_drone', port: 'cutoff_mod' } },
+    { id: 'dp8', from: { nodeId: 'filter_drone', port: 'output' }, to: { nodeId: 'vca_drone', port: 'input' } },
+
+    // ═══ SHIMMER LAYER ═══
+    { id: 'sh1', from: { nodeId: 'osc_shimmer', port: 'output' }, to: { nodeId: 'granular2', port: 'input' } },
+    { id: 'sh2', from: { nodeId: 'granular2', port: 'output' }, to: { nodeId: 'filter_shimmer', port: 'input' } },
+    { id: 'sh3', from: { nodeId: 'filter_shimmer', port: 'output' }, to: { nodeId: 'vca_shimmer', port: 'input' } },
+    { id: 'sh4', from: { nodeId: 'srnd_shimmer', port: 'output' }, to: { nodeId: 'vca_shimmer', port: 'gain_mod' } },
+
+    // ═══ MAIN MIX ═══
+    { id: 'mx1', from: { nodeId: 'vca_grain', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input1' } },
+    { id: 'mx2', from: { nodeId: 'vca_string', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input2' } },
+    { id: 'mx3', from: { nodeId: 'vca_string2', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input3' } },
+    { id: 'mx4', from: { nodeId: 'vca_drone', port: 'output' }, to: { nodeId: 'mixer_main', port: 'input4' } },
+    { id: 'mx5', from: { nodeId: 'vca_shimmer', port: 'output' }, to: { nodeId: 'mixer_sub', port: 'input1' } },
+    { id: 'mx6', from: { nodeId: 'mixer_main', port: 'output' }, to: { nodeId: 'mixer_sub', port: 'input2' } },
+
+    // ═══ EFFECTS CHAIN ═══
+    { id: 'fx1', from: { nodeId: 'mixer_sub', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'fx2', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+    { id: 'fx3', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'fx4', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
