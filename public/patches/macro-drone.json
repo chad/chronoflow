@@ -105,7 +105,6 @@
     }
   ],
   "connections": [
-    { "id": "c0", "from": { "nodeId": "seq1", "port": "output" }, "to": { "nodeId": "output", "port": "input" } },
     { "id": "c1", "from": { "nodeId": "lfo1", "port": "output" }, "to": { "nodeId": "macro1", "port": "input" } },
     { "id": "c2", "from": { "nodeId": "macro1", "port": "out1" }, "to": { "nodeId": "filter1", "port": "cutoff_mod" } },
     { "id": "c3", "from": { "nodeId": "macro1", "port": "out2" }, "to": { "nodeId": "vca1", "port": "gain_mod" } },

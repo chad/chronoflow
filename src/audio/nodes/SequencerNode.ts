@@ -69,7 +69,7 @@ export class SynthSequencerNode implements SynthNode {
   private stopCallback: StopCallback | null = null;
   private stepCallbacks: StepCallback[] = [];
   private dummyGain: GainNode; // For satisfying the SynthNode interface
-  private isConnected = false; // Only trigger notes when connected
+  private _isConnected = false; // Track connection state (for modular mode)
 
   // External clock input
   private clockInput: GainNode;
@@ -178,10 +178,10 @@ export class SynthSequencerNode implements SynthNode {
     const shouldPlay = step ? Math.random() * 100 < step.probability : false;
 
     // Only trigger notes if:
-    // - sequencer is connected
+    // - sequencer has a note callback (polyphonic mode) OR is connected (modular mode)
     // - step is a note (not rest)
     // - probability check passes
-    if (this.noteCallback && this.isConnected && step?.type === 'note' && step.midiNote !== undefined && shouldPlay) {
+    if (this.noteCallback && step?.type === 'note' && step.midiNote !== undefined && shouldPlay) {
       // Use per-step velocity, scale to 0-127 range for noteOn
       this.noteCallback(step.midiNote, step.velocity, gateTime);
     }
@@ -329,17 +329,22 @@ export class SynthSequencerNode implements SynthNode {
   connect(_destination: AudioNode | SynthNode): void {
     // Sequencer doesn't connect audio, but we track that it's "connected"
     // to enable note triggering (modular synth paradigm)
-    this.isConnected = true;
+    this._isConnected = true;
   }
 
   disconnect(): void {
     // Mark as disconnected to stop triggering notes
-    this.isConnected = false;
+    this._isConnected = false;
   }
 
   // Called by AudioGraph when a connection is made to this sequencer's output
   setConnected(connected: boolean): void {
-    this.isConnected = connected;
+    this._isConnected = connected;
+  }
+
+  // Check if sequencer has outgoing connections (for modular mode)
+  getIsConnected(): boolean {
+    return this._isConnected;
   }
 
   setParam(name: string, value: number | string | boolean): void {
