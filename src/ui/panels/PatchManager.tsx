@@ -18,6 +18,9 @@ import {
   CRYSTAL_BELLS_PATCH,
   MIDNIGHT_DRIVE_PATCH,
   ETHEREAL_DRIFT_PATCH,
+  EVOLVING_MELODY_PATCH,
+  POLYRHYTHMIC_TRIGGERS_PATCH,
+  MACRO_DRONE_PATCH,
 } from '../../patch/samplePatches';
 
 export function PatchManager() {
@@ -51,6 +54,9 @@ export function PatchManager() {
       crystalbells: CRYSTAL_BELLS_PATCH,
       midnight: MIDNIGHT_DRIVE_PATCH,
       ethereal: ETHEREAL_DRIFT_PATCH,
+      evolvingmelody: EVOLVING_MELODY_PATCH,
+      polyrhythmictriggers: POLYRHYTHMIC_TRIGGERS_PATCH,
+      macrodrone: MACRO_DRONE_PATCH,
     };
     const samplePatch = patches[name] || DEMO_PATCH;
     // Stop all sound before switching patches
@@ -209,6 +215,29 @@ export function PatchManager() {
             >
               Midnight Machine
               <span className="block text-purple-200 text-[10px]">Generative groove - S&H melodies, driving bass</span>
+            </button>
+
+            <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">New Generative Modules</div>
+            <button
+              onClick={() => loadSamplePatch('evolvingmelody')}
+              className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Evolving Melody
+              <span className="block text-amber-200 text-[10px]">Turing Machine + Slew + Euclidean</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('polyrhythmictriggers')}
+              className="bg-gradient-to-r from-purple-600 to-sky-600 hover:from-purple-500 hover:to-sky-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Polyrhythmic Triggers
+              <span className="block text-purple-200 text-[10px]">3x Euclidean + Logic XOR + Prob Gate</span>
+            </button>
+            <button
+              onClick={() => loadSamplePatch('macrodrone')}
+              className="bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 text-white text-xs px-3 py-1.5 rounded transition-colors text-left"
+            >
+              Macro Drone
+              <span className="block text-fuchsia-200 text-[10px]">Macro Controller + Env Follower</span>
             </button>
 
             <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-2">Generative</div>

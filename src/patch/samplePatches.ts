@@ -2845,3 +2845,129 @@ export const ETHEREAL_DRIFT_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// ============================================================================
+// NEW GENERATIVE MODULE DEMOS
+// ============================================================================
+
+// Evolving Melody - Turing Machine + Slew Limiter + Euclidean
+export const EVOLVING_MELODY_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Evolving Melody',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    { id: 'clock1', type: 'clock', position: { x: 50, y: 200 }, params: { bpm: 140, running: true, swing: 0 } },
+    { id: 'euclidean1', type: 'euclidean', position: { x: 200, y: 100 }, params: { steps: 16, hits: 7, rotation: 0, running: true } },
+    { id: 'turing1', type: 'turing', position: { x: 200, y: 300 }, params: { probability: 0.15, length: 8, scale: 1, locked: false } },
+    { id: 'slew1', type: 'slewlimiter', position: { x: 400, y: 300 }, params: { rise: 0.08, fall: 0.15, shape: 'exponential' } },
+    { id: 'quantizer1', type: 'quantizer', position: { x: 600, y: 300 }, params: { scale: 'minor', root: 0, octaves: 2 } },
+    { id: 'osc1', type: 'oscillator', position: { x: 800, y: 200 }, params: { frequency: 220, detune: 0, waveform: 'sawtooth' } },
+    { id: 'adsr1', type: 'adsr', position: { x: 400, y: 100 }, params: { attack: 0.005, decay: 0.2, sustain: 0.3, release: 0.4 } },
+    { id: 'filter1', type: 'filter', position: { x: 1000, y: 200 }, params: { mode: 'lowpass', cutoff: 1800, resonance: 3 } },
+    { id: 'vca1', type: 'vca', position: { x: 1200, y: 200 }, params: { gain: 0.8 } },
+    { id: 'delay1', type: 'delay', position: { x: 1400, y: 200 }, params: { time: 0.375, feedback: 0.35, mix: 0.3 } },
+    { id: 'reverb1', type: 'reverb', position: { x: 1600, y: 200 }, params: { decay: 2.5, mix: 0.25 } },
+    { id: 'output', type: 'output', position: { x: 1800, y: 200 }, params: { gain: 0.6 } },
+  ],
+  connections: [
+    { id: 'c1', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'euclidean1', port: 'clock' } },
+    { id: 'c2', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'turing1', port: 'clock' } },
+    { id: 'c3', from: { nodeId: 'euclidean1', port: 'output' }, to: { nodeId: 'adsr1', port: 'trigger' } },
+    { id: 'c4', from: { nodeId: 'turing1', port: 'output' }, to: { nodeId: 'slew1', port: 'input' } },
+    { id: 'c5', from: { nodeId: 'slew1', port: 'output' }, to: { nodeId: 'quantizer1', port: 'input' } },
+    { id: 'c6', from: { nodeId: 'quantizer1', port: 'output' }, to: { nodeId: 'osc1', port: 'freq_mod' } },
+    { id: 'c7', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c8', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    { id: 'c9', from: { nodeId: 'adsr1', port: 'output' }, to: { nodeId: 'filter1', port: 'cutoff_mod' } },
+    { id: 'c10', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c11', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c12', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c13', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
+
+// Polyrhythmic Triggers - Multiple Euclidean + Logic + Probability Gate
+export const POLYRHYTHMIC_TRIGGERS_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Polyrhythmic Triggers',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    { id: 'clock1', type: 'clock', position: { x: 50, y: 300 }, params: { bpm: 120, running: true, swing: 0 } },
+    { id: 'euclidean1', type: 'euclidean', position: { x: 250, y: 100 }, params: { steps: 16, hits: 5, rotation: 0, running: true } },
+    { id: 'euclidean2', type: 'euclidean', position: { x: 250, y: 300 }, params: { steps: 12, hits: 7, rotation: 2, running: true } },
+    { id: 'euclidean3', type: 'euclidean', position: { x: 250, y: 500 }, params: { steps: 8, hits: 3, rotation: 1, running: true } },
+    { id: 'logic1', type: 'logic', position: { x: 500, y: 200 }, params: { operation: 'xor' } },
+    { id: 'probgate1', type: 'probgate', position: { x: 500, y: 400 }, params: { probability: 0.7, mode: 'gate' } },
+    { id: 'kp1', type: 'karplusstrong', position: { x: 750, y: 100 }, params: { frequency: 330, damping: 0.4, feedback: 0.995, brightness: 0.8, pluck: 0.6 } },
+    { id: 'kp2', type: 'karplusstrong', position: { x: 750, y: 300 }, params: { frequency: 220, damping: 0.5, feedback: 0.99, brightness: 0.6, pluck: 0.5 } },
+    { id: 'kp3', type: 'karplusstrong', position: { x: 750, y: 500 }, params: { frequency: 110, damping: 0.6, feedback: 0.985, brightness: 0.4, pluck: 0.4 } },
+    { id: 'mixer1', type: 'mixer', position: { x: 1000, y: 300 }, params: { level1: 0.8, level2: 1, level3: 0.9, level4: 0, master: 0.8 } },
+    { id: 'reverb1', type: 'reverb', position: { x: 1200, y: 300 }, params: { decay: 3, mix: 0.35 } },
+    { id: 'output', type: 'output', position: { x: 1400, y: 300 }, params: { gain: 0.6 } },
+  ],
+  connections: [
+    { id: 'c1', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'euclidean1', port: 'clock' } },
+    { id: 'c2', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'euclidean2', port: 'clock' } },
+    { id: 'c3', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'euclidean3', port: 'clock' } },
+    { id: 'c4', from: { nodeId: 'euclidean1', port: 'output' }, to: { nodeId: 'logic1', port: 'inputA' } },
+    { id: 'c5', from: { nodeId: 'euclidean2', port: 'output' }, to: { nodeId: 'logic1', port: 'inputB' } },
+    { id: 'c6', from: { nodeId: 'euclidean3', port: 'output' }, to: { nodeId: 'probgate1', port: 'input' } },
+    { id: 'c7', from: { nodeId: 'logic1', port: 'output' }, to: { nodeId: 'kp1', port: 'trigger' } },
+    { id: 'c8', from: { nodeId: 'euclidean2', port: 'output' }, to: { nodeId: 'kp2', port: 'trigger' } },
+    { id: 'c9', from: { nodeId: 'probgate1', port: 'output' }, to: { nodeId: 'kp3', port: 'trigger' } },
+    { id: 'c10', from: { nodeId: 'kp1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
+    { id: 'c11', from: { nodeId: 'kp2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
+    { id: 'c12', from: { nodeId: 'kp3', port: 'output' }, to: { nodeId: 'mixer1', port: 'input3' } },
+    { id: 'c13', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c14', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
+
+// Macro Drone - Macro Controller + Envelope Follower
+export const MACRO_DRONE_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Macro Drone',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    { id: 'macro1', type: 'macro', position: { x: 50, y: 200 }, params: { value: 0.3, out1Min: 200, out1Max: 2000, out2Min: 0, out2Max: 1, out3Min: 0, out3Max: 1, out4Min: 0, out4Max: 1, smooth: 0.3 } },
+    { id: 'lfo1', type: 'lfo', position: { x: 50, y: 400 }, params: { rate: 0.05, depth: 0.5, waveform: 'sine' } },
+    { id: 'seq1', type: 'sequencer', position: { x: 50, y: 50 }, params: { bpm: 30, steps: 1, gate: 0.99, swing: 50, patternA: 'A-2', patternB: '', patternC: '', patternD: '', chain: 'A', running: true, extClock: false } },
+    { id: 'osc1', type: 'oscillator', position: { x: 300, y: 100 }, params: { frequency: 55, detune: 0, waveform: 'sawtooth' } },
+    { id: 'osc2', type: 'oscillator', position: { x: 300, y: 250 }, params: { frequency: 55.5, detune: 7, waveform: 'sawtooth' } },
+    { id: 'osc3', type: 'oscillator', position: { x: 300, y: 400 }, params: { frequency: 110, detune: -5, waveform: 'square' } },
+    { id: 'mixer1', type: 'mixer', position: { x: 550, y: 250 }, params: { level1: 0.7, level2: 0.7, level3: 0.4, level4: 0, master: 0.8 } },
+    { id: 'filter1', type: 'filter', position: { x: 750, y: 250 }, params: { mode: 'lowpass', cutoff: 800, resonance: 4 } },
+    { id: 'envfollower1', type: 'envfollower', position: { x: 750, y: 450 }, params: { attack: 20, release: 200, gain: 2, offset: 0 } },
+    { id: 'vca1', type: 'vca', position: { x: 950, y: 250 }, params: { gain: 0.6 } },
+    { id: 'delay1', type: 'delay', position: { x: 1150, y: 250 }, params: { time: 0.5, feedback: 0.45, mix: 0.3 } },
+    { id: 'reverb1', type: 'reverb', position: { x: 1350, y: 250 }, params: { decay: 4, mix: 0.4 } },
+    { id: 'output', type: 'output', position: { x: 1550, y: 250 }, params: { gain: 0.5 } },
+  ],
+  connections: [
+    { id: 'c1', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'macro1', port: 'input' } },
+    { id: 'c2', from: { nodeId: 'macro1', port: 'out1' }, to: { nodeId: 'filter1', port: 'cutoff_mod' } },
+    { id: 'c3', from: { nodeId: 'macro1', port: 'out2' }, to: { nodeId: 'vca1', port: 'gain_mod' } },
+    { id: 'c4', from: { nodeId: 'osc1', port: 'output' }, to: { nodeId: 'mixer1', port: 'input1' } },
+    { id: 'c5', from: { nodeId: 'osc2', port: 'output' }, to: { nodeId: 'mixer1', port: 'input2' } },
+    { id: 'c6', from: { nodeId: 'osc3', port: 'output' }, to: { nodeId: 'mixer1', port: 'input3' } },
+    { id: 'c7', from: { nodeId: 'mixer1', port: 'output' }, to: { nodeId: 'filter1', port: 'input' } },
+    { id: 'c8', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'envfollower1', port: 'input' } },
+    { id: 'c9', from: { nodeId: 'envfollower1', port: 'output' }, to: { nodeId: 'filter1', port: 'resonance_mod' } },
+    { id: 'c10', from: { nodeId: 'filter1', port: 'output' }, to: { nodeId: 'vca1', port: 'input' } },
+    { id: 'c11', from: { nodeId: 'vca1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'c12', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'c13', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
