@@ -278,6 +278,24 @@ class AudioGraph {
         default:
           output = fromNode.getOutputNode();
       }
+    } else if (fromNode instanceof SynthMacroNode) {
+      // Handle macro node's multiple outputs
+      switch (fromPort) {
+        case 'out1':
+          output = fromNode.getOutput1();
+          break;
+        case 'out2':
+          output = fromNode.getOutput2();
+          break;
+        case 'out3':
+          output = fromNode.getOutput3();
+          break;
+        case 'out4':
+          output = fromNode.getOutput4();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
     } else {
       output = fromNode.getOutputNode();
     }
@@ -365,6 +383,24 @@ class AudioGraph {
           break;
         case 'div8':
           output = fromNode.getDiv8Output();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
+    } else if (fromNode instanceof SynthMacroNode) {
+      // Handle macro node's multiple outputs
+      switch (fromPort) {
+        case 'out1':
+          output = fromNode.getOutput1();
+          break;
+        case 'out2':
+          output = fromNode.getOutput2();
+          break;
+        case 'out3':
+          output = fromNode.getOutput3();
+          break;
+        case 'out4':
+          output = fromNode.getOutput4();
           break;
         default:
           output = fromNode.getOutputNode();
