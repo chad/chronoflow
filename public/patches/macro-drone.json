@@ -1,0 +1,107 @@
+{
+  "version": "1.0",
+  "meta": {
+    "name": "Macro Drone",
+    "created": "2026-01-28T00:00:00.000Z",
+    "modified": "2026-01-28T00:00:00.000Z"
+  },
+  "nodes": [
+    {
+      "id": "macro1",
+      "type": "macro",
+      "position": { "x": 50, "y": 200 },
+      "params": {
+        "value": 0.3,
+        "out1Min": 100, "out1Max": 2000,
+        "out2Min": 0.1, "out2Max": 0.9,
+        "out3Min": 0.2, "out3Max": 5,
+        "out4Min": 0, "out4Max": 0.8,
+        "smooth": 0.3
+      }
+    },
+    {
+      "id": "lfo1",
+      "type": "lfo",
+      "position": { "x": 50, "y": 400 },
+      "params": { "rate": 0.05, "depth": 0.3, "waveform": "sine" }
+    },
+    {
+      "id": "osc1",
+      "type": "oscillator",
+      "position": { "x": 300, "y": 100 },
+      "params": { "frequency": 55, "detune": 0, "waveform": "sawtooth" }
+    },
+    {
+      "id": "osc2",
+      "type": "oscillator",
+      "position": { "x": 300, "y": 250 },
+      "params": { "frequency": 55.5, "detune": 7, "waveform": "sawtooth" }
+    },
+    {
+      "id": "osc3",
+      "type": "oscillator",
+      "position": { "x": 300, "y": 400 },
+      "params": { "frequency": 110, "detune": -5, "waveform": "square" }
+    },
+    {
+      "id": "mixer1",
+      "type": "mixer",
+      "position": { "x": 550, "y": 250 },
+      "params": { "level1": 0.7, "level2": 0.7, "level3": 0.4, "level4": 0, "master": 0.8 }
+    },
+    {
+      "id": "filter1",
+      "type": "filter",
+      "position": { "x": 750, "y": 250 },
+      "params": { "mode": "lowpass", "cutoff": 800, "resonance": 4 }
+    },
+    {
+      "id": "envfollower1",
+      "type": "envfollower",
+      "position": { "x": 750, "y": 450 },
+      "params": { "attack": 20, "release": 200, "gain": 2, "offset": 0 }
+    },
+    {
+      "id": "wavefolder1",
+      "type": "wavefolder",
+      "position": { "x": 950, "y": 250 },
+      "params": { "drive": 1.5, "folds": 2, "mix": 0.4 }
+    },
+    {
+      "id": "delay1",
+      "type": "delay",
+      "position": { "x": 1150, "y": 250 },
+      "params": { "time": 0.5, "feedback": 0.45, "mix": 0.3 }
+    },
+    {
+      "id": "reverb1",
+      "type": "reverb",
+      "position": { "x": 1350, "y": 250 },
+      "params": { "decay": 4, "mix": 0.4 }
+    },
+    {
+      "id": "output",
+      "type": "output",
+      "position": { "x": 1550, "y": 250 },
+      "params": { "gain": 0.5 }
+    }
+  ],
+  "connections": [
+    { "id": "c1", "from": { "nodeId": "lfo1", "port": "output" }, "to": { "nodeId": "macro1", "port": "input" } },
+    { "id": "c2", "from": { "nodeId": "macro1", "port": "out1" }, "to": { "nodeId": "filter1", "port": "cutoff" } },
+    { "id": "c3", "from": { "nodeId": "macro1", "port": "out2" }, "to": { "nodeId": "mixer1", "port": "master" } },
+    { "id": "c4", "from": { "nodeId": "macro1", "port": "out3" }, "to": { "nodeId": "wavefolder1", "port": "drive" } },
+    { "id": "c5", "from": { "nodeId": "macro1", "port": "out4" }, "to": { "nodeId": "delay1", "port": "feedback" } },
+    { "id": "c6", "from": { "nodeId": "osc1", "port": "output" }, "to": { "nodeId": "mixer1", "port": "in1" } },
+    { "id": "c7", "from": { "nodeId": "osc2", "port": "output" }, "to": { "nodeId": "mixer1", "port": "in2" } },
+    { "id": "c8", "from": { "nodeId": "osc3", "port": "output" }, "to": { "nodeId": "mixer1", "port": "in3" } },
+    { "id": "c9", "from": { "nodeId": "mixer1", "port": "output" }, "to": { "nodeId": "filter1", "port": "input" } },
+    { "id": "c10", "from": { "nodeId": "filter1", "port": "output" }, "to": { "nodeId": "envfollower1", "port": "input" } },
+    { "id": "c11", "from": { "nodeId": "envfollower1", "port": "output" }, "to": { "nodeId": "filter1", "port": "resonance" } },
+    { "id": "c12", "from": { "nodeId": "filter1", "port": "output" }, "to": { "nodeId": "wavefolder1", "port": "input" } },
+    { "id": "c13", "from": { "nodeId": "wavefolder1", "port": "output" }, "to": { "nodeId": "delay1", "port": "input" } },
+    { "id": "c14", "from": { "nodeId": "delay1", "port": "output" }, "to": { "nodeId": "reverb1", "port": "input" } },
+    { "id": "c15", "from": { "nodeId": "reverb1", "port": "output" }, "to": { "nodeId": "output", "port": "input" } }
+  ],
+  "groups": []
+}
