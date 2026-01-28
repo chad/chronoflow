@@ -26,6 +26,24 @@
       "params": { "rate": 0.05, "depth": 0.5, "waveform": "sine" }
     },
     {
+      "id": "seq1",
+      "type": "sequencer",
+      "position": { "x": 50, "y": 50 },
+      "params": {
+        "bpm": 30,
+        "steps": 1,
+        "gate": 0.99,
+        "swing": 50,
+        "patternA": "A-1",
+        "patternB": "",
+        "patternC": "",
+        "patternD": "",
+        "chain": "A",
+        "running": true,
+        "extClock": false
+      }
+    },
+    {
       "id": "osc1",
       "type": "oscillator",
       "position": { "x": 300, "y": 100 },
