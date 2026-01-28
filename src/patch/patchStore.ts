@@ -164,6 +164,11 @@ export const usePatchStore = create<PatchState>((set, get) => ({
   },
 
   updateNodeParam: (id, param, value) => {
+    // Validate value to prevent NaN/undefined from corrupting state
+    if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
+      console.warn(`[patchStore] Rejecting invalid value for ${id}.${param}:`, value);
+      return;
+    }
     set((state) => ({
       patch: {
         ...state.patch,

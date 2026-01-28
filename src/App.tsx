@@ -6,6 +6,7 @@ import { MidiClockPanel } from './ui/panels/MidiClockPanel';
 import { PatchManager } from './ui/panels/PatchManager';
 import { KeyboardInput } from './ui/panels/KeyboardInput';
 import { RecordingPanel } from './ui/panels/RecordingPanel';
+import { ErrorBoundary } from './ui/ErrorBoundary';
 import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
@@ -107,7 +108,9 @@ function App() {
 
         {/* Graph Editor */}
         <main className="flex-1">
-          <GraphCanvas />
+          <ErrorBoundary>
+            <GraphCanvas />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
