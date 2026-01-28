@@ -2543,8 +2543,8 @@ export const MIDNIGHT_DRIVE_PATCH: Patch = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ETHEREAL DRIFT - Self-playing ambient with Karplus-Strong strings
-// Multiple strings at different pitches, triggered by clocks
+// ETHEREAL DRIFT - Lush generative ambient with round, warm tones
+// Soft plucked strings with heavy filtering, layered reverbs, subtle texture
 // ═══════════════════════════════════════════════════════════════════════════
 export const ETHEREAL_DRIFT_PATCH: Patch = {
   version: '1.0',
@@ -2555,163 +2555,293 @@ export const ETHEREAL_DRIFT_PATCH: Patch = {
   },
   nodes: [
     // ═══════════════════════════════════════════════════════════════
-    // STRING 1 - Low E (82 Hz) - Slow deep bass
+    // LAYER 1 - Sub bass foundation (E1) - felt more than heard
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'clock1',
       type: 'clock',
       position: { x: 50, y: 50 },
-      params: { bpm: 20, running: true, swing: 0 },
+      params: { bpm: 3, running: true, swing: 0 },
     },
     {
       id: 'string1',
       type: 'karplusstrong',
-      position: { x: 200, y: 50 },
+      position: { x: 180, y: 50 },
       params: {
-        frequency: 82.41, // E2
-        damping: 0.3,
-        feedback: 0.995,
-        brightness: 0.5,
-        pluck: 0.5,
+        frequency: 41.20, // E1 - very deep
+        damping: 0.6,     // High damping = very round, no highs
+        feedback: 0.998,
+        brightness: 0.1,  // Very soft attack
+        pluck: 0.3,
       },
     },
     {
       id: 'atten1',
       type: 'attenuverter',
-      position: { x: 380, y: 50 },
-      params: { amount: 0.5, offset: 0 },
+      position: { x: 340, y: 50 },
+      params: { amount: 0.8, offset: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // STRING 2 - B (247 Hz) - Medium bell
+    // LAYER 2 - Warm bass (E2) - the body
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'clock2',
       type: 'clock',
-      position: { x: 50, y: 150 },
-      params: { bpm: 40, running: true, swing: 0 },
+      position: { x: 50, y: 130 },
+      params: { bpm: 5, running: true, swing: 0.2 },
     },
     {
       id: 'string2',
       type: 'karplusstrong',
-      position: { x: 200, y: 150 },
+      position: { x: 180, y: 130 },
       params: {
-        frequency: 246.94, // B3
-        damping: 0.3,
-        feedback: 0.995,
-        brightness: 0.5,
-        pluck: 0.5,
+        frequency: 82.41, // E2
+        damping: 0.55,
+        feedback: 0.997,
+        brightness: 0.15,
+        pluck: 0.35,
       },
     },
     {
       id: 'atten2',
       type: 'attenuverter',
-      position: { x: 380, y: 150 },
-      params: { amount: 0.4, offset: 0 },
+      position: { x: 340, y: 130 },
+      params: { amount: 0.6, offset: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // STRING 3 - E (330 Hz) - Higher bell
+    // LAYER 3 - Mid warmth (B2) - fifth harmony
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'clock3',
       type: 'clock',
-      position: { x: 50, y: 250 },
-      params: { bpm: 60, running: true, swing: 0 },
+      position: { x: 50, y: 210 },
+      params: { bpm: 7, running: true, swing: 0.3 },
+    },
+    {
+      id: 'div3',
+      type: 'clockdiv',
+      position: { x: 120, y: 210 },
+      params: { divisor: 2 },
     },
     {
       id: 'string3',
       type: 'karplusstrong',
-      position: { x: 200, y: 250 },
+      position: { x: 200, y: 210 },
       params: {
-        frequency: 329.63, // E4
-        damping: 0.3,
-        feedback: 0.995,
-        brightness: 0.5,
-        pluck: 0.5,
+        frequency: 123.47, // B2
+        damping: 0.5,
+        feedback: 0.996,
+        brightness: 0.2,
+        pluck: 0.4,
       },
     },
     {
       id: 'atten3',
       type: 'attenuverter',
-      position: { x: 380, y: 250 },
-      params: { amount: 0.35, offset: 0 },
+      position: { x: 360, y: 210 },
+      params: { amount: 0.5, offset: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // STRING 4 - G# (415 Hz) - Bright chime
+    // LAYER 4 - Soft mid (G3) - minor color
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'clock4',
       type: 'clock',
-      position: { x: 50, y: 350 },
-      params: { bpm: 90, running: true, swing: 0 },
+      position: { x: 50, y: 290 },
+      params: { bpm: 9, running: true, swing: 0.4 },
+    },
+    {
+      id: 'div4',
+      type: 'clockdiv',
+      position: { x: 120, y: 290 },
+      params: { divisor: 3 },
     },
     {
       id: 'string4',
       type: 'karplusstrong',
-      position: { x: 200, y: 350 },
+      position: { x: 200, y: 290 },
       params: {
-        frequency: 415.30, // G#4
-        damping: 0.3,
+        frequency: 196.00, // G3
+        damping: 0.45,
         feedback: 0.995,
-        brightness: 0.5,
-        pluck: 0.5,
+        brightness: 0.25,
+        pluck: 0.45,
       },
     },
     {
       id: 'atten4',
       type: 'attenuverter',
-      position: { x: 380, y: 350 },
-      params: { amount: 0.3, offset: 0 },
+      position: { x: 360, y: 290 },
+      params: { amount: 0.4, offset: 0 },
     },
 
     // ═══════════════════════════════════════════════════════════════
-    // EFFECTS - Delay and Reverb
+    // LAYER 5 - Gentle upper (E4) - soft presence
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'clock5',
+      type: 'clock',
+      position: { x: 50, y: 370 },
+      params: { bpm: 11, running: true, swing: 0.5 },
+    },
+    {
+      id: 'div5',
+      type: 'clockdiv',
+      position: { x: 120, y: 370 },
+      params: { divisor: 5 },
+    },
+    {
+      id: 'string5',
+      type: 'karplusstrong',
+      position: { x: 200, y: 370 },
+      params: {
+        frequency: 329.63, // E4
+        damping: 0.5,
+        feedback: 0.993,
+        brightness: 0.2,  // Still soft
+        pluck: 0.5,
+      },
+    },
+    {
+      id: 'atten5',
+      type: 'attenuverter',
+      position: { x: 360, y: 370 },
+      params: { amount: 0.25, offset: 0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // LAYER 6 - Rare high octave (E5) - occasional shimmer
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'clock6',
+      type: 'clock',
+      position: { x: 50, y: 450 },
+      params: { bpm: 13, running: true, swing: 0.6 },
+    },
+    {
+      id: 'div6',
+      type: 'clockdiv',
+      position: { x: 120, y: 450 },
+      params: { divisor: 11 }, // Very rare
+    },
+    {
+      id: 'string6',
+      type: 'karplusstrong',
+      position: { x: 200, y: 450 },
+      params: {
+        frequency: 659.25, // E5
+        damping: 0.55,     // Round even at high pitch
+        feedback: 0.988,
+        brightness: 0.15,  // Very soft
+        pluck: 0.4,
+      },
+    },
+    {
+      id: 'atten6',
+      type: 'attenuverter',
+      position: { x: 360, y: 450 },
+      params: { amount: 0.15, offset: 0 },
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEXTURE - Filtered noise bed for warmth
+    // ═══════════════════════════════════════════════════════════════
+    {
+      id: 'noise1',
+      type: 'noise',
+      position: { x: 50, y: 550 },
+      params: { type: 'pink' }, // Pink noise = warmer
+    },
+    {
+      id: 'noiseAtten',
+      type: 'attenuverter',
+      position: { x: 180, y: 550 },
+      params: { amount: 0.03, offset: 0 }, // Very subtle
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // EFFECTS - Dual delays into massive reverb
     // ═══════════════════════════════════════════════════════════════
     {
       id: 'delay1',
       type: 'delay',
-      position: { x: 550, y: 200 },
-      params: { time: 0.6, feedback: 0.55, mix: 0.35 },
+      position: { x: 520, y: 150 },
+      params: { time: 0.5, feedback: 0.4, mix: 0.35 },
+    },
+    {
+      id: 'delay2',
+      type: 'delay',
+      position: { x: 520, y: 350 },
+      params: { time: 0.75, feedback: 0.35, mix: 0.3 },
     },
     {
       id: 'reverb1',
       type: 'reverb',
-      position: { x: 720, y: 200 },
-      params: { decay: 6, mix: 0.5 },
+      position: { x: 700, y: 180 },
+      params: { decay: 12, mix: 0.7 }, // Very long, very wet
+    },
+    {
+      id: 'reverb2',
+      type: 'reverb',
+      position: { x: 700, y: 320 },
+      params: { decay: 15, mix: 0.8 }, // Even longer for depth
     },
     {
       id: 'output',
       type: 'output',
-      position: { x: 890, y: 200 },
-      params: { gain: 0.6 },
+      position: { x: 880, y: 250 },
+      params: { gain: 0.55 },
     },
   ],
   connections: [
-    // String 1 (bass)
-    { id: 's1a', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'string1', port: 'trigger' } },
-    { id: 's1b', from: { nodeId: 'string1', port: 'output' }, to: { nodeId: 'atten1', port: 'input' } },
-    { id: 's1c', from: { nodeId: 'atten1', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    // Layer 1 (sub) - direct to first reverb (no delay, keeps it solid)
+    { id: 'l1a', from: { nodeId: 'clock1', port: 'output' }, to: { nodeId: 'string1', port: 'trigger' } },
+    { id: 'l1b', from: { nodeId: 'string1', port: 'output' }, to: { nodeId: 'atten1', port: 'input' } },
+    { id: 'l1c', from: { nodeId: 'atten1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
 
-    // String 2 (medium)
-    { id: 's2a', from: { nodeId: 'clock2', port: 'output' }, to: { nodeId: 'string2', port: 'trigger' } },
-    { id: 's2b', from: { nodeId: 'string2', port: 'output' }, to: { nodeId: 'atten2', port: 'input' } },
-    { id: 's2c', from: { nodeId: 'atten2', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    // Layer 2 (warm bass) - to first delay
+    { id: 'l2a', from: { nodeId: 'clock2', port: 'output' }, to: { nodeId: 'string2', port: 'trigger' } },
+    { id: 'l2b', from: { nodeId: 'string2', port: 'output' }, to: { nodeId: 'atten2', port: 'input' } },
+    { id: 'l2c', from: { nodeId: 'atten2', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
 
-    // String 3 (higher)
-    { id: 's3a', from: { nodeId: 'clock3', port: 'output' }, to: { nodeId: 'string3', port: 'trigger' } },
-    { id: 's3b', from: { nodeId: 'string3', port: 'output' }, to: { nodeId: 'atten3', port: 'input' } },
-    { id: 's3c', from: { nodeId: 'atten3', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    // Layer 3 (mid warmth) - through divider to second delay
+    { id: 'l3a', from: { nodeId: 'clock3', port: 'output' }, to: { nodeId: 'div3', port: 'input' } },
+    { id: 'l3b', from: { nodeId: 'div3', port: 'output' }, to: { nodeId: 'string3', port: 'trigger' } },
+    { id: 'l3c', from: { nodeId: 'string3', port: 'output' }, to: { nodeId: 'atten3', port: 'input' } },
+    { id: 'l3d', from: { nodeId: 'atten3', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
 
-    // String 4 (chime)
-    { id: 's4a', from: { nodeId: 'clock4', port: 'output' }, to: { nodeId: 'string4', port: 'trigger' } },
-    { id: 's4b', from: { nodeId: 'string4', port: 'output' }, to: { nodeId: 'atten4', port: 'input' } },
-    { id: 's4c', from: { nodeId: 'atten4', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    // Layer 4 (soft mid) - to first delay
+    { id: 'l4a', from: { nodeId: 'clock4', port: 'output' }, to: { nodeId: 'div4', port: 'input' } },
+    { id: 'l4b', from: { nodeId: 'div4', port: 'output' }, to: { nodeId: 'string4', port: 'trigger' } },
+    { id: 'l4c', from: { nodeId: 'string4', port: 'output' }, to: { nodeId: 'atten4', port: 'input' } },
+    { id: 'l4d', from: { nodeId: 'atten4', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
 
-    // Effects chain
+    // Layer 5 (gentle upper) - to second delay
+    { id: 'l5a', from: { nodeId: 'clock5', port: 'output' }, to: { nodeId: 'div5', port: 'input' } },
+    { id: 'l5b', from: { nodeId: 'div5', port: 'output' }, to: { nodeId: 'string5', port: 'trigger' } },
+    { id: 'l5c', from: { nodeId: 'string5', port: 'output' }, to: { nodeId: 'atten5', port: 'input' } },
+    { id: 'l5d', from: { nodeId: 'atten5', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+
+    // Layer 6 (rare shimmer) - direct to second reverb
+    { id: 'l6a', from: { nodeId: 'clock6', port: 'output' }, to: { nodeId: 'div6', port: 'input' } },
+    { id: 'l6b', from: { nodeId: 'div6', port: 'output' }, to: { nodeId: 'string6', port: 'trigger' } },
+    { id: 'l6c', from: { nodeId: 'string6', port: 'output' }, to: { nodeId: 'atten6', port: 'input' } },
+    { id: 'l6d', from: { nodeId: 'atten6', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+
+    // Noise bed - direct to second reverb for atmosphere
+    { id: 'n1a', from: { nodeId: 'noise1', port: 'output' }, to: { nodeId: 'noiseAtten', port: 'input' } },
+    { id: 'n1b', from: { nodeId: 'noiseAtten', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+
+    // Delays feed into reverbs
     { id: 'fx1', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
-    { id: 'fx2', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    { id: 'fx2', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+
+    // Both reverbs to output
+    { id: 'fx3', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+    { id: 'fx4', from: { nodeId: 'reverb2', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
   ],
   groups: [],
 };

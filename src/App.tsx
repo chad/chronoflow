@@ -7,6 +7,7 @@ import { PatchManager } from './ui/panels/PatchManager';
 import { KeyboardInput } from './ui/panels/KeyboardInput';
 import { RecordingPanel } from './ui/panels/RecordingPanel';
 import { ErrorBoundary } from './ui/ErrorBoundary';
+import { CommandPalette } from './ui/CommandPalette';
 import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
@@ -14,10 +15,23 @@ import { usePatchStore } from './patch/patchStore';
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const isAudioEnabled = usePatchStore((state) => state.isAudioEnabled);
   const setAudioEnabled = usePatchStore((state) => state.setAudioEnabled);
   const loadPatch = usePatchStore((state) => state.loadPatch);
   const audioInitializedRef = useRef(false);
+
+  // Command palette keyboard shortcut (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((open) => !open);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleEnableAudio = async () => {
     if (audioInitializedRef.current) return;
@@ -72,6 +86,18 @@ function App() {
       <header className="h-12 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
         <h1 className="text-lg font-bold text-cyan-400">ChronoFlow</h1>
         <div className="flex items-center gap-4">
+          {/* Command palette button */}
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Search</span>
+            <kbd className="px-1.5 py-0.5 text-xs bg-gray-700 rounded">⌘K</kbd>
+          </button>
+
           {!isAudioEnabled ? (
             <button
               onClick={handleEnableAudio}
@@ -113,6 +139,12 @@ function App() {
           </ErrorBoundary>
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
     </div>
   );
 }
