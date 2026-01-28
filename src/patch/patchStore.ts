@@ -99,6 +99,13 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   smoothrandom: { rate: 0.1, range: 1, smooth: 0.8 },
   karplusstrong: { frequency: 220, damping: 0.5, feedback: 0.99, brightness: 0.7, pluck: 0.5 },
   granular: { grainSize: 100, density: 10, spray: 0.1, pitch: 1.0, position: 0.5, freeze: false, mix: 1.0, reverse: 0 },
+  euclidean: { steps: 16, hits: 4, rotation: 0, running: true },
+  slewlimiter: { rise: 0.1, fall: 0.1, shape: 'exponential' },
+  turing: { probability: 0.5, length: 8, scale: 1, locked: false },
+  envfollower: { attack: 10, release: 100, gain: 1, offset: 0 },
+  probgate: { probability: 0.5, mode: 'gate' },
+  logic: { operation: 'and' },
+  macro: { value: 0.5, out1Min: 0, out1Max: 1, out2Min: 0, out2Max: 1, out3Min: 0, out3Max: 1, out4Min: 0, out4Max: 1, smooth: 0.1 },
 };
 
 export const usePatchStore = create<PatchState>()(

@@ -20,6 +20,13 @@ import { GroupNodeUI } from './GroupNodeUI';
 import { SmoothRandomNodeUI } from './SmoothRandomNodeUI';
 import { KarplusStrongNodeUI } from './KarplusStrongNodeUI';
 import { GranularNodeUI } from './GranularNodeUI';
+import { EuclideanNodeUI } from './EuclideanNodeUI';
+import { SlewLimiterNodeUI } from './SlewLimiterNodeUI';
+import { TuringMachineNodeUI } from './TuringMachineNodeUI';
+import { EnvelopeFollowerNodeUI } from './EnvelopeFollowerNodeUI';
+import { ProbabilityGateNodeUI } from './ProbabilityGateNodeUI';
+import { LogicNodeUI } from './LogicNodeUI';
+import { MacroNodeUI } from './MacroNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -44,4 +51,11 @@ export const nodeTypes = {
   smoothrandom: SmoothRandomNodeUI,
   karplusstrong: KarplusStrongNodeUI,
   granular: GranularNodeUI,
+  euclidean: EuclideanNodeUI,
+  slewlimiter: SlewLimiterNodeUI,
+  turing: TuringMachineNodeUI,
+  envfollower: EnvelopeFollowerNodeUI,
+  probgate: ProbabilityGateNodeUI,
+  logic: LogicNodeUI,
+  macro: MacroNodeUI,
 };

@@ -31,17 +31,24 @@ import {
   SynthKarplusStrongNode,
   SynthGranularNode,
   SynthGranularWorkletNode,
+  SynthEuclideanNode,
+  SynthSlewLimiterNode,
+  SynthTuringMachineNode,
+  SynthEnvelopeFollowerNode,
+  SynthProbabilityGateNode,
+  SynthLogicNode,
+  SynthMacroNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro'];
 
 interface Connection {
   fromId: string;
@@ -186,6 +193,27 @@ class AudioGraph {
         } else {
           node = new SynthGranularNode(context, id, params);
         }
+        break;
+      case 'euclidean':
+        node = new SynthEuclideanNode(context, id, params);
+        break;
+      case 'slewlimiter':
+        node = new SynthSlewLimiterNode(context, id, params);
+        break;
+      case 'turing':
+        node = new SynthTuringMachineNode(context, id, params);
+        break;
+      case 'envfollower':
+        node = new SynthEnvelopeFollowerNode(context, id, params);
+        break;
+      case 'probgate':
+        node = new SynthProbabilityGateNode(context, id, params);
+        break;
+      case 'logic':
+        node = new SynthLogicNode(context, id, params);
+        break;
+      case 'macro':
+        node = new SynthMacroNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
