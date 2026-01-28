@@ -72,8 +72,10 @@ export function Knob({
   );
 
   // Calculate rotation from value (0-270 degrees)
-  const normalizedValue = (toLinear(value) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min);
-  const rotation = normalizedValue * 270 - 135;
+  // Defensive: ensure value is a valid number
+  const safeValue = typeof value === 'number' && !isNaN(value) ? value : min;
+  const normalizedValue = (toLinear(safeValue) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min);
+  const rotation = isNaN(normalizedValue) ? -135 : normalizedValue * 270 - 135;
 
   // Calculate modulation indicator rotation
   const clampedModValue = modulatedValue !== undefined
@@ -88,9 +90,9 @@ export function Knob({
       e.stopPropagation(); // Prevent React Flow from capturing the event
       setIsDragging(true);
       dragStartY.current = e.clientY;
-      dragStartValue.current = value;
+      dragStartValue.current = safeValue;
     },
-    [value]
+    [safeValue]
   );
 
   useEffect(() => {
@@ -130,17 +132,17 @@ export function Knob({
   }, [isDragging, min, max, step, onChange, logarithmic, toLinear, fromLinear]);
 
   // Format display value
-  const displayValue = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toFixed(step < 1 ? 2 : 0);
+  const displayValue = safeValue >= 1000 ? `${(safeValue / 1000).toFixed(1)}k` : safeValue.toFixed(step < 1 ? 2 : 0);
 
   // Handle double-click to edit
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setEditValue(value.toString());
+    setEditValue(safeValue.toString());
     setIsEditing(true);
     // Focus input after render
     setTimeout(() => inputRef.current?.select(), 0);
-  }, [value]);
+  }, [safeValue]);
 
   // Handle input submission
   const handleInputSubmit = useCallback(() => {

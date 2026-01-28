@@ -29,7 +29,10 @@ export class SynthKarplusStrongNode implements SynthNode {
   // Audio nodes
   private delayNode: DelayNode;
   private feedbackGain: GainNode;
-  private dampingFilter: BiquadFilterNode;
+  private averagingDelay: DelayNode; // One-sample delay for averaging filter
+  private averagingGain1: GainNode;  // Current sample weight
+  private averagingGain2: GainNode;  // Delayed sample weight
+  private averagingMerge: GainNode;  // Merge point for averaging
   private outputGain: GainNode;
   private inputGain: GainNode;
 
@@ -48,9 +51,9 @@ export class SynthKarplusStrongNode implements SynthNode {
     this.id = id;
     this.params = { ...DEFAULT_PARAMS, ...params };
 
-    // Create the Karplus-Strong feedback loop
-    // Signal flow: input/exciter -> delay -> damping filter -> feedback gain -> delay (loop)
-    //                                    \-> output
+    // Create the Karplus-Strong feedback loop using classic averaging filter
+    // The averaging filter: y[n] = a * x[n] + (1-a) * x[n-1]
+    // This is stable by design and provides natural high-frequency damping
 
     this.inputGain = context.createGain();
     this.inputGain.gain.value = 1;
@@ -58,26 +61,41 @@ export class SynthKarplusStrongNode implements SynthNode {
     this.delayNode = context.createDelay(1); // Max 1 second delay
     this.updateDelayTime();
 
-    this.dampingFilter = context.createBiquadFilter();
-    this.dampingFilter.type = 'lowpass';
-    this.updateDamping();
+    // Classic Karplus-Strong averaging filter
+    // Mix current sample with one-sample-delayed sample
+    this.averagingMerge = context.createGain();
+    this.averagingMerge.gain.value = 1;
+
+    this.averagingGain1 = context.createGain(); // Weight for current sample
+    this.averagingGain2 = context.createGain(); // Weight for delayed sample
+    this.updateDamping(); // Sets the weights
+
+    // One-sample delay for averaging
+    this.averagingDelay = context.createDelay(0.1);
+    this.averagingDelay.delayTime.value = 1 / context.sampleRate; // One sample
 
     this.feedbackGain = context.createGain();
     this.updateFeedback();
 
     this.outputGain = context.createGain();
-    this.outputGain.gain.value = 0.8;
+    this.outputGain.gain.value = 1.0;
 
     // Create the feedback loop
-    // Input goes to delay
+    // Input goes to main delay
     this.inputGain.connect(this.delayNode);
 
-    // Delay output goes to both: output AND damping filter
+    // Delay output goes to output AND to averaging filter
     this.delayNode.connect(this.outputGain);
-    this.delayNode.connect(this.dampingFilter);
 
-    // Damping filter -> feedback gain -> back to delay
-    this.dampingFilter.connect(this.feedbackGain);
+    // Averaging filter: current + delayed sample
+    this.delayNode.connect(this.averagingGain1);
+    this.delayNode.connect(this.averagingDelay);
+    this.averagingDelay.connect(this.averagingGain2);
+    this.averagingGain1.connect(this.averagingMerge);
+    this.averagingGain2.connect(this.averagingMerge);
+
+    // Merged signal -> feedback gain -> back to delay
+    this.averagingMerge.connect(this.feedbackGain);
     this.feedbackGain.connect(this.delayNode);
 
     // Create noise buffer for plucking
@@ -104,15 +122,24 @@ export class SynthKarplusStrongNode implements SynthNode {
 
   private checkTrigger(): void {
     this.triggerAnalyser.getFloatTimeDomainData(this.triggerData as Float32Array<ArrayBuffer>);
-    const currentValue = this.triggerData[0] || 0;
 
-    // Detect rising edge (crossing threshold from below)
-    const threshold = 0.1;
-    if (currentValue > threshold && this.lastTriggerValue <= threshold) {
-      this.trigger(Math.min(1, currentValue)); // Use signal amplitude as velocity
+    // Find the maximum value in the buffer (pulse might be anywhere in the window)
+    let maxValue = 0;
+    for (let i = 0; i < this.triggerData.length; i++) {
+      const val = this.triggerData[i];
+      if (val > maxValue) {
+        maxValue = val;
+      }
     }
 
-    this.lastTriggerValue = currentValue;
+    // Detect rising edge (crossing threshold from below)
+    const threshold = 0.5;
+    if (maxValue > threshold && this.lastTriggerValue <= threshold) {
+      console.log(`[KarplusStrong ${this.id}] Trigger detected, peak: ${maxValue.toFixed(3)}`);
+      this.trigger(Math.min(1, maxValue)); // Use signal amplitude as velocity
+    }
+
+    this.lastTriggerValue = maxValue;
   }
 
   // Get trigger input node for external connections
@@ -121,19 +148,19 @@ export class SynthKarplusStrongNode implements SynthNode {
   }
 
   private createNoiseBuffer(): void {
-    // Create a short burst of filtered noise for excitation
-    const duration = 0.05; // 50ms burst
+    // Create noise burst for excitation - needs enough energy to start the string
+    const duration = 0.015; // 15ms burst
     const sampleRate = this.context.sampleRate;
     const length = Math.floor(duration * sampleRate);
     this.noiseBuffer = this.context.createBuffer(1, length, sampleRate);
     const data = this.noiseBuffer.getChannelData(0);
 
-    // Generate noise with envelope
+    // Generate noise with linear decay envelope - full amplitude
     for (let i = 0; i < length; i++) {
       const t = i / length;
-      // Quick attack, quick decay envelope
-      const envelope = t < 0.1 ? t * 10 : Math.pow(1 - (t - 0.1) / 0.9, 2);
-      // Noise
+      // Linear decay
+      const envelope = 1 - t;
+      // Full amplitude noise
       data[i] = (Math.random() * 2 - 1) * envelope;
     }
   }
@@ -147,14 +174,20 @@ export class SynthKarplusStrongNode implements SynthNode {
   }
 
   private updateDamping(): void {
-    // Damping controls the lowpass filter cutoff
-    // Higher damping = lower cutoff = faster high frequency decay = darker sound
-    const minCutoff = 200;
-    const maxCutoff = 8000;
-    // Invert damping so higher damping = lower cutoff
-    const cutoff = minCutoff + (1 - this.params.damping) * (maxCutoff - minCutoff);
-    this.dampingFilter.frequency.setValueAtTime(cutoff, this.context.currentTime);
-    this.dampingFilter.Q.value = 0.5;
+    // Damping controls the averaging filter blend
+    // Classic K-S uses 0.5/0.5 blend. We vary this based on damping:
+    // Higher damping = more weight on delayed sample = more HF rolloff
+    // damping 0 -> weights 0.5/0.5 (even mix, bright)
+    // damping 1 -> weights 0.2/0.8 (more smoothing, dark)
+    const currentWeight = 0.5 - this.params.damping * 0.3; // 0.5 to 0.2
+    const delayedWeight = 0.5 + this.params.damping * 0.3; // 0.5 to 0.8
+
+    if (this.averagingGain1) {
+      this.averagingGain1.gain.setValueAtTime(currentWeight, this.context.currentTime);
+    }
+    if (this.averagingGain2) {
+      this.averagingGain2.gain.setValueAtTime(delayedWeight, this.context.currentTime);
+    }
   }
 
   private updateFeedback(): void {
@@ -168,38 +201,22 @@ export class SynthKarplusStrongNode implements SynthNode {
   trigger(velocity: number = 1): void {
     if (!this.noiseBuffer) return;
 
+    console.log(`[KarplusStrong ${this.id}] Plucking at velocity ${velocity}`);
+
     // Create noise burst source
     const noiseSource = this.context.createBufferSource();
     noiseSource.buffer = this.noiseBuffer;
 
-    // Brightness filter - filters the exciter noise
-    const brightnessFilter = this.context.createBiquadFilter();
-    brightnessFilter.type = 'lowpass';
-    const brightnessFreq = 500 + this.params.brightness * 7500; // 500 - 8000 Hz
-    brightnessFilter.frequency.value = brightnessFreq;
-
-    // Pluck position filter - comb filter effect
-    // Position affects which harmonics are emphasized
-    const pluckDelay = this.context.createDelay(0.02);
-    const pluckTime = this.params.pluck * 0.01; // 0-10ms
-    pluckDelay.delayTime.value = pluckTime;
-    const pluckMix = this.context.createGain();
-    pluckMix.gain.value = 0.5;
-
-    // Velocity affects amplitude
+    // Velocity gain - full strength
     const velocityGain = this.context.createGain();
     velocityGain.gain.value = velocity;
 
-    // Connect exciter chain
-    noiseSource.connect(brightnessFilter);
-    brightnessFilter.connect(velocityGain);
-    brightnessFilter.connect(pluckDelay);
-    pluckDelay.connect(pluckMix);
-    pluckMix.connect(velocityGain);
+    // Direct connection: noise -> velocity -> input
+    noiseSource.connect(velocityGain);
     velocityGain.connect(this.inputGain);
 
     noiseSource.start();
-    noiseSource.stop(this.context.currentTime + 0.05);
+    noiseSource.stop(this.context.currentTime + 0.02);
   }
 
   // Set frequency via external CV (for sequencer connection)
@@ -277,7 +294,10 @@ export class SynthKarplusStrongNode implements SynthNode {
     }
     this.inputGain.disconnect();
     this.delayNode.disconnect();
-    this.dampingFilter.disconnect();
+    this.averagingGain1.disconnect();
+    this.averagingGain2.disconnect();
+    this.averagingDelay.disconnect();
+    this.averagingMerge.disconnect();
     this.feedbackGain.disconnect();
     this.outputGain.disconnect();
     this.triggerInput.disconnect();

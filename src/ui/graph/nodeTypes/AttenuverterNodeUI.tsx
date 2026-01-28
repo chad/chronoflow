@@ -14,8 +14,11 @@ type AttenuverterNode = Node<AttenuverterData, 'attenuverter'>;
 export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<AttenuverterNode>) => {
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
+  // Defensive: ensure amount is a valid number
+  const amount = typeof data.amount === 'number' && !isNaN(data.amount) ? data.amount : 0;
+
   // Format display: show as percentage
-  const displayPercent = Math.round(data.amount * 100);
+  const displayPercent = Math.round(amount * 100);
   const polarityColor = displayPercent < 0 ? 'text-red-400' : displayPercent > 0 ? 'text-green-400' : 'text-gray-500';
 
   return (
@@ -31,7 +34,7 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
       <div className="flex justify-center">
         <Knob
           label="Amount"
-          value={data.amount}
+          value={amount}
           min={-1}
           max={1}
           step={0.01}
