@@ -11,6 +11,7 @@ import { CommandPalette } from './ui/CommandPalette';
 import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
+import { useUndoRedo } from './patch/useUndoRedo';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,9 @@ function App() {
   const setAudioEnabled = usePatchStore((state) => state.setAudioEnabled);
   const loadPatch = usePatchStore((state) => state.loadPatch);
   const audioInitializedRef = useRef(false);
+
+  // Initialize undo/redo (sets up Cmd+Z / Cmd+Shift+Z handlers)
+  const { canUndo, canRedo, undo, redo } = useUndoRedo();
 
   // Command palette keyboard shortcut (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -86,6 +90,30 @@ function App() {
       <header className="h-12 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
         <h1 className="text-lg font-bold text-cyan-400">ChronoFlow</h1>
         <div className="flex items-center gap-4">
+          {/* Undo/Redo buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="p-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 text-sm rounded border border-gray-700 transition-colors"
+              title="Undo (⌘Z)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="p-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 text-sm rounded border border-gray-700 transition-colors"
+              title="Redo (⌘⇧Z)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+              </svg>
+            </button>
+          </div>
+
           {/* Command palette button */}
           <button
             onClick={() => setIsCommandPaletteOpen(true)}

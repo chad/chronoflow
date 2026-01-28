@@ -1,9 +1,11 @@
 import { create } from 'zustand';
+import { temporal } from 'zundo';
 import { nanoid } from 'nanoid';
 import type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchGroup, ExposedPort } from './types';
 import { createEmptyPatch } from './types';
 import { computeAutoLayout } from '../layout/autoLayout';
 import { detectExposedPorts, calculateGroupCenter, generatePortAlias } from '../layout/groupUtils';
+
 
 interface PatchState {
   patch: Patch;
@@ -99,7 +101,9 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   granular: { grainSize: 100, density: 10, spray: 0.1, pitch: 1.0, position: 0.5, freeze: false, mix: 1.0, reverse: 0 },
 };
 
-export const usePatchStore = create<PatchState>((set, get) => ({
+export const usePatchStore = create<PatchState>()(
+  temporal(
+    (set, get) => ({
   patch: createEmptyPatch(),
   isAudioEnabled: false,
   selectedNodeId: null,
@@ -520,4 +524,18 @@ export const usePatchStore = create<PatchState>((set, get) => ({
       return false;
     }
   },
-}));
+}),
+    {
+      // Only track patch state for undo/redo
+      // Skip: selection, audio enabled, focused group
+      partialize: (state) => ({
+        patch: state.patch,
+      }),
+      // Limit history to 100 entries
+      limit: 100,
+      // Equality function to prevent duplicate history entries
+      equality: (pastState, currentState) =>
+        JSON.stringify(pastState.patch) === JSON.stringify(currentState.patch),
+    }
+  )
+);

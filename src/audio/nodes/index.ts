@@ -21,3 +21,4 @@ export * from './OutputNode';
 export * from './SmoothRandomNode';
 export * from './KarplusStrongNode';
 export * from './GranularNode';
+export * from './GranularWorkletNode';

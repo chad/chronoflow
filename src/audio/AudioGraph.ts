@@ -3,6 +3,9 @@
 // Set to true to enable debug logging
 const DEBUG = false;
 
+// Set to true to use AudioWorklet for granular processing
+const USE_GRANULAR_WORKLET = true;
+
 import { audioEngine } from './AudioEngine';
 import type { SynthNode } from './nodes';
 import {
@@ -27,6 +30,7 @@ import {
   SynthSmoothRandomNode,
   SynthKarplusStrongNode,
   SynthGranularNode,
+  SynthGranularWorkletNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
@@ -176,7 +180,12 @@ class AudioGraph {
         node = new SynthKarplusStrongNode(context, id, params);
         break;
       case 'granular':
-        node = new SynthGranularNode(context, id, params);
+        // Use worklet version if enabled and AudioWorklet is supported
+        if (USE_GRANULAR_WORKLET && context.audioWorklet) {
+          node = new SynthGranularWorkletNode(context, id, params);
+        } else {
+          node = new SynthGranularNode(context, id, params);
+        }
         break;
       case 'output':
         // Output node is a singleton
