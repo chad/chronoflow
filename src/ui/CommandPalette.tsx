@@ -18,6 +18,10 @@ import {
   CRYSTAL_BELLS_PATCH,
   MIDNIGHT_DRIVE_PATCH,
   ETHEREAL_DRIFT_PATCH,
+  EVOLVING_MELODY_PATCH,
+  POLYRHYTHMIC_TRIGGERS_PATCH,
+  MACRO_DRONE_PATCH,
+  COSMIC_CATHEDRAL_PATCH,
 } from '../patch/samplePatches';
 import type { Patch } from '../patch/types';
 
@@ -85,6 +89,10 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       ['Crystal Bells', CRYSTAL_BELLS_PATCH],
       ['Midnight Drive', MIDNIGHT_DRIVE_PATCH],
       ['Ethereal Drift', ETHEREAL_DRIFT_PATCH],
+      ['Evolving Melody', EVOLVING_MELODY_PATCH],
+      ['Polyrhythmic Triggers', POLYRHYTHMIC_TRIGGERS_PATCH],
+      ['Macro Drone', MACRO_DRONE_PATCH],
+      ['Cosmic Cathedral', COSMIC_CATHEDRAL_PATCH],
     ];
 
     const nodeTypes: [string, string, string][] = [

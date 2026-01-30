@@ -25,6 +25,13 @@ export class SynthADSRNode implements SynthNode {
   private isActive = false;
   private releaseStartValue = 0;
 
+  // For trigger detection (external clock/gate input)
+  private triggerInput: GainNode;
+  private triggerAnalyser: AnalyserNode;
+  private triggerData: Float32Array;
+  private lastTriggerValue: number = 0;
+  private triggerCheckInterval: number | null = null;
+
   constructor(context: AudioContext, id: string, params?: Partial<ADSRParams>) {
     this.context = context;
     this.id = id;
@@ -42,6 +49,58 @@ export class SynthADSRNode implements SynthNode {
     // Connect: constant 1.0 -> gain (envelope shape) -> output
     this.constantSource.connect(this.gainNode);
     this.constantSource.start();
+
+    // Trigger input for external clock/gate connections
+    this.triggerInput = context.createGain();
+    this.triggerInput.gain.value = 1;
+    this.triggerAnalyser = context.createAnalyser();
+    this.triggerAnalyser.fftSize = 256;
+    this.triggerData = new Float32Array(this.triggerAnalyser.fftSize);
+    this.triggerInput.connect(this.triggerAnalyser);
+  }
+
+  private startTriggerDetection(): void {
+    if (this.triggerCheckInterval !== null) return;
+
+    this.triggerCheckInterval = window.setInterval(() => {
+      this.checkTrigger();
+    }, 10); // Check every 10ms
+  }
+
+  private stopTriggerDetection(): void {
+    if (this.triggerCheckInterval !== null) {
+      clearInterval(this.triggerCheckInterval);
+      this.triggerCheckInterval = null;
+    }
+  }
+
+  private checkTrigger(): void {
+    this.triggerAnalyser.getFloatTimeDomainData(this.triggerData as Float32Array<ArrayBuffer>);
+
+    // Find the maximum value in the buffer
+    let maxValue = 0;
+    for (let i = 0; i < this.triggerData.length; i++) {
+      const val = this.triggerData[i];
+      if (val > maxValue) maxValue = val;
+    }
+
+    // Detect rising edge (trigger pulse)
+    const threshold = 0.5;
+    if (maxValue > threshold && this.lastTriggerValue <= threshold) {
+      this.trigger(1);
+    } else if (maxValue <= threshold && this.lastTriggerValue > threshold) {
+      // Falling edge - release the envelope
+      this.release();
+    }
+
+    this.lastTriggerValue = maxValue;
+  }
+
+  // Get trigger input node for external connections
+  getTriggerInput(): AudioNode {
+    // Start detection when something connects
+    this.startTriggerDetection();
+    return this.triggerInput;
   }
 
   trigger(velocity: number = 1): void {
@@ -145,9 +204,12 @@ export class SynthADSRNode implements SynthNode {
   }
 
   dispose(): void {
+    this.stopTriggerDetection();
     this.forceStop();
     this.constantSource.stop();
     this.constantSource.disconnect();
     this.gainNode.disconnect();
+    this.triggerInput.disconnect();
+    this.triggerAnalyser.disconnect();
   }
 }

@@ -332,6 +332,10 @@ class AudioGraph {
       const triggerInput = toNode.getTriggerInput();
       toNode.setExternalTrigger(true);
       output.connect(triggerInput);
+    } else if (toPort === 'trigger' && toNode instanceof SynthADSRNode) {
+      // Special handling for ADSR trigger input
+      const triggerInput = toNode.getTriggerInput();
+      output.connect(triggerInput);
     } else {
       // Check if this is a mixer channel input
       const mixerInputMatch = toPort.match(/^input([1-4])$/);
@@ -347,7 +351,7 @@ class AudioGraph {
         // Regular audio connection
         const input = toNode.getInputNode();
         if (!input) {
-          console.error(`AudioGraph: Cannot connect - missing input`);
+          console.error(`AudioGraph: Cannot connect - missing input for ${fromId}.${fromPort} -> ${toId}.${toPort}`);
           return false;
         }
         output.connect(input);
@@ -435,6 +439,10 @@ class AudioGraph {
       // Special handling for Sample & Hold trigger input
       const triggerInput = toNode.getTriggerInput();
       toNode.setExternalTrigger(false);
+      output.disconnect(triggerInput);
+    } else if (toPort === 'trigger' && toNode instanceof SynthADSRNode) {
+      // Special handling for ADSR trigger input
+      const triggerInput = toNode.getTriggerInput();
       output.disconnect(triggerInput);
     } else {
       // Check if this is a mixer channel input
