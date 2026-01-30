@@ -3041,7 +3041,6 @@ export const COSMIC_CATHEDRAL_PATCH: Patch = {
     // ═══════════════════════════════════════════════════════════════════════
     { id: 'noiseGrain', type: 'noise', position: { x: 50, y: 900 }, params: { type: 'pink' } },
     { id: 'granular1', type: 'granular', position: { x: 230, y: 900 }, params: { grainSize: 150, density: 8, spray: 0.3, pitch: 1.0, position: 0.5, freeze: false, mix: 1.0, reverse: 0.3 } },
-    { id: 'smoothRndGrain', type: 'smoothrandom', position: { x: 50, y: 1000 }, params: { rate: 0.03, range: 0.4, smooth: 0.9 } },
     { id: 'filterGrain', type: 'filter', position: { x: 410, y: 900 }, params: { mode: 'bandpass', cutoff: 800, resonance: 3 } },
     { id: 'attenGrain', type: 'attenuverter', position: { x: 590, y: 900 }, params: { amount: 0.2 } },
 
@@ -3127,9 +3126,7 @@ export const COSMIC_CATHEDRAL_PATCH: Patch = {
 
     // === Layer 5: Granular texture ===
     { id: 'l5a', from: { nodeId: 'noiseGrain', port: 'output' }, to: { nodeId: 'granular1', port: 'input' } },
-    { id: 'l5b', from: { nodeId: 'smoothRndGrain', port: 'output' }, to: { nodeId: 'granular1', port: 'position_mod' } },
     { id: 'l5c', from: { nodeId: 'granular1', port: 'output' }, to: { nodeId: 'filterGrain', port: 'input' } },
-    { id: 'l5d', from: { nodeId: 'smoothRndGrain', port: 'output' }, to: { nodeId: 'filterGrain', port: 'cutoff_mod' } },
     { id: 'l5e', from: { nodeId: 'filterGrain', port: 'output' }, to: { nodeId: 'attenGrain', port: 'input' } },
     { id: 'l5f', from: { nodeId: 'attenGrain', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
 
