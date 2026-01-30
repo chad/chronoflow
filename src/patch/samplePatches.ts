@@ -3051,27 +3051,27 @@ export const COSMIC_CATHEDRAL_PATCH: Patch = {
     { id: 'lfo2', type: 'lfo', position: { x: 50, y: 1180 }, params: { rate: 0.035, depth: 0.5, waveform: 'triangle' } },
     { id: 'oscDrone1', type: 'oscillator', position: { x: 230, y: 1100 }, params: { frequency: 110, detune: 0, waveform: 'sawtooth' } },
     { id: 'oscDrone2', type: 'oscillator', position: { x: 230, y: 1180 }, params: { frequency: 110.5, detune: 7, waveform: 'sawtooth' } },
-    { id: 'mixerDrone', type: 'mixer', position: { x: 410, y: 1140 }, params: { level1: 0.7, level2: 0.7, level3: 0, level4: 0, master: 0.8 } },
-    { id: 'wavefolderDrone', type: 'wavefolder', position: { x: 590, y: 1140 }, params: { drive: 1.5, folds: 3, mix: 0.6 } },
+    { id: 'mixerDrone', type: 'mixer', position: { x: 410, y: 1140 }, params: { level1: 0.4, level2: 0.4, level3: 0, level4: 0, master: 0.5 } },
+    { id: 'wavefolderDrone', type: 'wavefolder', position: { x: 590, y: 1140 }, params: { drive: 1.2, folds: 2, mix: 0.5 } },
     { id: 'filterDrone', type: 'filter', position: { x: 770, y: 1140 }, params: { mode: 'lowpass', cutoff: 600, resonance: 2 } },
     { id: 'attenDrone', type: 'attenuverter', position: { x: 950, y: 1140 }, params: { amount: 0.25 } },
 
     // ═══════════════════════════════════════════════════════════════════════
     // MIXER - Combine all layers
     // ═══════════════════════════════════════════════════════════════════════
-    { id: 'mixerMain', type: 'mixer', position: { x: 1300, y: 600 }, params: { level1: 1, level2: 0.8, level3: 1, level4: 0.9, master: 0.7 } },
+    { id: 'mixerMain', type: 'mixer', position: { x: 1300, y: 600 }, params: { level1: 0.7, level2: 0.6, level3: 0.8, level4: 0.5, master: 0.6 } },
 
     // ═══════════════════════════════════════════════════════════════════════
     // EFFECTS CHAIN - Cascading delays into massive reverbs
     // ═══════════════════════════════════════════════════════════════════════
     { id: 'delay1', type: 'delay', position: { x: 1480, y: 500 }, params: { time: 0.375, feedback: 0.4, mix: 0.35 } },
     { id: 'delay2', type: 'delay', position: { x: 1480, y: 700 }, params: { time: 0.5, feedback: 0.35, mix: 0.3 } },
-    { id: 'reverb1', type: 'reverb', position: { x: 1660, y: 500 }, params: { decay: 6, mix: 0.5 } },
-    { id: 'reverb2', type: 'reverb', position: { x: 1660, y: 700 }, params: { decay: 10, mix: 0.6 } },
-    { id: 'mixerFX', type: 'mixer', position: { x: 1840, y: 600 }, params: { level1: 1, level2: 1, level3: 0, level4: 0, master: 0.85 } },
+    { id: 'reverb1', type: 'reverb', position: { x: 1660, y: 500 }, params: { decay: 4, mix: 0.4 } },
+    { id: 'reverb2', type: 'reverb', position: { x: 1660, y: 700 }, params: { decay: 6, mix: 0.45 } },
+    { id: 'mixerFX', type: 'mixer', position: { x: 1840, y: 600 }, params: { level1: 0.8, level2: 0.8, level3: 0, level4: 0, master: 0.7 } },
 
     // OUTPUT
-    { id: 'output', type: 'output', position: { x: 2020, y: 600 }, params: { gain: 0.55 } },
+    { id: 'output', type: 'output', position: { x: 2020, y: 600 }, params: { gain: 0.45 } },
   ],
   connections: [
     // === Master clock distribution ===
@@ -3091,7 +3091,6 @@ export const COSMIC_CATHEDRAL_PATCH: Patch = {
     { id: 'l1f', from: { nodeId: 'adsrLead', port: 'output' }, to: { nodeId: 'vcaLead', port: 'gain_mod' } },
     { id: 'l1g', from: { nodeId: 'adsrLead', port: 'output' }, to: { nodeId: 'filterLead', port: 'cutoff_mod' } },
     { id: 'l1h', from: { nodeId: 'filterLead', port: 'output' }, to: { nodeId: 'vcaLead', port: 'input' } },
-    { id: 'l1i', from: { nodeId: 'vcaLead', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
 
     // === Layer 2: Counter melody ===
     { id: 'l2a', from: { nodeId: 'divCounter', port: 'div2' }, to: { nodeId: 'euclidCounter', port: 'clock' } },
@@ -3103,7 +3102,6 @@ export const COSMIC_CATHEDRAL_PATCH: Patch = {
     { id: 'l2g', from: { nodeId: 'oscCounter', port: 'output' }, to: { nodeId: 'filterCounter', port: 'input' } },
     { id: 'l2h', from: { nodeId: 'adsrCounter', port: 'output' }, to: { nodeId: 'vcaCounter', port: 'gain_mod' } },
     { id: 'l2i', from: { nodeId: 'filterCounter', port: 'output' }, to: { nodeId: 'vcaCounter', port: 'input' } },
-    { id: 'l2j', from: { nodeId: 'vcaCounter', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
 
     // === Layer 3: Deep bass ===
     { id: 'l3a', from: { nodeId: 'divBass', port: 'div4' }, to: { nodeId: 'euclidBass', port: 'clock' } },
