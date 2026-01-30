@@ -62,7 +62,7 @@ class AudioGraph {
   private connections: Connection[] = [];
   private outputNode: SynthOutputNode | null = null;
   private voiceAllocator: VoiceAllocator | null = null;
-  private polyphonyEnabled = true;
+  private polyphonyEnabled = false;
   private maxVoices = 8;
 
   async init(): Promise<void> {
