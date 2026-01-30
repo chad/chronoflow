@@ -1,160 +1,204 @@
+import { useState, useEffect, useMemo } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
 import type { PatchNodeType } from '../../patch/types';
+import { SearchInput } from '../components/SearchInput';
 
 interface NodeOption {
   type: PatchNodeType;
   label: string;
-  color: string;
   description: string;
 }
 
-const NODE_OPTIONS: NodeOption[] = [
+interface Category {
+  name: string;
+  color: string;
+  borderColor: string;
+  modules: NodeOption[];
+}
+
+const CATEGORIES: Category[] = [
   {
-    type: 'oscillator',
-    label: 'Osc',
-    color: 'bg-orange-500',
-    description: 'Audio oscillator',
+    name: 'Sources',
+    color: 'bg-orange-900/50',
+    borderColor: 'border-l-orange-500',
+    modules: [
+      { type: 'oscillator', label: 'Oscillator', description: 'Audio oscillator with multiple waveforms' },
+      { type: 'noise', label: 'Noise', description: 'White/pink noise generator' },
+      { type: 'karplusstrong', label: 'Karplus-Strong', description: 'Plucked string synthesis' },
+      { type: 'granular', label: 'Granular', description: 'Granular texture processor' },
+      { type: 'smoothrandom', label: 'Smooth Random', description: 'Smooth random walk generator' },
+    ],
   },
   {
-    type: 'filter',
-    label: 'Filter',
-    color: 'bg-purple-500',
-    description: 'LP/HP/BP filter',
+    name: 'Modulators',
+    color: 'bg-pink-900/50',
+    borderColor: 'border-l-pink-500',
+    modules: [
+      { type: 'lfo', label: 'LFO', description: 'Low frequency oscillator' },
+      { type: 'adsr', label: 'ADSR', description: 'Attack/Decay/Sustain/Release envelope' },
+      { type: 'envfollower', label: 'Envelope Follower', description: 'Track amplitude of input signal' },
+    ],
   },
   {
-    type: 'vca',
-    label: 'VCA',
-    color: 'bg-green-500',
-    description: 'Volume control',
+    name: 'Sequencing',
+    color: 'bg-emerald-900/50',
+    borderColor: 'border-l-emerald-500',
+    modules: [
+      { type: 'clock', label: 'Clock', description: 'Master tempo clock' },
+      { type: 'clockdiv', label: 'Clock Divider', description: 'Divide clock rate' },
+      { type: 'sequencer', label: 'Sequencer', description: '8-step CV sequencer' },
+      { type: 'euclidean', label: 'Euclidean', description: 'Euclidean rhythm generator' },
+    ],
   },
   {
-    type: 'adsr',
-    label: 'ADSR',
-    color: 'bg-pink-500',
-    description: 'Envelope generator',
+    name: 'CV / Logic',
+    color: 'bg-sky-900/50',
+    borderColor: 'border-l-sky-500',
+    modules: [
+      { type: 'samplehold', label: 'Sample & Hold', description: 'Sample input on trigger' },
+      { type: 'quantizer', label: 'Quantizer', description: 'Quantize to musical scales' },
+      { type: 'slewlimiter', label: 'Slew Limiter', description: 'Smooth/portamento CV changes' },
+      { type: 'attenuverter', label: 'Attenuverter', description: 'Scale and invert signals' },
+      { type: 'logic', label: 'Logic', description: 'Boolean logic operations' },
+      { type: 'probgate', label: 'Probability Gate', description: 'Randomly pass/block gates' },
+      { type: 'macro', label: 'Macro', description: 'Multi-output control knob' },
+    ],
   },
   {
-    type: 'lfo',
-    label: 'LFO',
-    color: 'bg-yellow-500',
-    description: 'Modulation source',
+    name: 'Processing',
+    color: 'bg-purple-900/50',
+    borderColor: 'border-l-purple-500',
+    modules: [
+      { type: 'filter', label: 'Filter', description: 'LP/HP/BP resonant filter' },
+      { type: 'vca', label: 'VCA', description: 'Voltage controlled amplifier' },
+      { type: 'wavefolder', label: 'Wavefolder', description: 'Harmonic waveshaping' },
+      { type: 'ringmod', label: 'Ring Mod', description: 'Ring modulator' },
+    ],
   },
   {
-    type: 'attenuverter',
-    label: 'Atten',
-    color: 'bg-gray-500',
-    description: 'Invert/scale signal',
-  },
-  {
-    type: 'noise',
-    label: 'Noise',
-    color: 'bg-stone-500',
-    description: 'White/pink noise',
-  },
-  {
-    type: 'samplehold',
-    label: 'S&H',
-    color: 'bg-lime-500',
-    description: 'Sample & Hold',
-  },
-  {
-    type: 'wavefolder',
-    label: 'Fold',
-    color: 'bg-rose-500',
-    description: 'Wavefolder distortion',
-  },
-  {
-    type: 'ringmod',
-    label: 'Ring',
-    color: 'bg-fuchsia-500',
-    description: 'Ring modulator',
-  },
-  {
-    type: 'quantizer',
-    label: 'Quant',
-    color: 'bg-sky-500',
-    description: 'Scale quantizer',
-  },
-  {
-    type: 'clock',
-    label: 'Clock',
-    color: 'bg-red-500',
-    description: 'Master clock',
-  },
-  {
-    type: 'clockdiv',
-    label: 'Div',
-    color: 'bg-orange-500',
-    description: 'Clock divider',
-  },
-  {
-    type: 'sequencer',
-    label: 'Seq',
-    color: 'bg-emerald-500',
-    description: '8-step sequencer',
-  },
-  {
-    type: 'delay',
-    label: 'Delay',
-    color: 'bg-blue-500',
-    description: 'Delay effect',
-  },
-  {
-    type: 'reverb',
-    label: 'Reverb',
-    color: 'bg-indigo-500',
-    description: 'Reverb effect',
-  },
-  {
-    type: 'mixer',
-    label: 'Mixer',
-    color: 'bg-amber-500',
-    description: '4-channel mixer',
-  },
-  {
-    type: 'smoothrandom',
-    label: 'SRnd',
-    color: 'bg-teal-500',
-    description: 'Smooth random walk',
-  },
-  {
-    type: 'karplusstrong',
-    label: 'String',
-    color: 'bg-amber-600',
-    description: 'Karplus-Strong string',
-  },
-  {
-    type: 'granular',
-    label: 'Grain',
-    color: 'bg-violet-500',
-    description: 'Granular processor',
+    name: 'Effects',
+    color: 'bg-blue-900/50',
+    borderColor: 'border-l-blue-500',
+    modules: [
+      { type: 'delay', label: 'Delay', description: 'Stereo delay effect' },
+      { type: 'reverb', label: 'Reverb', description: 'Convolution reverb' },
+      { type: 'mixer', label: 'Mixer', description: '4-channel audio mixer' },
+    ],
   },
 ];
 
+const STORAGE_KEY = 'chronoflow-palette-collapsed';
+
+function loadCollapsedState(): Record<string, boolean> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCollapsedState(state: Record<string, boolean>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function NodePalette() {
   const addNode = usePatchStore((state) => state.addNode);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>(loadCollapsedState);
+
+  useEffect(() => {
+    saveCollapsedState(collapsedCategories);
+  }, [collapsedCategories]);
 
   const handleAddNode = (type: PatchNodeType) => {
-    // Add node at a random position near center
     const x = 100 + Math.random() * 200;
     const y = 100 + Math.random() * 200;
     addNode(type, { x, y });
   };
 
+  const toggleCategory = (categoryName: string) => {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [categoryName]: !prev[categoryName],
+    }));
+  };
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return CATEGORIES;
+    }
+    const query = searchQuery.toLowerCase();
+    return CATEGORIES.map((category) => ({
+      ...category,
+      modules: category.modules.filter(
+        (m) =>
+          m.label.toLowerCase().includes(query) ||
+          m.description.toLowerCase().includes(query) ||
+          m.type.toLowerCase().includes(query)
+      ),
+    })).filter((category) => category.modules.length > 0);
+  }, [searchQuery]);
+
   return (
     <div className="bg-gray-900 border border-gray-700 rounded-lg p-3">
-      <h3 className="text-sm font-bold text-gray-300 mb-3">Add Node</h3>
-      <div className="flex flex-wrap gap-2">
-        {NODE_OPTIONS.map((option) => (
-          <button
-            key={option.type}
-            onClick={() => handleAddNode(option.type)}
-            className={`${option.color} hover:opacity-80 text-white text-xs font-medium px-3 py-1.5 rounded transition-opacity`}
-            title={option.description}
-          >
-            {option.label}
-          </button>
-        ))}
+      <h3 className="text-sm font-bold text-gray-300 mb-3">Add Module</h3>
+
+      <div className="mb-3">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search modules..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        {filteredCategories.map((category) => {
+          const isCollapsed = collapsedCategories[category.name] && !searchQuery;
+
+          return (
+            <div key={category.name} className="rounded overflow-hidden">
+              <button
+                onClick={() => toggleCategory(category.name)}
+                className={`w-full flex items-center justify-between px-2 py-1.5 text-xs font-medium text-gray-300 hover:bg-gray-800 transition-colors ${category.color}`}
+              >
+                <span>{category.name}</span>
+                <span className="text-gray-500">
+                  {isCollapsed ? '▶' : '▼'}
+                </span>
+              </button>
+
+              {!isCollapsed && (
+                <div className="space-y-1 py-1">
+                  {category.modules.map((module) => (
+                    <button
+                      key={module.type}
+                      onClick={() => handleAddNode(module.type)}
+                      className={`w-full text-left px-2 py-1.5 border-l-2 ${category.borderColor} bg-gray-800/50 hover:bg-gray-700/50 transition-colors`}
+                    >
+                      <div className="text-xs font-medium text-gray-200">
+                        {module.label}
+                      </div>
+                      <div className="text-[10px] text-gray-500">
+                        {module.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {filteredCategories.length === 0 && (
+          <div className="text-xs text-gray-500 text-center py-4">
+            No modules found
+          </div>
+        )}
       </div>
     </div>
   );
