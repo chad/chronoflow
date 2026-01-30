@@ -2971,3 +2971,190 @@ export const MACRO_DRONE_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// ============================================================================
+// COSMIC CATHEDRAL - The Mother of All Demos
+// A generative ambient electronic piece with multiple interlocking layers
+// ============================================================================
+export const COSMIC_CATHEDRAL_PATCH: Patch = {
+  version: '1.0',
+  meta: {
+    name: 'Cosmic Cathedral',
+    created: new Date().toISOString(),
+    modified: new Date().toISOString(),
+  },
+  nodes: [
+    // ═══════════════════════════════════════════════════════════════════════
+    // MASTER CLOCK - 80 BPM for a hypnotic, spacious feel
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'masterClock', type: 'clock', position: { x: 50, y: 400 }, params: { bpm: 80, running: true, swing: 0.15 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 1: EVOLVING LEAD MELODY
+    // Turing Machine → Slew → Quantizer → Oscillator with filter sweep
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'euclidLead', type: 'euclidean', position: { x: 200, y: 50 }, params: { steps: 16, hits: 7, rotation: 0, running: true } },
+    { id: 'turingLead', type: 'turing', position: { x: 200, y: 150 }, params: { probability: 0.12, length: 16, scale: 1.2, locked: false } },
+    { id: 'slewLead', type: 'slewlimiter', position: { x: 380, y: 150 }, params: { rise: 0.06, fall: 0.12, shape: 'exponential' } },
+    { id: 'quantLead', type: 'quantizer', position: { x: 560, y: 150 }, params: { scale: 'minor', root: 0, octaves: 2 } },
+    { id: 'oscLead', type: 'oscillator', position: { x: 740, y: 100 }, params: { frequency: 440, detune: 0, waveform: 'sawtooth' } },
+    { id: 'adsrLead', type: 'adsr', position: { x: 560, y: 50 }, params: { attack: 0.008, decay: 0.25, sustain: 0.4, release: 0.6 } },
+    { id: 'filterLead', type: 'filter', position: { x: 920, y: 100 }, params: { mode: 'lowpass', cutoff: 2200, resonance: 4 } },
+    { id: 'vcaLead', type: 'vca', position: { x: 1100, y: 100 }, params: { gain: 0.7 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 2: COUNTER MELODY (offset rhythm, different scale position)
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'divCounter', type: 'clockdiv', position: { x: 200, y: 280 }, params: {} },
+    { id: 'euclidCounter', type: 'euclidean', position: { x: 350, y: 250 }, params: { steps: 12, hits: 5, rotation: 3, running: true } },
+    { id: 'turingCounter', type: 'turing', position: { x: 350, y: 350 }, params: { probability: 0.18, length: 12, scale: 0.8, locked: false } },
+    { id: 'slewCounter', type: 'slewlimiter', position: { x: 530, y: 350 }, params: { rise: 0.1, fall: 0.2, shape: 'linear' } },
+    { id: 'quantCounter', type: 'quantizer', position: { x: 710, y: 350 }, params: { scale: 'minor', root: 7, octaves: 2 } },
+    { id: 'oscCounter', type: 'oscillator', position: { x: 890, y: 300 }, params: { frequency: 330, detune: 5, waveform: 'triangle' } },
+    { id: 'adsrCounter', type: 'adsr', position: { x: 710, y: 250 }, params: { attack: 0.02, decay: 0.35, sustain: 0.3, release: 0.8 } },
+    { id: 'filterCounter', type: 'filter', position: { x: 1070, y: 300 }, params: { mode: 'bandpass', cutoff: 1800, resonance: 5 } },
+    { id: 'vcaCounter', type: 'vca', position: { x: 1250, y: 300 }, params: { gain: 0.5 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 3: DEEP BASS - Karplus-Strong strings at low frequencies
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'divBass', type: 'clockdiv', position: { x: 200, y: 500 }, params: {} },
+    { id: 'euclidBass', type: 'euclidean', position: { x: 350, y: 500 }, params: { steps: 8, hits: 3, rotation: 0, running: true } },
+    { id: 'probBass', type: 'probgate', position: { x: 530, y: 500 }, params: { probability: 0.85, mode: 'gate' } },
+    { id: 'stringBass1', type: 'karplusstrong', position: { x: 710, y: 470 }, params: { frequency: 55, damping: 0.6, feedback: 0.997, brightness: 0.2, pluck: 0.3 } },
+    { id: 'stringBass2', type: 'karplusstrong', position: { x: 710, y: 550 }, params: { frequency: 82.4, damping: 0.55, feedback: 0.996, brightness: 0.25, pluck: 0.35 } },
+    { id: 'attenBass', type: 'attenuverter', position: { x: 890, y: 510 }, params: { amount: 0.9 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 4: POLYRHYTHMIC PERCUSSION - Metallic plucks
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'euclidPerc1', type: 'euclidean', position: { x: 200, y: 680 }, params: { steps: 16, hits: 9, rotation: 2, running: true } },
+    { id: 'euclidPerc2', type: 'euclidean', position: { x: 200, y: 760 }, params: { steps: 12, hits: 5, rotation: 1, running: true } },
+    { id: 'logicPerc', type: 'logic', position: { x: 380, y: 720 }, params: { operation: 'xor' } },
+    { id: 'probPerc', type: 'probgate', position: { x: 560, y: 720 }, params: { probability: 0.7, mode: 'gate' } },
+    { id: 'stringPerc1', type: 'karplusstrong', position: { x: 740, y: 680 }, params: { frequency: 440, damping: 0.3, feedback: 0.98, brightness: 0.9, pluck: 0.8 } },
+    { id: 'stringPerc2', type: 'karplusstrong', position: { x: 740, y: 760 }, params: { frequency: 660, damping: 0.25, feedback: 0.975, brightness: 0.95, pluck: 0.85 } },
+    { id: 'attenPerc', type: 'attenuverter', position: { x: 920, y: 720 }, params: { amount: 0.35 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 5: GRANULAR TEXTURE PAD - Ethereal atmosphere
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'noiseGrain', type: 'noise', position: { x: 50, y: 900 }, params: { type: 'pink' } },
+    { id: 'granular1', type: 'granular', position: { x: 230, y: 900 }, params: { grainSize: 150, density: 8, spray: 0.3, pitch: 1.0, position: 0.5, freeze: false, mix: 1.0, reverse: 0.3 } },
+    { id: 'smoothRndGrain', type: 'smoothrandom', position: { x: 50, y: 1000 }, params: { rate: 0.03, range: 0.4, smooth: 0.9 } },
+    { id: 'filterGrain', type: 'filter', position: { x: 410, y: 900 }, params: { mode: 'bandpass', cutoff: 800, resonance: 3 } },
+    { id: 'attenGrain', type: 'attenuverter', position: { x: 590, y: 900 }, params: { amount: 0.2 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAYER 6: WAVEFOLDER DRONE - Rich harmonics, slowly evolving
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'lfo1', type: 'lfo', position: { x: 50, y: 1100 }, params: { rate: 0.02, depth: 200, waveform: 'sine' } },
+    { id: 'lfo2', type: 'lfo', position: { x: 50, y: 1180 }, params: { rate: 0.035, depth: 0.5, waveform: 'triangle' } },
+    { id: 'oscDrone1', type: 'oscillator', position: { x: 230, y: 1100 }, params: { frequency: 110, detune: 0, waveform: 'sawtooth' } },
+    { id: 'oscDrone2', type: 'oscillator', position: { x: 230, y: 1180 }, params: { frequency: 110.5, detune: 7, waveform: 'sawtooth' } },
+    { id: 'mixerDrone', type: 'mixer', position: { x: 410, y: 1140 }, params: { level1: 0.7, level2: 0.7, level3: 0, level4: 0, master: 0.8 } },
+    { id: 'wavefolderDrone', type: 'wavefolder', position: { x: 590, y: 1140 }, params: { drive: 1.5, folds: 3, mix: 0.6 } },
+    { id: 'filterDrone', type: 'filter', position: { x: 770, y: 1140 }, params: { mode: 'lowpass', cutoff: 600, resonance: 2 } },
+    { id: 'attenDrone', type: 'attenuverter', position: { x: 950, y: 1140 }, params: { amount: 0.25 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MIXER - Combine all layers
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'mixerMain', type: 'mixer', position: { x: 1300, y: 600 }, params: { level1: 1, level2: 0.8, level3: 1, level4: 0.9, master: 0.7 } },
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // EFFECTS CHAIN - Cascading delays into massive reverbs
+    // ═══════════════════════════════════════════════════════════════════════
+    { id: 'delay1', type: 'delay', position: { x: 1480, y: 500 }, params: { time: 0.375, feedback: 0.4, mix: 0.35 } },
+    { id: 'delay2', type: 'delay', position: { x: 1480, y: 700 }, params: { time: 0.5, feedback: 0.35, mix: 0.3 } },
+    { id: 'reverb1', type: 'reverb', position: { x: 1660, y: 500 }, params: { decay: 6, mix: 0.5 } },
+    { id: 'reverb2', type: 'reverb', position: { x: 1660, y: 700 }, params: { decay: 10, mix: 0.6 } },
+    { id: 'mixerFX', type: 'mixer', position: { x: 1840, y: 600 }, params: { level1: 1, level2: 1, level3: 0, level4: 0, master: 0.85 } },
+
+    // OUTPUT
+    { id: 'output', type: 'output', position: { x: 2020, y: 600 }, params: { gain: 0.55 } },
+  ],
+  connections: [
+    // === Master clock distribution ===
+    { id: 'mc1', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'euclidLead', port: 'clock' } },
+    { id: 'mc2', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'turingLead', port: 'clock' } },
+    { id: 'mc3', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'divCounter', port: 'input' } },
+    { id: 'mc4', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'divBass', port: 'input' } },
+    { id: 'mc5', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'euclidPerc1', port: 'clock' } },
+    { id: 'mc6', from: { nodeId: 'masterClock', port: 'output' }, to: { nodeId: 'euclidPerc2', port: 'clock' } },
+
+    // === Layer 1: Lead melody ===
+    { id: 'l1a', from: { nodeId: 'euclidLead', port: 'output' }, to: { nodeId: 'adsrLead', port: 'trigger' } },
+    { id: 'l1b', from: { nodeId: 'turingLead', port: 'output' }, to: { nodeId: 'slewLead', port: 'input' } },
+    { id: 'l1c', from: { nodeId: 'slewLead', port: 'output' }, to: { nodeId: 'quantLead', port: 'input' } },
+    { id: 'l1d', from: { nodeId: 'quantLead', port: 'output' }, to: { nodeId: 'oscLead', port: 'freq_mod' } },
+    { id: 'l1e', from: { nodeId: 'oscLead', port: 'output' }, to: { nodeId: 'filterLead', port: 'input' } },
+    { id: 'l1f', from: { nodeId: 'adsrLead', port: 'output' }, to: { nodeId: 'vcaLead', port: 'gain_mod' } },
+    { id: 'l1g', from: { nodeId: 'adsrLead', port: 'output' }, to: { nodeId: 'filterLead', port: 'cutoff_mod' } },
+    { id: 'l1h', from: { nodeId: 'filterLead', port: 'output' }, to: { nodeId: 'vcaLead', port: 'input' } },
+    { id: 'l1i', from: { nodeId: 'vcaLead', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+
+    // === Layer 2: Counter melody ===
+    { id: 'l2a', from: { nodeId: 'divCounter', port: 'div2' }, to: { nodeId: 'euclidCounter', port: 'clock' } },
+    { id: 'l2b', from: { nodeId: 'divCounter', port: 'div2' }, to: { nodeId: 'turingCounter', port: 'clock' } },
+    { id: 'l2c', from: { nodeId: 'euclidCounter', port: 'output' }, to: { nodeId: 'adsrCounter', port: 'trigger' } },
+    { id: 'l2d', from: { nodeId: 'turingCounter', port: 'output' }, to: { nodeId: 'slewCounter', port: 'input' } },
+    { id: 'l2e', from: { nodeId: 'slewCounter', port: 'output' }, to: { nodeId: 'quantCounter', port: 'input' } },
+    { id: 'l2f', from: { nodeId: 'quantCounter', port: 'output' }, to: { nodeId: 'oscCounter', port: 'freq_mod' } },
+    { id: 'l2g', from: { nodeId: 'oscCounter', port: 'output' }, to: { nodeId: 'filterCounter', port: 'input' } },
+    { id: 'l2h', from: { nodeId: 'adsrCounter', port: 'output' }, to: { nodeId: 'vcaCounter', port: 'gain_mod' } },
+    { id: 'l2i', from: { nodeId: 'filterCounter', port: 'output' }, to: { nodeId: 'vcaCounter', port: 'input' } },
+    { id: 'l2j', from: { nodeId: 'vcaCounter', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+
+    // === Layer 3: Deep bass ===
+    { id: 'l3a', from: { nodeId: 'divBass', port: 'div4' }, to: { nodeId: 'euclidBass', port: 'clock' } },
+    { id: 'l3b', from: { nodeId: 'euclidBass', port: 'output' }, to: { nodeId: 'probBass', port: 'input' } },
+    { id: 'l3c', from: { nodeId: 'probBass', port: 'output' }, to: { nodeId: 'stringBass1', port: 'trigger' } },
+    { id: 'l3d', from: { nodeId: 'probBass', port: 'output' }, to: { nodeId: 'stringBass2', port: 'trigger' } },
+    { id: 'l3e', from: { nodeId: 'stringBass1', port: 'output' }, to: { nodeId: 'attenBass', port: 'input' } },
+    { id: 'l3f', from: { nodeId: 'stringBass2', port: 'output' }, to: { nodeId: 'attenBass', port: 'input' } },
+    { id: 'l3g', from: { nodeId: 'attenBass', port: 'output' }, to: { nodeId: 'mixerMain', port: 'input3' } },
+
+    // === Layer 4: Polyrhythmic percussion ===
+    { id: 'l4a', from: { nodeId: 'euclidPerc1', port: 'output' }, to: { nodeId: 'logicPerc', port: 'inputA' } },
+    { id: 'l4b', from: { nodeId: 'euclidPerc2', port: 'output' }, to: { nodeId: 'logicPerc', port: 'inputB' } },
+    { id: 'l4c', from: { nodeId: 'logicPerc', port: 'output' }, to: { nodeId: 'probPerc', port: 'input' } },
+    { id: 'l4d', from: { nodeId: 'probPerc', port: 'output' }, to: { nodeId: 'stringPerc1', port: 'trigger' } },
+    { id: 'l4e', from: { nodeId: 'euclidPerc2', port: 'output' }, to: { nodeId: 'stringPerc2', port: 'trigger' } },
+    { id: 'l4f', from: { nodeId: 'stringPerc1', port: 'output' }, to: { nodeId: 'attenPerc', port: 'input' } },
+    { id: 'l4g', from: { nodeId: 'stringPerc2', port: 'output' }, to: { nodeId: 'attenPerc', port: 'input' } },
+    { id: 'l4h', from: { nodeId: 'attenPerc', port: 'output' }, to: { nodeId: 'mixerMain', port: 'input4' } },
+
+    // === Layer 5: Granular texture ===
+    { id: 'l5a', from: { nodeId: 'noiseGrain', port: 'output' }, to: { nodeId: 'granular1', port: 'input' } },
+    { id: 'l5b', from: { nodeId: 'smoothRndGrain', port: 'output' }, to: { nodeId: 'granular1', port: 'position_mod' } },
+    { id: 'l5c', from: { nodeId: 'granular1', port: 'output' }, to: { nodeId: 'filterGrain', port: 'input' } },
+    { id: 'l5d', from: { nodeId: 'smoothRndGrain', port: 'output' }, to: { nodeId: 'filterGrain', port: 'cutoff_mod' } },
+    { id: 'l5e', from: { nodeId: 'filterGrain', port: 'output' }, to: { nodeId: 'attenGrain', port: 'input' } },
+    { id: 'l5f', from: { nodeId: 'attenGrain', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+
+    // === Layer 6: Wavefolder drone ===
+    { id: 'l6a', from: { nodeId: 'lfo1', port: 'output' }, to: { nodeId: 'filterDrone', port: 'cutoff_mod' } },
+    { id: 'l6b', from: { nodeId: 'lfo2', port: 'output' }, to: { nodeId: 'wavefolderDrone', port: 'drive_mod' } },
+    { id: 'l6c', from: { nodeId: 'oscDrone1', port: 'output' }, to: { nodeId: 'mixerDrone', port: 'input1' } },
+    { id: 'l6d', from: { nodeId: 'oscDrone2', port: 'output' }, to: { nodeId: 'mixerDrone', port: 'input2' } },
+    { id: 'l6e', from: { nodeId: 'mixerDrone', port: 'output' }, to: { nodeId: 'wavefolderDrone', port: 'input' } },
+    { id: 'l6f', from: { nodeId: 'wavefolderDrone', port: 'output' }, to: { nodeId: 'filterDrone', port: 'input' } },
+    { id: 'l6g', from: { nodeId: 'filterDrone', port: 'output' }, to: { nodeId: 'attenDrone', port: 'input' } },
+    { id: 'l6h', from: { nodeId: 'attenDrone', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+
+    // === Main mixer routing ===
+    { id: 'mx1', from: { nodeId: 'vcaLead', port: 'output' }, to: { nodeId: 'mixerMain', port: 'input1' } },
+    { id: 'mx2', from: { nodeId: 'vcaCounter', port: 'output' }, to: { nodeId: 'mixerMain', port: 'input2' } },
+
+    // === Effects chain ===
+    { id: 'fx1', from: { nodeId: 'mixerMain', port: 'output' }, to: { nodeId: 'delay1', port: 'input' } },
+    { id: 'fx2', from: { nodeId: 'mixerMain', port: 'output' }, to: { nodeId: 'delay2', port: 'input' } },
+    { id: 'fx3', from: { nodeId: 'delay1', port: 'output' }, to: { nodeId: 'reverb1', port: 'input' } },
+    { id: 'fx4', from: { nodeId: 'delay2', port: 'output' }, to: { nodeId: 'reverb2', port: 'input' } },
+    { id: 'fx5', from: { nodeId: 'reverb1', port: 'output' }, to: { nodeId: 'mixerFX', port: 'input1' } },
+    { id: 'fx6', from: { nodeId: 'reverb2', port: 'output' }, to: { nodeId: 'mixerFX', port: 'input2' } },
+    { id: 'fx7', from: { nodeId: 'mixerFX', port: 'output' }, to: { nodeId: 'output', port: 'input' } },
+  ],
+  groups: [],
+};
