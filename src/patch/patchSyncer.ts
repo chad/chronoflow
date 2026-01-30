@@ -32,6 +32,33 @@ class PatchSyncer {
   private syncPatch(patch: Patch): void {
     try {
     if (DEBUG) console.log('[PatchSyncer] syncPatch called for:', patch.meta.name);
+
+    // Detect if this is a completely different patch (not just edits to current patch)
+    // This happens when loading sample patches or importing patches
+    const isPatchSwitch = this.previousPatch &&
+      this.previousPatch.meta.name !== patch.meta.name;
+
+    if (isPatchSwitch) {
+      if (DEBUG) console.log('[PatchSyncer] Patch switch detected, doing full rebuild');
+      // Clear entire audio graph and rebuild from scratch
+      audioGraph.clear();
+
+      // Add all nodes fresh
+      patch.nodes.forEach((n) => this.addAudioNode(n));
+
+      // Add all connections
+      patch.connections.forEach((c) => this.addAudioConnection(c, patch));
+
+      // Rebuild voices
+      audioGraph.rebuildVoices(patch.nodes, patch.connections);
+
+      // Update sequencer connections
+      this.updateSequencerConnections(patch);
+
+      this.previousPatch = JSON.parse(JSON.stringify(patch));
+      return;
+    }
+
     const prevNodes = this.previousPatch?.nodes ?? [];
     const prevConnections = this.previousPatch?.connections ?? [];
 
