@@ -29,3 +29,8 @@ export * from './EnvelopeFollowerNode';
 export * from './ProbabilityGateNode';
 export * from './LogicNode';
 export * from './MacroNode';
+export * from './CounterNode';
+export * from './ComparatorNode';
+export * from './SwitchNode';
+export * from './CrossfaderNode';
+export * from './SequenceChainNode';

@@ -38,17 +38,22 @@ import {
   SynthProbabilityGateNode,
   SynthLogicNode,
   SynthMacroNode,
+  SynthCounterNode,
+  SynthComparatorNode,
+  SynthSwitchNode,
+  SynthCrossfaderNode,
+  SynthSequenceChainNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain'];
 
 interface Connection {
   fromId: string;
@@ -215,6 +220,21 @@ class AudioGraph {
       case 'macro':
         node = new SynthMacroNode(context, id, params);
         break;
+      case 'counter':
+        node = new SynthCounterNode(context, id, params);
+        break;
+      case 'comparator':
+        node = new SynthComparatorNode(context, id, params);
+        break;
+      case 'switch':
+        node = new SynthSwitchNode(context, id, params);
+        break;
+      case 'crossfader':
+        node = new SynthCrossfaderNode(context, id, params);
+        break;
+      case 'sequencechain':
+        node = new SynthSequenceChainNode(context, id, params);
+        break;
       case 'output':
         // Output node is a singleton
         return this.outputNode;
@@ -336,6 +356,56 @@ class AudioGraph {
       // Special handling for ADSR trigger input
       const triggerInput = toNode.getTriggerInput();
       output.connect(triggerInput);
+    } else if (toNode instanceof SynthCounterNode) {
+      // Counter has trigger and reset inputs
+      if (toPort === 'trigger' || toPort === 'input') {
+        output.connect(toNode.getTriggerInput());
+      } else if (toPort === 'reset') {
+        output.connect(toNode.getResetInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthComparatorNode) {
+      // Comparator has input and threshold inputs
+      if (toPort === 'threshold') {
+        output.connect(toNode.getThresholdInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthSwitchNode) {
+      // Switch has multiple inputs, cv, and trigger
+      const inputMatch = toPort.match(/^input([1-4])$/);
+      if (inputMatch) {
+        const channel = parseInt(inputMatch[1], 10);
+        const input = toNode.getInput(channel);
+        if (input) output.connect(input);
+      } else if (toPort === 'cv') {
+        output.connect(toNode.getCVInput());
+      } else if (toPort === 'trigger') {
+        output.connect(toNode.getTriggerInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthCrossfaderNode) {
+      // Crossfader has inputA, inputB, and cv
+      if (toPort === 'inputA' || toPort === 'input') {
+        output.connect(toNode.getInputA());
+      } else if (toPort === 'inputB') {
+        output.connect(toNode.getInputB());
+      } else if (toPort === 'cv') {
+        output.connect(toNode.getCVInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthSequenceChainNode) {
+      // Sequence chain has clock and reset inputs
+      if (toPort === 'clock' || toPort === 'input') {
+        output.connect(toNode.getClockInput());
+      } else if (toPort === 'reset') {
+        output.connect(toNode.getResetInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
     } else {
       // Check if this is a mixer channel input
       const mixerInputMatch = toPort.match(/^input([1-4])$/);

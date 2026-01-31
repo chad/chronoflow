@@ -62,6 +62,18 @@ const CATEGORIES: Category[] = [
       { type: 'logic', label: 'Logic', description: 'Boolean logic operations' },
       { type: 'probgate', label: 'Probability Gate', description: 'Randomly pass/block gates' },
       { type: 'macro', label: 'Macro', description: 'Multi-output control knob' },
+      { type: 'comparator', label: 'Comparator', description: 'Compare CV to threshold' },
+    ],
+  },
+  {
+    name: 'Structure',
+    color: 'bg-amber-900/50',
+    borderColor: 'border-l-amber-500',
+    modules: [
+      { type: 'counter', label: 'Counter', description: 'Count triggers, fire on N' },
+      { type: 'sequencechain', label: 'Scene Chain', description: 'Progress through scenes' },
+      { type: 'switch', label: 'Switch', description: 'Route between inputs' },
+      { type: 'crossfader', label: 'Crossfader', description: 'Blend between two sources' },
     ],
   },
   {

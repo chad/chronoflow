@@ -106,6 +106,11 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   probgate: { probability: 0.5, mode: 'gate' },
   logic: { operation: 'and' },
   macro: { value: 0.5, out1Min: 0, out1Max: 1, out2Min: 0, out2Max: 1, out3Min: 0, out3Max: 1, out4Min: 0, out4Max: 1, smooth: 0.1 },
+  counter: { count: 8, mode: 'up', autoReset: true },
+  comparator: { threshold: 0.5, mode: 'greater', windowSize: 0.1, hysteresis: 0.05 },
+  switch: { channels: 2, mode: 'cv', position: 0, smooth: 10 },
+  crossfader: { position: 0.5, curve: 'equal_power' },
+  sequencechain: { scenes: 4, stepsPerScene: 16, mode: 'forward', loop: true },
 };
 
 export const usePatchStore = create<PatchState>()(
