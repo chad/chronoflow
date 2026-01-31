@@ -23,6 +23,7 @@ import {
   POLYRHYTHMIC_TRIGGERS_PATCH,
   MACRO_DRONE_PATCH,
   COSMIC_CATHEDRAL_PATCH,
+  ETERNAL_GARDEN_PATCH,
 } from '../../patch/samplePatches';
 
 interface SamplePatch {
@@ -50,6 +51,7 @@ const PATCH_CATEGORIES: PatchCategory[] = [
   {
     name: 'Generative',
     patches: [
+      { key: 'eternalgarden', name: 'Eternal Garden', description: 'Scene Chain + Crossfade evolution', patch: ETERNAL_GARDEN_PATCH },
       { key: 'cosmiccathedral', name: 'Cosmic Cathedral', description: '6-layer generative masterpiece', patch: COSMIC_CATHEDRAL_PATCH },
       { key: 'evolvingmelody', name: 'Evolving Melody', description: 'Turing Machine + Slew + Euclidean', patch: EVOLVING_MELODY_PATCH },
       { key: 'polyrhythmictriggers', name: 'Polyrhythmic Triggers', description: '3x Euclidean + Logic XOR', patch: POLYRHYTHMIC_TRIGGERS_PATCH },
