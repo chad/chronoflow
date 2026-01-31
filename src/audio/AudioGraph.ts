@@ -316,6 +316,41 @@ class AudioGraph {
         default:
           output = fromNode.getOutputNode();
       }
+    } else if (fromNode instanceof SynthCounterNode) {
+      // Handle counter node's multiple outputs
+      switch (fromPort) {
+        case 'count':
+          output = fromNode.getCountOutput();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
+    } else if (fromNode instanceof SynthComparatorNode) {
+      // Handle comparator node's multiple outputs
+      switch (fromPort) {
+        case 'inverted':
+          output = fromNode.getInvertedOutput();
+          break;
+        case 'trigger':
+          output = fromNode.getTriggerOutput();
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
+    } else if (fromNode instanceof SynthSequenceChainNode) {
+      // Handle sequence chain node's multiple outputs
+      switch (fromPort) {
+        case 'trigger':
+          output = fromNode.getTriggerOutput();
+          break;
+        case 'scene1': case 'scene2': case 'scene3': case 'scene4':
+        case 'scene5': case 'scene6': case 'scene7': case 'scene8':
+          const sceneNum = parseInt(fromPort.replace('scene', ''), 10);
+          output = fromNode.getSceneGate(sceneNum);
+          break;
+        default:
+          output = fromNode.getOutputNode();
+      }
     } else {
       output = fromNode.getOutputNode();
     }

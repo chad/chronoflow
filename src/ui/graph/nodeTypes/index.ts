@@ -27,6 +27,11 @@ import { EnvelopeFollowerNodeUI } from './EnvelopeFollowerNodeUI';
 import { ProbabilityGateNodeUI } from './ProbabilityGateNodeUI';
 import { LogicNodeUI } from './LogicNodeUI';
 import { MacroNodeUI } from './MacroNodeUI';
+import { SequenceChainNodeUI } from './SequenceChainNodeUI';
+import { CrossfaderNodeUI } from './CrossfaderNodeUI';
+import { CounterNodeUI } from './CounterNodeUI';
+import { SwitchNodeUI } from './SwitchNodeUI';
+import { ComparatorNodeUI } from './ComparatorNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -58,4 +63,9 @@ export const nodeTypes = {
   probgate: ProbabilityGateNodeUI,
   logic: LogicNodeUI,
   macro: MacroNodeUI,
+  sequencechain: SequenceChainNodeUI,
+  crossfader: CrossfaderNodeUI,
+  counter: CounterNodeUI,
+  switch: SwitchNodeUI,
+  comparator: ComparatorNodeUI,
 };

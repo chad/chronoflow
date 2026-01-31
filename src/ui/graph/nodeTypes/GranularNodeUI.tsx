@@ -115,6 +115,18 @@ export const GranularNodeUI = memo(({ id, data, selected }: NodeProps<GranularNo
         nodeId={id}
         className="!bg-violet-400 !w-3 !h-3"
         title="Audio In"
+        style={{ top: '50%' }}
+      />
+
+      {/* Mix modulation input */}
+      <ClickableHandle
+        type="target"
+        position={Position.Left}
+        id="mix_mod"
+        nodeId={id}
+        className="!bg-green-400 !w-3 !h-3"
+        title="Mix CV"
+        style={{ top: '75%' }}
       />
 
       {/* Audio output */}

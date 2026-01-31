@@ -3322,7 +3322,7 @@ export const ETERNAL_GARDEN_PATCH: Patch = {
 
     // === Layer 5: Atmospheric texture ===
     { id: 'at1', from: { nodeId: 'noiseAtmo', port: 'output' }, to: { nodeId: 'granularAtmo', port: 'input' } },
-    { id: 'at2', from: { nodeId: 'smoothRnd', port: 'output' }, to: { nodeId: 'granularAtmo', port: 'density_mod' } },
+    { id: 'at2', from: { nodeId: 'smoothRnd', port: 'output' }, to: { nodeId: 'granularAtmo', port: 'mix_mod' } },
     { id: 'at3', from: { nodeId: 'granularAtmo', port: 'output' }, to: { nodeId: 'filterAtmo', port: 'input' } },
     { id: 'at4', from: { nodeId: 'filterAtmo', port: 'output' }, to: { nodeId: 'vcaAtmo', port: 'input' } },
     { id: 'at5', from: { nodeId: 'vcaAtmo', port: 'output' }, to: { nodeId: 'mixMain', port: 'input4' } },
