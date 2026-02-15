@@ -26,12 +26,37 @@ class MidiEngine {
       this.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
       this.midiAccess.onstatechange = () => {
         this.notifyStateChange();
+        // Auto-reconnect to IAC if it appears
+        this.autoConnectIAC();
       };
+      // Auto-connect to IAC Driver on init
+      this.autoConnectIAC();
       return true;
     } catch (err) {
       console.error('Failed to access MIDI:', err);
       return false;
     }
+  }
+
+  /** Automatically select IAC Driver Bus 1 as input if available */
+  autoConnectIAC(): boolean {
+    if (!this.midiAccess) return false;
+    // Already connected to something
+    if (this.selectedInput) return true;
+
+    let iacInput: MIDIInput | null = null;
+    this.midiAccess.inputs.forEach((input) => {
+      if (input.name && input.name.toLowerCase().includes('iac')) {
+        iacInput = input;
+      }
+    });
+
+    if (iacInput) {
+      console.log('[MidiEngine] Auto-connecting to IAC Driver input:', (iacInput as MIDIInput).name);
+      this.selectInput((iacInput as MIDIInput).id);
+      return true;
+    }
+    return false;
   }
 
   isAvailable(): boolean {

@@ -5,6 +5,7 @@ import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ProbabilityGateData = {
   probability: number;
@@ -19,7 +20,8 @@ export const ProbabilityGateNodeUI = memo(({ id, data, selected }: NodeProps<Pro
   const isBernoulli = data.mode === 'bernoulli';
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="probgate">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[130px] ${
         selected ? 'border-cyan-400' : 'border-lime-500'
       }`}
@@ -90,6 +92,7 @@ export const ProbabilityGateNodeUI = memo(({ id, data, selected }: NodeProps<Pro
         />
       )}
     </div>
+    </NodeWrapper>
   );
 });
 

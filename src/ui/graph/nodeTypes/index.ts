@@ -32,6 +32,18 @@ import { CrossfaderNodeUI } from './CrossfaderNodeUI';
 import { CounterNodeUI } from './CounterNodeUI';
 import { SwitchNodeUI } from './SwitchNodeUI';
 import { ComparatorNodeUI } from './ComparatorNodeUI';
+import { AudioInputNodeUI } from './AudioInputNodeUI';
+import { PitchShifterNodeUI } from './PitchShifterNodeUI';
+import { FormantShifterNodeUI } from './FormantShifterNodeUI';
+import { ShimmerReverbNodeUI } from './ShimmerReverbNodeUI';
+import { ChorusNodeUI } from './ChorusNodeUI';
+import { CompressorNodeUI } from './CompressorNodeUI';
+import { EQNodeUI } from './EQNodeUI';
+import { BitcrusherNodeUI } from './BitcrusherNodeUI';
+import { VocoderNodeUI } from './VocoderNodeUI';
+import { GlitchNodeUI } from './GlitchNodeUI';
+import { FreqShifterNodeUI } from './FreqShifterNodeUI';
+import { CombFilterNodeUI } from './CombFilterNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -68,4 +80,16 @@ export const nodeTypes = {
   counter: CounterNodeUI,
   switch: SwitchNodeUI,
   comparator: ComparatorNodeUI,
+  audioinput: AudioInputNodeUI,
+  pitchshifter: PitchShifterNodeUI,
+  formantshifter: FormantShifterNodeUI,
+  shimmerreverb: ShimmerReverbNodeUI,
+  chorus: ChorusNodeUI,
+  compressor: CompressorNodeUI,
+  eq: EQNodeUI,
+  bitcrusher: BitcrusherNodeUI,
+  vocoder: VocoderNodeUI,
+  glitch: GlitchNodeUI,
+  freqshifter: FreqShifterNodeUI,
+  combfilter: CombFilterNodeUI,
 };

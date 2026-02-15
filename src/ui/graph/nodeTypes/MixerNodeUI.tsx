@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type MixerData = {
   level1: number;
@@ -19,7 +20,8 @@ export const MixerNodeUI = memo(({ id, data, selected }: NodeProps<MixerNode>) =
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="mixer">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[180px] ${
         selected ? 'border-cyan-400' : 'border-amber-500'
       }`}
@@ -121,6 +123,7 @@ export const MixerNodeUI = memo(({ id, data, selected }: NodeProps<MixerNode>) =
         className="!bg-amber-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

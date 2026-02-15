@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ComparatorData = {
   threshold: number;
@@ -25,7 +26,8 @@ export const ComparatorNodeUI = memo(({ id, data, selected }: NodeProps<Comparat
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="comparator">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-rose-500'
       }`}
@@ -151,6 +153,7 @@ export const ComparatorNodeUI = memo(({ id, data, selected }: NodeProps<Comparat
         style={{ top: '70%' }}
       />
     </div>
+    </NodeWrapper>
   );
 });
 

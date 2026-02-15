@@ -20,6 +20,10 @@ export class SynthFilterNode implements SynthNode {
   private context: AudioContext;
   private params: FilterParams;
 
+  // Performance controller offsets (added on top of user cutoff)
+  private modWheelOffset: number = 0;
+  private aftertouchOffset: number = 0;
+
   constructor(context: AudioContext, id: string, params?: Partial<FilterParams>) {
     this.context = context;
     this.id = id;
@@ -58,6 +62,25 @@ export class SynthFilterNode implements SynthNode {
     }
   }
 
+  // Set mod wheel offset (Hz, added to cutoff)
+  setModWheelOffset(hz: number): void {
+    this.modWheelOffset = hz;
+    this.applyEffectiveCutoff();
+  }
+
+  // Set aftertouch offset (Hz, added to cutoff)
+  setAftertouchOffset(hz: number): void {
+    this.aftertouchOffset = hz;
+    this.applyEffectiveCutoff();
+  }
+
+  private applyEffectiveCutoff(): void {
+    const effective = Math.max(20, Math.min(20000,
+      this.params.cutoff + this.modWheelOffset + this.aftertouchOffset
+    ));
+    this.filter.frequency.setTargetAtTime(effective, this.context.currentTime, 0.01);
+  }
+
   connect(destination: AudioNode | SynthNode): void {
     if ('getInputNode' in destination) {
       const input = destination.getInputNode();
@@ -81,7 +104,7 @@ export class SynthFilterNode implements SynthNode {
         break;
       case 'cutoff':
         this.params.cutoff = value as number;
-        this.filter.frequency.setTargetAtTime(value as number, this.context.currentTime, 0.01);
+        this.applyEffectiveCutoff();
         break;
       case 'resonance':
         this.params.resonance = value as number;

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ClockDividerData = Record<string, never>; // No params
 
@@ -9,7 +10,8 @@ type ClockDividerNode = Node<ClockDividerData, 'clockdiv'>;
 
 export const ClockDividerNodeUI = memo(({ id, selected }: NodeProps<ClockDividerNode>) => {
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="clockdiv">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[100px] ${
         selected ? 'border-cyan-400' : 'border-orange-500'
       }`}
@@ -85,6 +87,7 @@ export const ClockDividerNodeUI = memo(({ id, selected }: NodeProps<ClockDivider
         title="/8 (every 8 beats)"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

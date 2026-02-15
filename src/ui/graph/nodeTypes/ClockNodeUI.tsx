@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ClockData = {
   bpm: number;
@@ -17,7 +18,8 @@ export const ClockNodeUI = memo(({ id, data, selected }: NodeProps<ClockNode>) =
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="clock">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-red-500'
       }`}
@@ -68,6 +70,7 @@ export const ClockNodeUI = memo(({ id, data, selected }: NodeProps<ClockNode>) =
         title="Clock Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

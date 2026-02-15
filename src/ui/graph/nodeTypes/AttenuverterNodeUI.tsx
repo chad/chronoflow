@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type AttenuverterData = {
   amount: number;
@@ -22,7 +23,8 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
   const polarityColor = displayPercent < 0 ? 'text-red-400' : displayPercent > 0 ? 'text-green-400' : 'text-gray-500';
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="attenuverter">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[100px] ${
         selected ? 'border-cyan-400' : 'border-gray-500'
       }`}
@@ -65,6 +67,7 @@ export const AttenuverterNodeUI = memo(({ id, data, selected }: NodeProps<Attenu
         className="!bg-yellow-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

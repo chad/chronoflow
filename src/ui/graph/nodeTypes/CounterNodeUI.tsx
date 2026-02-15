@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type CounterData = {
   count: number;
@@ -23,7 +24,8 @@ export const CounterNodeUI = memo(({ id, data, selected }: NodeProps<CounterNode
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="counter">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-teal-500'
       }`}
@@ -128,6 +130,7 @@ export const CounterNodeUI = memo(({ id, data, selected }: NodeProps<CounterNode
         style={{ top: '65%' }}
       />
     </div>
+    </NodeWrapper>
   );
 });
 

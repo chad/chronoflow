@@ -70,6 +70,12 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const setPatch = usePatchStore((state) => state.setPatch);
   const addNode = usePatchStore((state) => state.addNode);
   const autoLayoutNodes = usePatchStore((state) => state.autoLayoutNodes);
+  const copySelected = usePatchStore((state) => state.copySelected);
+  const duplicateSelected = usePatchStore((state) => state.duplicateSelected);
+  const toggleMute = usePatchStore((state) => state.toggleMute);
+  const toggleBypass = usePatchStore((state) => state.toggleBypass);
+  const selectedNodeId = usePatchStore((state) => state.selectedNodeId);
+  const patchNodes = usePatchStore((state) => state.patch.nodes);
 
   // Define all available commands
   const commands = useMemo<Command[]>(() => {
@@ -124,7 +130,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     const actions: [string, string, () => void][] = [
       ['Auto Layout', 'Arrange nodes automatically', autoLayoutNodes],
       ['New Patch', 'Clear and start fresh', () => setPatch(SIMPLE_PATCH)],
+      ['Copy Selected', 'Copy nodes to clipboard (⌘C)', copySelected],
+      ['Duplicate Selected', 'Duplicate selected nodes (⌘D)', duplicateSelected],
+      ['Mute Selected', 'Toggle mute on selected node (M)', () => { if (selectedNodeId) toggleMute(selectedNodeId); }],
+      ['Bypass Selected', 'Toggle bypass on selected node (B)', () => { if (selectedNodeId) toggleBypass(selectedNodeId); }],
     ];
+
+
 
     const cmds: Command[] = [];
 
@@ -169,8 +181,22 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       });
     }
 
+    // Add "Go to Node" entries for existing nodes
+    for (const node of patchNodes) {
+      cmds.push({
+        id: `goto-${node.id}`,
+        type: 'action',
+        name: `Go to ${node.type} (${node.id})`,
+        description: `Pan to ${node.type} node`,
+        icon: '📍',
+        action: () => {
+          usePatchStore.getState().selectNode(node.id);
+        },
+      });
+    }
+
     return cmds;
-  }, [setPatch, addNode, autoLayoutNodes]);
+  }, [setPatch, addNode, autoLayoutNodes, copySelected, duplicateSelected, toggleMute, toggleBypass, selectedNodeId, patchNodes]);
 
   // Filter commands based on query
   const results = useMemo<SearchResult<Command>[]>(() => {

@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type LogicData = {
   operation: string;
@@ -30,7 +31,8 @@ export const LogicNodeUI = memo(({ id, data, selected }: NodeProps<LogicNode>) =
   };
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="logic">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[110px] ${
         selected ? 'border-cyan-400' : 'border-sky-500'
       }`}
@@ -92,6 +94,7 @@ export const LogicNodeUI = memo(({ id, data, selected }: NodeProps<LogicNode>) =
         title="Output"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

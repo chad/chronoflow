@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type SequenceChainData = {
   scenes: number;
@@ -25,7 +26,8 @@ export const SequenceChainNodeUI = memo(({ id, data, selected }: NodeProps<Seque
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="sequencechain">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[180px] ${
         selected ? 'border-cyan-400' : 'border-amber-500'
       }`}
@@ -142,6 +144,7 @@ export const SequenceChainNodeUI = memo(({ id, data, selected }: NodeProps<Seque
         style={{ top: '60%' }}
       />
     </div>
+    </NodeWrapper>
   );
 });
 

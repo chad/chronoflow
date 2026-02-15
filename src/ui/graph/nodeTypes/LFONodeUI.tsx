@@ -5,6 +5,7 @@ import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 const WAVEFORM_OPTIONS = [
   { value: 'sine', label: 'Sine' },
@@ -25,7 +26,8 @@ export const LFONodeUI = memo(({ id, data, selected }: NodeProps<LFONode>) => {
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="lfo">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-yellow-500'
       }`}
@@ -69,6 +71,7 @@ export const LFONodeUI = memo(({ id, data, selected }: NodeProps<LFONode>) => {
         className="!bg-yellow-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

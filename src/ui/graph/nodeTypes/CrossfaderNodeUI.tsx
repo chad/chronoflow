@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type CrossfaderData = {
   position: number;
@@ -26,7 +27,8 @@ export const CrossfaderNodeUI = memo(({ id, data, selected }: NodeProps<Crossfad
   const bLevel = Math.sin(data.position * Math.PI / 2);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="crossfader">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-pink-500'
       }`}
@@ -127,6 +129,7 @@ export const CrossfaderNodeUI = memo(({ id, data, selected }: NodeProps<Crossfad
         title="Output"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

@@ -5,6 +5,7 @@ import type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchGroup, Expo
 import { createEmptyPatch } from './types';
 import { computeAutoLayout } from '../layout/autoLayout';
 import { detectExposedPorts, calculateGroupCenter, generatePortAlias } from '../layout/groupUtils';
+import { copyNodes, pasteNodes } from './clipboard';
 
 
 interface PatchState {
@@ -13,6 +14,7 @@ interface PatchState {
   selectedNodeId: string | null;
   selectedNodeIds: string[]; // Multi-select for grouping
   focusedGroupId: string | null; // Currently focused group for dive-in
+  tracingNodeId: string | null; // Signal path tracing
 
   // Actions
   setAudioEnabled: (enabled: boolean) => void;
@@ -24,10 +26,25 @@ interface PatchState {
   removeNode: (id: string) => void;
   updateNodePosition: (id: string, position: { x: number; y: number }) => void;
   updateNodeParam: (id: string, param: string, value: number | string | boolean) => void;
+  batchUpdateParams: (updates: { nodeId: string; param: string; value: number | string | boolean }[]) => void;
   selectNode: (id: string | null) => void;
   setSelectedNodeIds: (ids: string[]) => void;
   toggleNodeSelection: (id: string) => void;
   clearSelection: () => void;
+
+  // Mute / bypass
+  toggleMute: (id: string) => void;
+  toggleBypass: (id: string) => void;
+
+  // Copy / paste
+  copySelected: () => void;
+  pasteAtPosition: (position: { x: number; y: number }) => void;
+  duplicateSelected: () => void;
+
+  // Signal tracing
+  setTracingNode: (id: string | null) => void;
+  getUpstreamNodes: (id: string) => Set<string>;
+  getDownstreamNodes: (id: string) => Set<string>;
 
   // Connection operations
   addConnection: (
@@ -37,6 +54,7 @@ interface PatchState {
     toPort: string
   ) => string | null;
   removeConnection: (id: string) => void;
+  removeAllConnections: (nodeId: string) => void;
 
   // Layout operations
   autoLayoutNodes: () => void;
@@ -111,6 +129,18 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   switch: { channels: 2, mode: 'cv', position: 0, smooth: 10 },
   crossfader: { position: 0.5, curve: 'equal_power' },
   sequencechain: { scenes: 4, stepsPerScene: 16, mode: 'forward', loop: true },
+  audioinput: { gain: 1.0, monitoring: false, source: 'microphone' },
+  pitchshifter: { semitones: 0, cents: 0, grainSize: 2048, mix: 1.0 },
+  formantshifter: { shift: 0, mix: 1.0, bandwidth: 8, vowel: 'auto' },
+  shimmerreverb: { decay: 4, shimmer: 0.5, pitchShift: 12, damping: 0.3, mix: 0.5, diffusion: 0.7 },
+  chorus: { rate: 1.5, depth: 0.5, voices: 3, spread: 0.5, mix: 0.5, feedback: 0 },
+  compressor: { threshold: -24, ratio: 4, attack: 0.003, release: 0.25, knee: 10, makeupGain: 0, mix: 1.0 },
+  eq: { lowFreq: 100, lowGain: 0, midFreq: 1000, midGain: 0, midQ: 1, highFreq: 8000, highGain: 0 },
+  bitcrusher: { bits: 8, sampleRateReduction: 1, mix: 1.0 },
+  vocoder: { bands: 16, attack: 0.005, release: 0.02, shift: 0, mix: 1.0 },
+  glitch: { rate: 8, size: 0.05, pitch: 1.0, pitchRamp: 0, reverse: false, probability: 1.0, mix: 1.0, active: false },
+  freqshifter: { shiftHz: 0, mode: 'up', mix: 1.0 },
+  combfilter: { frequency: 200, feedback: 0.8, damping: 0.3, mode: 'feedback', mix: 0.5 },
 };
 
 export const usePatchStore = create<PatchState>()(
@@ -121,6 +151,7 @@ export const usePatchStore = create<PatchState>()(
   selectedNodeId: null,
   selectedNodeIds: [],
   focusedGroupId: null,
+  tracingNodeId: null,
 
   setAudioEnabled: (enabled) => set({ isAudioEnabled: enabled }),
 
@@ -213,6 +244,142 @@ export const usePatchStore = create<PatchState>()(
 
   clearSelection: () => set({ selectedNodeIds: [], selectedNodeId: null }),
 
+  // Batch param updates (from ParamScheduler)
+  batchUpdateParams: (updates) => {
+    set((state) => {
+      let nodes = state.patch.nodes;
+      for (const { nodeId, param, value } of updates) {
+        if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) continue;
+        nodes = nodes.map((n) =>
+          n.id === nodeId ? { ...n, params: { ...n.params, [param]: value } } : n
+        );
+      }
+      return {
+        patch: {
+          ...state.patch,
+          nodes,
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
+  },
+
+  // Mute / bypass
+  toggleMute: (id) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: state.patch.nodes.map((n) =>
+          n.id === id ? { ...n, muted: !n.muted } : n
+        ),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  toggleBypass: (id) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: state.patch.nodes.map((n) =>
+          n.id === id ? { ...n, bypassed: !n.bypassed } : n
+        ),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  // Copy / paste
+  copySelected: () => {
+    const state = get();
+    const ids = state.selectedNodeIds.length > 0
+      ? state.selectedNodeIds
+      : state.selectedNodeId ? [state.selectedNodeId] : [];
+    if (ids.length === 0) return;
+    copyNodes(ids.filter((id) => id !== 'output'), state.patch.nodes, state.patch.connections);
+  },
+
+  pasteAtPosition: (position) => {
+    const result = pasteNodes(position);
+    if (!result) return;
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: [...state.patch.nodes, ...result.nodes],
+        connections: [...state.patch.connections, ...result.connections],
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+      selectedNodeIds: result.nodes.map((n) => n.id),
+    }));
+  },
+
+  duplicateSelected: () => {
+    const state = get();
+    const ids = state.selectedNodeIds.length > 0
+      ? state.selectedNodeIds
+      : state.selectedNodeId ? [state.selectedNodeId] : [];
+    if (ids.length === 0) return;
+    copyNodes(ids.filter((id) => id !== 'output'), state.patch.nodes, state.patch.connections);
+    const result = pasteNodes({ x: 50, y: 50 }); // offset from center
+    if (!result) return;
+    // Place relative to original positions with offset
+    const origNodes = state.patch.nodes.filter((n) => ids.includes(n.id));
+    if (origNodes.length > 0) {
+      let cx = 0, cy = 0;
+      origNodes.forEach((n) => { cx += n.position.x; cy += n.position.y; });
+      cx /= origNodes.length;
+      cy /= origNodes.length;
+      result.nodes.forEach((n) => {
+        n.position.x += cx;
+        n.position.y += cy;
+      });
+    }
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        nodes: [...state.patch.nodes, ...result.nodes],
+        connections: [...state.patch.connections, ...result.connections],
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+      selectedNodeIds: result.nodes.map((n) => n.id),
+    }));
+  },
+
+  // Signal tracing
+  setTracingNode: (id) => set({ tracingNodeId: id }),
+
+  getUpstreamNodes: (id) => {
+    const state = get();
+    const visited = new Set<string>();
+    const queue = [id];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      state.patch.connections
+        .filter((c) => c.to.nodeId === current)
+        .forEach((c) => queue.push(c.from.nodeId));
+    }
+    visited.delete(id); // Don't include self
+    return visited;
+  },
+
+  getDownstreamNodes: (id) => {
+    const state = get();
+    const visited = new Set<string>();
+    const queue = [id];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      state.patch.connections
+        .filter((c) => c.from.nodeId === current)
+        .forEach((c) => queue.push(c.to.nodeId));
+    }
+    visited.delete(id);
+    return visited;
+  },
+
   addConnection: (fromNodeId, fromPort, toNodeId, toPort) => {
     const state = get();
 
@@ -267,6 +434,18 @@ export const usePatchStore = create<PatchState>()(
       patch: {
         ...state.patch,
         connections: state.patch.connections.filter((c) => c.id !== id),
+        meta: { ...state.patch.meta, modified: new Date().toISOString() },
+      },
+    }));
+  },
+
+  removeAllConnections: (nodeId) => {
+    set((state) => ({
+      patch: {
+        ...state.patch,
+        connections: state.patch.connections.filter(
+          (c) => c.from.nodeId !== nodeId && c.to.nodeId !== nodeId
+        ),
         meta: { ...state.patch.meta, modified: new Date().toISOString() },
       },
     }));

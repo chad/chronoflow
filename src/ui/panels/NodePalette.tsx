@@ -27,6 +27,7 @@ const CATEGORIES: Category[] = [
       { type: 'karplusstrong', label: 'Karplus-Strong', description: 'Plucked string synthesis' },
       { type: 'granular', label: 'Granular', description: 'Granular texture processor' },
       { type: 'smoothrandom', label: 'Smooth Random', description: 'Smooth random walk generator' },
+      { type: 'audioinput', label: 'Audio Input', description: 'Microphone or stream input' },
     ],
   },
   {
@@ -85,6 +86,14 @@ const CATEGORIES: Category[] = [
       { type: 'vca', label: 'VCA', description: 'Voltage controlled amplifier' },
       { type: 'wavefolder', label: 'Wavefolder', description: 'Harmonic waveshaping' },
       { type: 'ringmod', label: 'Ring Mod', description: 'Ring modulator' },
+      { type: 'pitchshifter', label: 'Pitch Shifter', description: 'Granular pitch shifting' },
+      { type: 'formantshifter', label: 'Formant Shifter', description: 'Shift vocal formants independently' },
+      { type: 'freqshifter', label: 'Freq Shifter', description: 'Fixed Hz frequency shifting (Bode)' },
+      { type: 'combfilter', label: 'Comb Filter', description: 'Resonant metallic comb filter' },
+      { type: 'vocoder', label: 'Vocoder', description: 'Channel vocoder (voice + carrier)' },
+      { type: 'eq', label: 'EQ', description: '3-band parametric equalizer' },
+      { type: 'compressor', label: 'Compressor', description: 'Dynamics compressor with sidechain' },
+      { type: 'bitcrusher', label: 'Bitcrusher', description: 'Bit depth & sample rate reduction' },
     ],
   },
   {
@@ -94,6 +103,9 @@ const CATEGORIES: Category[] = [
     modules: [
       { type: 'delay', label: 'Delay', description: 'Stereo delay effect' },
       { type: 'reverb', label: 'Reverb', description: 'Convolution reverb' },
+      { type: 'shimmerreverb', label: 'Shimmer Reverb', description: 'Reverb with pitch-shifted feedback' },
+      { type: 'chorus', label: 'Chorus', description: 'Multi-voice ensemble effect' },
+      { type: 'glitch', label: 'Glitch', description: 'Buffer stutter, reverse & pitch-ramp' },
       { type: 'mixer', label: 'Mixer', description: '4-channel audio mixer' },
     ],
   },
@@ -128,8 +140,9 @@ export function NodePalette() {
   }, [collapsedCategories]);
 
   const handleAddNode = (type: PatchNodeType) => {
-    const x = 100 + Math.random() * 200;
-    const y = 100 + Math.random() * 200;
+    // Place at a reasonable position with slight randomness to avoid stacking
+    const x = 200 + Math.random() * 100;
+    const y = 150 + Math.random() * 100;
     addNode(type, { x, y });
   };
 

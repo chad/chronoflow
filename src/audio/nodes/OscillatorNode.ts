@@ -26,6 +26,9 @@ export class SynthOscillatorNode implements SynthNode {
   private freqModGain: GainNode;
   private detuneModGain: GainNode;
 
+  // Pitch bend offset (in cents, applied on top of detune)
+  private pitchBendCents: number = 0;
+
   constructor(context: AudioContext, id: string, params?: Partial<OscillatorParams>) {
     this.context = context;
     this.id = id;
@@ -119,6 +122,16 @@ export class SynthOscillatorNode implements SynthNode {
     }
   }
 
+  // Set pitch bend in cents (applied on top of user detune)
+  setPitchBendCents(cents: number): void {
+    this.pitchBendCents = cents;
+    if (this.oscillator) {
+      // Combine user detune + pitch bend
+      const totalDetune = this.params.detune + this.pitchBendCents;
+      this.oscillator.detune.setTargetAtTime(totalDetune, this.context.currentTime, 0.005);
+    }
+  }
+
   connect(destination: AudioNode | SynthNode): void {
     if ('getInputNode' in destination) {
       const input = destination.getInputNode();
@@ -145,7 +158,8 @@ export class SynthOscillatorNode implements SynthNode {
       case 'detune':
         this.params.detune = value as number;
         if (this.oscillator) {
-          this.oscillator.detune.setTargetAtTime(value as number, this.context.currentTime, 0.01);
+          const totalDetune = (value as number) + this.pitchBendCents;
+          this.oscillator.detune.setTargetAtTime(totalDetune, this.context.currentTime, 0.01);
         }
         break;
       case 'waveform':

@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 import { audioGraph } from '../../../audio/AudioGraph';
 import { parseTrackerPattern, midiToNoteName, type ParsedStep } from '../../../audio/nodes/trackerParser';
 
@@ -154,7 +155,8 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
   const isCurrentTabPlaying = selectedTab === activePatternKey && data.running;
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="sequencer">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[340px] max-w-[420px] ${
         selected ? 'border-cyan-400' : 'border-emerald-500'
       }`}
@@ -328,6 +330,7 @@ export const SequencerNodeUI = memo(({ id, data, selected }: NodeProps<Sequencer
         title="Trigger Output"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

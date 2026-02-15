@@ -43,17 +43,29 @@ import {
   SynthSwitchNode,
   SynthCrossfaderNode,
   SynthSequenceChainNode,
+  SynthAudioInputNode,
+  SynthPitchShifterNode,
+  SynthFormantShifterNode,
+  SynthShimmerReverbNode,
+  SynthChorusNode,
+  SynthCompressorNode,
+  SynthEQNode,
+  SynthBitcrusherNode,
+  SynthVocoderNode,
+  SynthGlitchNode,
+  SynthFreqShifterNode,
+  SynthCombFilterNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain', 'audioinput', 'pitchshifter', 'formantshifter', 'shimmerreverb', 'chorus', 'compressor', 'eq', 'bitcrusher', 'vocoder', 'glitch', 'freqshifter', 'combfilter'];
 
 interface Connection {
   fromId: string;
@@ -234,6 +246,42 @@ class AudioGraph {
         break;
       case 'sequencechain':
         node = new SynthSequenceChainNode(context, id, params);
+        break;
+      case 'audioinput':
+        node = new SynthAudioInputNode(context, id, params);
+        break;
+      case 'pitchshifter':
+        node = new SynthPitchShifterNode(context, id, params);
+        break;
+      case 'formantshifter':
+        node = new SynthFormantShifterNode(context, id, params);
+        break;
+      case 'shimmerreverb':
+        node = new SynthShimmerReverbNode(context, id, params);
+        break;
+      case 'chorus':
+        node = new SynthChorusNode(context, id, params);
+        break;
+      case 'compressor':
+        node = new SynthCompressorNode(context, id, params);
+        break;
+      case 'eq':
+        node = new SynthEQNode(context, id, params);
+        break;
+      case 'bitcrusher':
+        node = new SynthBitcrusherNode(context, id, params);
+        break;
+      case 'vocoder':
+        node = new SynthVocoderNode(context, id, params);
+        break;
+      case 'glitch':
+        node = new SynthGlitchNode(context, id, params);
+        break;
+      case 'freqshifter':
+        node = new SynthFreqShifterNode(context, id, params);
+        break;
+      case 'combfilter':
+        node = new SynthCombFilterNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
@@ -441,6 +489,27 @@ class AudioGraph {
       } else {
         output.connect(toNode.getInputNode());
       }
+    } else if (toNode instanceof SynthVocoderNode) {
+      // Vocoder has modulator (voice) and carrier (synth) inputs
+      if (toPort === 'carrier') {
+        output.connect(toNode.getCarrierInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthGlitchNode) {
+      // Glitch has audio input and trigger input
+      if (toPort === 'trigger') {
+        output.connect(toNode.getTriggerInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
+    } else if (toNode instanceof SynthCompressorNode) {
+      // Compressor has audio input and sidechain input
+      if (toPort === 'sidechain') {
+        output.connect(toNode.getSidechainInput());
+      } else {
+        output.connect(toNode.getInputNode());
+      }
     } else {
       // Check if this is a mixer channel input
       const mixerInputMatch = toPort.match(/^input([1-4])$/);
@@ -615,6 +684,56 @@ class AudioGraph {
     }
   }
 
+  // === PITCH BEND / MOD WHEEL / AFTERTOUCH ===
+
+  // Apply pitch bend to all active oscillators (cents-based for smooth bending)
+  setPitchBend(value: number, rangeSemitones: number = 2): void {
+    const cents = value * rangeSemitones * 100; // convert to cents
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthOscillatorNode) {
+        node.setPitchBendCents(cents);
+      }
+    });
+    // Also apply to voice oscillators
+    if (this.voiceAllocator) {
+      for (const voice of this.voiceAllocator.getVoices()) {
+        voice.setPitchBendCents(cents);
+      }
+    }
+  }
+
+  // Apply mod wheel — routes to filter cutoff modulation by default
+  setModWheel(value: number): void {
+    // Modulate filter cutoff: mod wheel opens the filter (0 = no change, 1 = full open)
+    // Scale: add up to 4000 Hz to cutoff based on mod wheel position
+    const modAmount = value * 4000;
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthFilterNode) {
+        node.setModWheelOffset(modAmount);
+      }
+    });
+    if (this.voiceAllocator) {
+      for (const voice of this.voiceAllocator.getVoices()) {
+        voice.setModWheelOffset(modAmount);
+      }
+    }
+  }
+
+  // Apply channel aftertouch — routes to filter cutoff + VCA volume boost
+  setAftertouch(value: number): void {
+    const filterMod = value * 2000;
+    this.nodes.forEach((node) => {
+      if (node instanceof SynthFilterNode) {
+        node.setAftertouchOffset(filterMod);
+      }
+    });
+    if (this.voiceAllocator) {
+      for (const voice of this.voiceAllocator.getVoices()) {
+        voice.setAftertouchOffset(filterMod);
+      }
+    }
+  }
+
   // === POLYPHONIC NOTE HANDLING ===
 
   // Note on with polyphony
@@ -695,7 +814,7 @@ class AudioGraph {
   // Clear all delay/reverb tails
   clearEffects(): void {
     this.nodes.forEach((node) => {
-      if (node instanceof SynthDelayNode || node instanceof SynthReverbNode) {
+      if (node instanceof SynthDelayNode || node instanceof SynthReverbNode || node instanceof SynthShimmerReverbNode) {
         (node as { clear: () => void }).clear();
       }
     });

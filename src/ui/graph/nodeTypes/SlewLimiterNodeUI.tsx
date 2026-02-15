@@ -5,6 +5,7 @@ import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type SlewLimiterData = {
   rise: number;
@@ -18,7 +19,8 @@ export const SlewLimiterNodeUI = memo(({ id, data, selected }: NodeProps<SlewLim
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="slewlimiter">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-teal-500'
       }`}
@@ -79,6 +81,7 @@ export const SlewLimiterNodeUI = memo(({ id, data, selected }: NodeProps<SlewLim
         title="CV Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

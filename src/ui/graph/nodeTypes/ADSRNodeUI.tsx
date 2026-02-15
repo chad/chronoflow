@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ADSRData = {
   attack: number;
@@ -18,7 +19,8 @@ export const ADSRNodeUI = memo(({ id, data, selected }: NodeProps<ADSRNode>) => 
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="adsr">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[180px] ${
         selected ? 'border-cyan-400' : 'border-pink-500'
       }`}
@@ -84,6 +86,7 @@ export const ADSRNodeUI = memo(({ id, data, selected }: NodeProps<ADSRNode>) => 
         className="!bg-pink-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

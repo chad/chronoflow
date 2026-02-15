@@ -5,6 +5,7 @@ import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 const SCALE_OPTIONS = [
   { value: 'chromatic', label: 'Chromatic' },
@@ -44,7 +45,8 @@ export const QuantizerNodeUI = memo(({ id, data, selected }: NodeProps<Quantizer
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="quantizer">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[150px] ${
         selected ? 'border-cyan-400' : 'border-sky-500'
       }`}
@@ -96,6 +98,7 @@ export const QuantizerNodeUI = memo(({ id, data, selected }: NodeProps<Quantizer
         title="Quantized Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

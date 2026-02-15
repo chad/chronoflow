@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type SwitchData = {
   channels: number;
@@ -26,7 +27,8 @@ export const SwitchNodeUI = memo(({ id, data, selected }: NodeProps<SwitchNode>)
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="switch">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-indigo-500'
       }`}
@@ -149,6 +151,7 @@ export const SwitchNodeUI = memo(({ id, data, selected }: NodeProps<SwitchNode>)
         title="Output"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

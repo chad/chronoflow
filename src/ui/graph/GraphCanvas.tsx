@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -26,9 +26,12 @@ import '@xyflow/react/dist/style.css';
 
 import { nodeTypes } from './nodeTypes';
 import { usePatchStore } from '../../patch/patchStore';
-import type { PatchNode, PatchConnection, PatchGroup } from '../../patch/types';
+import type { PatchNode, PatchConnection, PatchGroup, PatchNodeType } from '../../patch/types';
 import { remapConnectionsForCollapsedGroup } from '../../layout/groupUtils';
 import { ConnectionProvider, useConnection } from './ConnectionContext';
+import { ContextMenu, type ContextMenuState } from './ContextMenu';
+import { QuickAdd } from './QuickAdd';
+import { hasClipboard } from '../../patch/clipboard';
 
 // Convert patch nodes to React Flow nodes
 function patchNodesToFlowNodes(
@@ -36,7 +39,6 @@ function patchNodesToFlowNodes(
   groups: PatchGroup[],
   focusedGroupId: string | null
 ): Node[] {
-  // Get all collapsed group node IDs
   const collapsedGroupNodeIds = new Set<string>();
   groups.forEach((g) => {
     if (g.collapsed) {
@@ -44,7 +46,6 @@ function patchNodesToFlowNodes(
     }
   });
 
-  // If focused on a group, only show nodes in that group
   let visibleNodes = patchNodes;
   if (focusedGroupId) {
     const focusedGroup = groups.find((g) => g.id === focusedGroupId);
@@ -53,7 +54,6 @@ function patchNodesToFlowNodes(
       visibleNodes = patchNodes.filter((n) => focusedNodeIds.has(n.id));
     }
   } else {
-    // At root level, hide nodes that are in collapsed groups
     visibleNodes = patchNodes.filter((n) => !collapsedGroupNodeIds.has(n.id));
   }
 
@@ -61,11 +61,10 @@ function patchNodesToFlowNodes(
     id: node.id,
     type: node.type,
     position: node.position,
-    data: node.params,
+    data: { ...node.params, _muted: node.muted, _bypassed: node.bypassed },
     selected: false,
   }));
 
-  // Add collapsed group nodes at root level
   if (!focusedGroupId) {
     groups.forEach((group) => {
       if (group.collapsed) {
@@ -91,9 +90,10 @@ function patchNodesToFlowNodes(
 function patchConnectionsToFlowEdges(
   connections: PatchConnection[],
   groups: PatchGroup[],
-  focusedGroupId: string | null
+  focusedGroupId: string | null,
+  tracingNodeId: string | null,
+  traceNodeIds: Set<string> | null
 ): Edge[] {
-  // For collapsed groups, remap external connections
   let processedConnections = [...connections];
   groups.forEach((group) => {
     if (group.collapsed && !focusedGroupId) {
@@ -101,7 +101,6 @@ function patchConnectionsToFlowEdges(
     }
   });
 
-  // If focused on a group, only show connections within that group
   if (focusedGroupId) {
     const focusedGroup = groups.find((g) => g.id === focusedGroupId);
     if (focusedGroup) {
@@ -111,7 +110,6 @@ function patchConnectionsToFlowEdges(
       );
     }
   } else {
-    // At root level, filter out connections that are fully internal to collapsed groups
     const collapsedGroupNodeIds = new Set<string>();
     groups.forEach((g) => {
       if (g.collapsed) {
@@ -122,26 +120,40 @@ function patchConnectionsToFlowEdges(
     processedConnections = processedConnections.filter((c) => {
       const fromInCollapsed = collapsedGroupNodeIds.has(c.from.nodeId);
       const toInCollapsed = collapsedGroupNodeIds.has(c.to.nodeId);
-      // Keep if not both in collapsed groups (or if remapped to group node)
       return !(fromInCollapsed && toInCollapsed);
     });
   }
 
-  return processedConnections.map((conn) => ({
-    id: conn.id,
-    source: conn.from.nodeId,
-    sourceHandle: conn.from.port,
-    target: conn.to.nodeId,
-    targetHandle: conn.to.port,
-    type: 'default',
-    animated: true,
-    style: { stroke: '#06b6d4', strokeWidth: 2 },
-  }));
+  return processedConnections.map((conn) => {
+    // Dim edges not in trace path
+    let isInTrace = true;
+    if (tracingNodeId && traceNodeIds) {
+      isInTrace =
+        traceNodeIds.has(conn.from.nodeId) || traceNodeIds.has(conn.to.nodeId) ||
+        conn.from.nodeId === tracingNodeId || conn.to.nodeId === tracingNodeId;
+    }
+
+    return {
+      id: conn.id,
+      source: conn.from.nodeId,
+      sourceHandle: conn.from.port,
+      target: conn.to.nodeId,
+      targetHandle: conn.to.port,
+      type: 'default',
+      animated: true,
+      style: {
+        stroke: isInTrace ? '#06b6d4' : '#06b6d430',
+        strokeWidth: isInTrace ? 2 : 1,
+        transition: 'stroke 0.3s, stroke-width 0.3s',
+      },
+    };
+  });
 }
 
 function GraphCanvasInner() {
   const patch = usePatchStore((state) => state.patch);
   const updateNodePosition = usePatchStore((state) => state.updateNodePosition);
+  const addNode = usePatchStore((state) => state.addNode);
   const addConnection = usePatchStore((state) => state.addConnection);
   const removeConnection = usePatchStore((state) => state.removeConnection);
   const removeNode = usePatchStore((state) => state.removeNode);
@@ -155,6 +167,20 @@ function GraphCanvasInner() {
   const diveIntoGroup = usePatchStore((state) => state.diveIntoGroup);
   const exitGroup = usePatchStore((state) => state.exitGroup);
   const deleteGroup = usePatchStore((state) => state.deleteGroup);
+  const removeAllConnections = usePatchStore((state) => state.removeAllConnections);
+  const toggleMute = usePatchStore((state) => state.toggleMute);
+  const toggleBypass = usePatchStore((state) => state.toggleBypass);
+  const copySelected = usePatchStore((state) => state.copySelected);
+  const pasteAtPosition = usePatchStore((state) => state.pasteAtPosition);
+  const duplicateSelected = usePatchStore((state) => state.duplicateSelected);
+  const tracingNodeId = usePatchStore((state) => state.tracingNodeId);
+  const setTracingNode = usePatchStore((state) => state.setTracingNode);
+  const getUpstreamNodes = usePatchStore((state) => state.getUpstreamNodes);
+  const getDownstreamNodes = usePatchStore((state) => state.getDownstreamNodes);
+
+  // Context menu & quick add state
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [quickAdd, setQuickAdd] = useState<{ screen: { x: number; y: number }; canvas: { x: number; y: number } } | null>(null);
 
   // Click-to-connect state
   const {
@@ -168,19 +194,24 @@ function GraphCanvasInner() {
     setPreConnectionViewport,
     completeConnection,
   } = useConnection();
-  const { setCenter, getNodes, getViewport, setViewport } = useReactFlow();
+  const { setCenter, getNodes, getViewport, setViewport, screenToFlowPosition } = useReactFlow();
 
-  // Save viewport and auto-pan to show all nodes when connection mode starts
+  // Compute trace node set for edge dimming
+  const traceNodeIds = useMemo(() => {
+    if (!tracingNodeId) return null;
+    const up = getUpstreamNodes(tracingNodeId);
+    const down = getDownstreamNodes(tracingNodeId);
+    return new Set([...up, ...down, tracingNodeId]);
+  }, [tracingNodeId, getUpstreamNodes, getDownstreamNodes]);
+
+  // Save viewport and auto-pan when connection mode starts
   useEffect(() => {
     if (isConnecting && connectionSource) {
-      // Save current viewport to restore later
       const currentViewport = getViewport();
       setPreConnectionViewport(currentViewport);
 
-      // Find potential target nodes and pan to show them
       const nodes = getNodes();
       if (nodes.length > 1) {
-        // Calculate bounding box of all nodes
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         nodes.forEach(node => {
           const x = node.position.x;
@@ -192,8 +223,6 @@ function GraphCanvasInner() {
           minY = Math.min(minY, y);
           maxY = Math.max(maxY, y + height);
         });
-
-        // Center on the midpoint of all nodes with some zoom out
         const centerX = (minX + maxX) / 2;
         const centerY = (minY + maxY) / 2;
         setCenter(centerX, centerY, { zoom: 0.8, duration: 300 });
@@ -201,28 +230,78 @@ function GraphCanvasInner() {
     }
   }, [isConnecting, connectionSource, getNodes, setCenter, getViewport, setPreConnectionViewport]);
 
-  // Handle ESC key to cancel connection and restore viewport
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isConnecting) {
-        cancelConnection();
-        // Restore viewport on cancel
-        if (preConnectionViewport) {
-          setViewport(preConnectionViewport, { duration: 300 });
-          setPreConnectionViewport(null);
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      // ESC: cancel connection, clear tracing, close menus
+      if (e.key === 'Escape') {
+        if (isConnecting) {
+          cancelConnection();
+          if (preConnectionViewport) {
+            setViewport(preConnectionViewport, { duration: 300 });
+            setPreConnectionViewport(null);
+          }
         }
+        if (tracingNodeId) setTracingNode(null);
+        setContextMenu(null);
+        setQuickAdd(null);
+        return;
+      }
+
+      // Cmd+C: copy
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+
+      // Cmd+V: paste at viewport center
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+        e.preventDefault();
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        pasteAtPosition(center);
+        return;
+      }
+
+      // Cmd+D: duplicate
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        e.preventDefault();
+        duplicateSelected();
+        return;
+      }
+
+      // Cmd+A: select all
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        e.preventDefault();
+        setSelectedNodeIds(patch.nodes.map((n) => n.id));
+        return;
+      }
+
+      // M: mute selected
+      if (e.key === 'm' || e.key === 'M') {
+        const id = usePatchStore.getState().selectedNodeId;
+        if (id) toggleMute(id);
+        return;
+      }
+
+      // B: bypass selected
+      if (e.key === 'b' || e.key === 'B') {
+        const id = usePatchStore.getState().selectedNodeId;
+        if (id) toggleBypass(id);
+        return;
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isConnecting, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
+  }, [isConnecting, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport, tracingNodeId, setTracingNode, copySelected, pasteAtPosition, duplicateSelected, setSelectedNodeIds, patch.nodes, toggleMute, toggleBypass, screenToFlowPosition, getViewport]);
 
-  // Set up connection complete callback with viewport restore
+  // Set up connection complete callback
   useEffect(() => {
     setOnConnectionComplete((sourceNodeId, sourceHandle, targetNodeId, targetHandle) => {
       addConnection(sourceNodeId, sourceHandle, targetNodeId, targetHandle);
-
-      // Restore viewport after a brief delay to let the connection render
       if (preConnectionViewport) {
         setTimeout(() => {
           setViewport(preConnectionViewport, { duration: 300 });
@@ -232,48 +311,35 @@ function GraphCanvasInner() {
     });
   }, [setOnConnectionComplete, addConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
 
-  // Track mouse position and find closest snap target during connection
+  // Snap target tracking
   useEffect(() => {
     if (!isConnecting || !connectionSource) return;
 
-    const SNAP_DISTANCE = 50; // pixels
-
+    const SNAP_DISTANCE = 50;
     const handleMouseMove = (e: MouseEvent) => {
-      // Get all handle elements that are valid targets
       const handles = document.querySelectorAll('.react-flow__handle');
       let closest: { nodeId: string; handleId: string; distance: number } | null = null;
 
       handles.forEach((handle) => {
         const rect = handle.getBoundingClientRect();
-        const handleCenterX = rect.left + rect.width / 2;
-        const handleCenterY = rect.top + rect.height / 2;
-        const distance = Math.sqrt(
-          Math.pow(e.clientX - handleCenterX, 2) + Math.pow(e.clientY - handleCenterY, 2)
-        );
+        const hx = rect.left + rect.width / 2;
+        const hy = rect.top + rect.height / 2;
+        const dist = Math.sqrt(Math.pow(e.clientX - hx, 2) + Math.pow(e.clientY - hy, 2));
 
-        // Check if this handle is a valid target
         const handleType = handle.classList.contains('source') ? 'source' : 'target';
         const isValidType =
           (connectionSource.handleType === 'source' && handleType === 'target') ||
           (connectionSource.handleType === 'target' && handleType === 'source');
 
-        // Get node ID and handle ID from data attributes
         const nodeId = handle.getAttribute('data-nodeid');
         const handleId = handle.getAttribute('data-handleid');
 
-        if (
-          nodeId &&
-          handleId &&
-          nodeId !== connectionSource.nodeId &&
-          isValidType &&
-          distance < SNAP_DISTANCE
-        ) {
-          if (!closest || distance < closest.distance) {
-            closest = { nodeId, handleId, distance };
+        if (nodeId && handleId && nodeId !== connectionSource.nodeId && isValidType && dist < SNAP_DISTANCE) {
+          if (!closest || dist < closest.distance) {
+            closest = { nodeId, handleId, distance: dist };
           }
         }
       });
-
       setSnapTarget(closest);
     };
 
@@ -281,57 +347,169 @@ function GraphCanvasInner() {
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [isConnecting, connectionSource, setSnapTarget]);
 
-  // Handle pane click - connect to snap target or cancel
+  // Pane click: connect snap target or cancel
   const handlePaneClick = useCallback(() => {
+    if (contextMenu) {
+      setContextMenu(null);
+      return;
+    }
+    if (quickAdd) {
+      setQuickAdd(null);
+      return;
+    }
     if (isConnecting) {
       if (snapTarget) {
-        // Connect to the snap target
         completeConnection(snapTarget.nodeId, snapTarget.handleId);
       } else {
-        // Cancel if no snap target
         cancelConnection();
-        // Restore viewport on cancel
         if (preConnectionViewport) {
           setViewport(preConnectionViewport, { duration: 300 });
           setPreConnectionViewport(null);
         }
       }
     }
-  }, [isConnecting, snapTarget, completeConnection, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
+    // Clear signal tracing on click
+    if (tracingNodeId) setTracingNode(null);
+  }, [isConnecting, snapTarget, completeConnection, cancelConnection, preConnectionViewport, setViewport, setPreConnectionViewport, contextMenu, quickAdd, tracingNodeId, setTracingNode]);
 
-  // Get the current focused group for breadcrumb
+  // Double-click canvas → Quick Add popup (only on empty space)
+  const handlePaneDoubleClick = useCallback(
+    (event: React.MouseEvent) => {
+      // Don't trigger on nodes, handles, or other interactive elements
+      const target = event.target as HTMLElement;
+      if (target.closest('.react-flow__node') || target.closest('.react-flow__handle') || target.closest('.quick-add-popup')) return;
+
+      const canvasPos = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      setQuickAdd({
+        screen: { x: event.clientX, y: event.clientY },
+        canvas: canvasPos,
+      });
+    },
+    [screenToFlowPosition]
+  );
+
+  // Right-click canvas → Context Menu (only on empty space)
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      // Don't trigger if right-clicking on a node (that's handled by onNodeContextMenu)
+      const target = event.target as HTMLElement;
+      if (target.closest('.react-flow__node')) return;
+      event.preventDefault();
+      setContextMenu({
+        type: 'canvas',
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    []
+  );
+
+  // Right-click node → Node Context Menu
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      const patchNode = patch.nodes.find((n) => n.id === node.id);
+      setContextMenu({
+        type: 'node',
+        x: event.clientX,
+        y: event.clientY,
+        nodeId: node.id,
+        nodeType: node.type,
+        isMuted: patchNode?.muted,
+        isBypassed: patchNode?.bypassed,
+      });
+    },
+    [patch.nodes]
+  );
+
+  // Right-click edge → Edge Context Menu
+  const handleEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: Edge) => {
+      event.preventDefault();
+      setContextMenu({
+        type: 'edge',
+        x: event.clientX,
+        y: event.clientY,
+        edgeId: edge.id,
+      });
+    },
+    []
+  );
+
+  // Context menu: add node at screen position → convert to canvas position
+  const handleContextAddNode = useCallback(
+    (type: PatchNodeType, screenPos: { x: number; y: number }) => {
+      const canvasPos = screenToFlowPosition(screenPos);
+      addNode(type, canvasPos);
+    },
+    [addNode, screenToFlowPosition]
+  );
+
+  const handleContextPaste = useCallback(
+    (screenPos: { x: number; y: number }) => {
+      const canvasPos = screenToFlowPosition(screenPos);
+      pasteAtPosition(canvasPos);
+    },
+    [pasteAtPosition, screenToFlowPosition]
+  );
+
+  const handleContextSelectAll = useCallback(() => {
+    setSelectedNodeIds(patch.nodes.map((n) => n.id));
+  }, [setSelectedNodeIds, patch.nodes]);
+
+  const handleContextDuplicate = useCallback(
+    (id: string) => {
+      selectNode(id);
+      setSelectedNodeIds([id]);
+      setTimeout(() => duplicateSelected(), 0);
+    },
+    [selectNode, setSelectedNodeIds, duplicateSelected]
+  );
+
+  const handleContextCopy = useCallback(
+    (id: string) => {
+      selectNode(id);
+      setSelectedNodeIds([id]);
+      setTimeout(() => copySelected(), 0);
+    },
+    [selectNode, setSelectedNodeIds, copySelected]
+  );
+
+  const handleTraceSignal = useCallback(
+    (id: string) => {
+      setTracingNode(tracingNodeId === id ? null : id);
+    },
+    [setTracingNode, tracingNodeId]
+  );
+
   const focusedGroup = useMemo(
     () => patch.groups.find((g) => g.id === focusedGroupId),
     [patch.groups, focusedGroupId]
   );
 
-  // Convert patch state to React Flow format
   const initialNodes = useMemo(
     () => patchNodesToFlowNodes(patch.nodes, patch.groups, focusedGroupId),
     [patch.nodes, patch.groups, focusedGroupId]
   );
   const initialEdges = useMemo(
-    () => patchConnectionsToFlowEdges(patch.connections, patch.groups, focusedGroupId),
-    [patch.connections, patch.groups, focusedGroupId]
+    () => patchConnectionsToFlowEdges(patch.connections, patch.groups, focusedGroupId, tracingNodeId, traceNodeIds),
+    [patch.connections, patch.groups, focusedGroupId, tracingNodeId, traceNodeIds]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // Sync nodes from patch when it changes
   useEffect(() => {
     setNodes(patchNodesToFlowNodes(patch.nodes, patch.groups, focusedGroupId));
   }, [patch.nodes, patch.groups, focusedGroupId, setNodes]);
 
   useEffect(() => {
-    setEdges(patchConnectionsToFlowEdges(patch.connections, patch.groups, focusedGroupId));
-  }, [patch.connections, patch.groups, focusedGroupId, setEdges]);
+    setEdges(patchConnectionsToFlowEdges(patch.connections, patch.groups, focusedGroupId, tracingNodeId, traceNodeIds));
+  }, [patch.connections, patch.groups, focusedGroupId, setEdges, tracingNodeId, traceNodeIds]);
 
-  // Handle node position changes
   const handleNodesChange: OnNodesChange = useCallback(
     (changes: NodeChange[]) => {
       onNodesChange(changes);
-
       changes.forEach((change) => {
         if (change.type === 'position' && change.position) {
           updateNodePosition(change.id, change.position);
@@ -347,11 +525,9 @@ function GraphCanvasInner() {
     [onNodesChange, updateNodePosition, removeNode, selectNode]
   );
 
-  // Handle edge changes
   const handleEdgesChange: OnEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       onEdgesChange(changes);
-
       changes.forEach((change) => {
         if (change.type === 'remove') {
           removeConnection(change.id);
@@ -361,7 +537,6 @@ function GraphCanvasInner() {
     [onEdgesChange, removeConnection]
   );
 
-  // Handle new connections
   const onConnect = useCallback(
     (connection: Connection) => {
       if (connection.source && connection.target) {
@@ -389,7 +564,6 @@ function GraphCanvasInner() {
     [addConnection, setEdges]
   );
 
-  // Handle multi-selection changes
   const onSelectionChange: OnSelectionChangeFunc = useCallback(
     ({ nodes: selectedNodes }) => {
       const ids = selectedNodes.map((n) => n.id);
@@ -398,13 +572,9 @@ function GraphCanvasInner() {
     [setSelectedNodeIds]
   );
 
-  // Handle creating a group from selection
   const handleCreateGroup = useCallback(() => {
     if (selectedNodeIds.length >= 2) {
-      // Filter out any group nodes from selection
-      const nodeOnlyIds = selectedNodeIds.filter(
-        (id) => !id.startsWith('group_')
-      );
+      const nodeOnlyIds = selectedNodeIds.filter((id) => !id.startsWith('group_'));
       if (nodeOnlyIds.length >= 2) {
         const name = prompt('Enter group name:', 'New Group');
         if (name) {
@@ -414,7 +584,6 @@ function GraphCanvasInner() {
     }
   }, [selectedNodeIds, createGroup]);
 
-  // Handle double-click on a group node to dive in
   const handleNodeDoubleClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       if (node.id.startsWith('group_')) {
@@ -424,14 +593,13 @@ function GraphCanvasInner() {
     [diveIntoGroup]
   );
 
-  // Get non-collapsed groups for the groups panel
   const activeGroups = useMemo(
     () => patch.groups.filter((g) => !g.collapsed),
     [patch.groups]
   );
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full" onContextMenu={handleContextMenu} onDoubleClick={handlePaneDoubleClick}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -440,11 +608,14 @@ function GraphCanvasInner() {
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
         onNodeDoubleClick={handleNodeDoubleClick}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
         onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         fitView
         snapToGrid
         snapGrid={[10, 10]}
+        zoomOnDoubleClick={false}
         selectionMode={SelectionMode.Partial}
         selectionOnDrag
         deleteKeyCode={['Backspace', 'Delete']}
@@ -472,6 +643,15 @@ function GraphCanvasInner() {
               Create Group ({selectedNodeIds.length})
             </button>
           )}
+
+          {tracingNodeId && (
+            <button
+              onClick={() => setTracingNode(null)}
+              className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm rounded-md border border-yellow-500 transition-colors"
+            >
+              ✕ Clear Trace
+            </button>
+          )}
         </Panel>
 
         {/* Groups Panel */}
@@ -486,27 +666,9 @@ function GraphCanvasInner() {
                 >
                   <span className="text-white truncate">{group.name}</span>
                   <div className="flex gap-1">
-                    <button
-                      onClick={() => collapseGroup(group.id)}
-                      className="text-gray-400 hover:text-white text-xs"
-                      title="Collapse"
-                    >
-                      [-]
-                    </button>
-                    <button
-                      onClick={() => diveIntoGroup(group.id)}
-                      className="text-cyan-400 hover:text-cyan-300 text-xs"
-                      title="Dive In"
-                    >
-                      {'[>]'}
-                    </button>
-                    <button
-                      onClick={() => deleteGroup(group.id)}
-                      className="text-red-400 hover:text-red-300 text-xs"
-                      title="Delete Group"
-                    >
-                      [x]
-                    </button>
+                    <button onClick={() => collapseGroup(group.id)} className="text-gray-400 hover:text-white text-xs" title="Collapse">[-]</button>
+                    <button onClick={() => diveIntoGroup(group.id)} className="text-cyan-400 hover:text-cyan-300 text-xs" title="Dive In">{'[>]'}</button>
+                    <button onClick={() => deleteGroup(group.id)} className="text-red-400 hover:text-red-300 text-xs" title="Delete Group">[x]</button>
                   </div>
                 </div>
               ))}
@@ -514,24 +676,14 @@ function GraphCanvasInner() {
           </Panel>
         )}
 
-        {/* Breadcrumb Navigation (when inside a group) */}
+        {/* Breadcrumb Navigation */}
         {focusedGroupId && focusedGroup && (
           <Panel position="top-center" className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5">
             <div className="flex items-center gap-2 text-sm">
-              <button
-                onClick={exitGroup}
-                className="text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                Root
-              </button>
+              <button onClick={exitGroup} className="text-cyan-400 hover:text-cyan-300 transition-colors">Root</button>
               <span className="text-gray-500">/</span>
               <span className="text-white font-medium">{focusedGroup.name}</span>
-              <button
-                onClick={exitGroup}
-                className="ml-2 px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded border border-gray-600 transition-colors"
-              >
-                Exit
-              </button>
+              <button onClick={exitGroup} className="ml-2 px-2 py-0.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded border border-gray-600 transition-colors">Exit</button>
             </div>
           </Panel>
         )}
@@ -547,18 +699,61 @@ function GraphCanvasInner() {
                 </span>
               ) : (
                 <span className="text-cyan-100">
-                  Move near a target handle to snap, or press <kbd className="px-1.5 py-0.5 bg-cyan-800 rounded text-xs">ESC</kbd> to cancel
+                  Move near a target handle, or <kbd className="px-1.5 py-0.5 bg-cyan-800 rounded text-xs">ESC</kbd> to cancel
                 </span>
               )}
             </div>
           </Panel>
         )}
+
+        {/* Hint bar */}
+        {!isConnecting && !focusedGroupId && !contextMenu && !quickAdd && (
+          <Panel position="bottom-left" className="text-[10px] text-gray-600 flex gap-3">
+            <span>Double-click: add module</span>
+            <span>Right-click: menu</span>
+            <span>M: mute</span>
+            <span>B: bypass</span>
+          </Panel>
+        )}
       </ReactFlow>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          state={contextMenu}
+          onClose={() => setContextMenu(null)}
+          onAddNode={handleContextAddNode}
+          onPaste={handleContextPaste}
+          onSelectAll={handleContextSelectAll}
+          onAutoLayout={autoLayoutNodes}
+          onDeleteNode={removeNode}
+          onDuplicateNode={handleContextDuplicate}
+          onDisconnectAll={removeAllConnections}
+          onToggleMute={toggleMute}
+          onToggleBypass={toggleBypass}
+          onCopyNode={handleContextCopy}
+          onTraceSignal={handleTraceSignal}
+          onDeleteEdge={removeConnection}
+          hasClipboard={hasClipboard()}
+        />
+      )}
+
+      {/* Quick Add (double-click canvas) */}
+      {quickAdd && (
+        <QuickAdd
+          position={quickAdd.screen}
+          canvasPosition={quickAdd.canvas}
+          onAdd={(type, pos) => {
+            addNode(type, pos);
+            setQuickAdd(null);
+          }}
+          onClose={() => setQuickAdd(null)}
+        />
+      )}
     </div>
   );
 }
 
-// Wrapper component that provides ReactFlowProvider and ConnectionProvider
 export function GraphCanvas() {
   return (
     <ReactFlowProvider>

@@ -307,6 +307,33 @@ export class Voice {
     return allComplete;
   }
 
+  // Apply pitch bend to all voice oscillators
+  setPitchBendCents(cents: number): void {
+    this.nodes.forEach((node) => {
+      if (node.type === 'oscillator') {
+        (node as SynthOscillatorNode).setPitchBendCents(cents);
+      }
+    });
+  }
+
+  // Apply mod wheel offset to all voice filters
+  setModWheelOffset(hz: number): void {
+    this.nodes.forEach((node) => {
+      if (node.type === 'filter') {
+        (node as SynthFilterNode).setModWheelOffset(hz);
+      }
+    });
+  }
+
+  // Apply aftertouch offset to all voice filters
+  setAftertouchOffset(hz: number): void {
+    this.nodes.forEach((node) => {
+      if (node.type === 'filter') {
+        (node as SynthFilterNode).setAftertouchOffset(hz);
+      }
+    });
+  }
+
   // Update parameters across all instances of a node type
   updateParam(nodeId: string, param: string, value: number | string): void {
     const node = this.nodes.get(nodeId);

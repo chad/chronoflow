@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type ReverbData = {
   decay: number;
@@ -16,7 +17,8 @@ export const ReverbNodeUI = memo(({ id, data, selected }: NodeProps<ReverbNode>)
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="reverb">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[120px] ${
         selected ? 'border-cyan-400' : 'border-indigo-500'
       }`}
@@ -63,6 +65,7 @@ export const ReverbNodeUI = memo(({ id, data, selected }: NodeProps<ReverbNode>)
         className="!bg-indigo-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

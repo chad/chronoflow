@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type SmoothRandomData = {
   rate: number;
@@ -17,7 +18,8 @@ export const SmoothRandomNodeUI = memo(({ id, data, selected }: NodeProps<Smooth
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="smoothrandom">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-teal-500'
       }`}
@@ -64,6 +66,7 @@ export const SmoothRandomNodeUI = memo(({ id, data, selected }: NodeProps<Smooth
         title="Random Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

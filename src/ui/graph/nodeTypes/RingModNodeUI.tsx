@@ -5,6 +5,7 @@ import { Knob } from '../../controls/Knob';
 import { Select } from '../../controls/Select';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 const WAVEFORM_OPTIONS = [
   { value: 'sine', label: 'Sine' },
@@ -25,7 +26,8 @@ export const RingModNodeUI = memo(({ id, data, selected }: NodeProps<RingModNode
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="ringmod">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[150px] ${
         selected ? 'border-cyan-400' : 'border-fuchsia-500'
       }`}
@@ -102,6 +104,7 @@ export const RingModNodeUI = memo(({ id, data, selected }: NodeProps<RingModNode
         className="!bg-fuchsia-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

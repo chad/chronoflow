@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type GranularData = {
   grainSize: number;
@@ -22,7 +23,8 @@ export const GranularNodeUI = memo(({ id, data, selected }: NodeProps<GranularNo
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="granular">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[200px] ${
         selected ? 'border-cyan-400' : 'border-violet-500'
       }`}
@@ -139,6 +141,7 @@ export const GranularNodeUI = memo(({ id, data, selected }: NodeProps<GranularNo
         title="Audio Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

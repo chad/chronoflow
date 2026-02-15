@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type MacroData = {
   value: number;
@@ -33,7 +34,8 @@ export const MacroNodeUI = memo(({ id, data, selected }: NodeProps<MacroNode>) =
   ];
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="macro">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[160px] ${
         selected ? 'border-cyan-400' : 'border-fuchsia-500'
       }`}
@@ -124,6 +126,7 @@ export const MacroNodeUI = memo(({ id, data, selected }: NodeProps<MacroNode>) =
         style={{ top: '75%' }}
       />
     </div>
+    </NodeWrapper>
   );
 });
 

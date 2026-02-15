@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type KarplusStrongData = {
   frequency: number;
@@ -19,7 +20,8 @@ export const KarplusStrongNodeUI = memo(({ id, data, selected }: NodeProps<Karpl
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="karplusstrong">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[180px] ${
         selected ? 'border-cyan-400' : 'border-amber-500'
       }`}
@@ -107,6 +109,7 @@ export const KarplusStrongNodeUI = memo(({ id, data, selected }: NodeProps<Karpl
         title="Audio Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

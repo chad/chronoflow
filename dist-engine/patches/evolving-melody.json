@@ -1,0 +1,98 @@
+{
+  "version": "1.0",
+  "meta": {
+    "name": "Evolving Melody",
+    "created": "2026-01-28T00:00:00.000Z",
+    "modified": "2026-01-28T00:00:00.000Z"
+  },
+  "nodes": [
+    {
+      "id": "clock1",
+      "type": "clock",
+      "position": { "x": 50, "y": 200 },
+      "params": { "bpm": 140, "running": true, "swing": 0 }
+    },
+    {
+      "id": "euclidean1",
+      "type": "euclidean",
+      "position": { "x": 200, "y": 100 },
+      "params": { "steps": 16, "hits": 7, "rotation": 0, "running": true }
+    },
+    {
+      "id": "turing1",
+      "type": "turing",
+      "position": { "x": 200, "y": 300 },
+      "params": { "probability": 0.15, "length": 8, "scale": 1, "locked": false }
+    },
+    {
+      "id": "slew1",
+      "type": "slewlimiter",
+      "position": { "x": 400, "y": 300 },
+      "params": { "rise": 0.08, "fall": 0.15, "shape": "exponential" }
+    },
+    {
+      "id": "quantizer1",
+      "type": "quantizer",
+      "position": { "x": 600, "y": 300 },
+      "params": { "scale": "minor", "root": 0, "octaves": 2 }
+    },
+    {
+      "id": "osc1",
+      "type": "oscillator",
+      "position": { "x": 800, "y": 200 },
+      "params": { "frequency": 220, "detune": 0, "waveform": "sawtooth" }
+    },
+    {
+      "id": "adsr1",
+      "type": "adsr",
+      "position": { "x": 400, "y": 100 },
+      "params": { "attack": 0.005, "decay": 0.2, "sustain": 0.3, "release": 0.4 }
+    },
+    {
+      "id": "filter1",
+      "type": "filter",
+      "position": { "x": 1000, "y": 200 },
+      "params": { "mode": "lowpass", "cutoff": 1800, "resonance": 3 }
+    },
+    {
+      "id": "vca1",
+      "type": "vca",
+      "position": { "x": 1200, "y": 200 },
+      "params": { "gain": 0.8 }
+    },
+    {
+      "id": "delay1",
+      "type": "delay",
+      "position": { "x": 1400, "y": 200 },
+      "params": { "time": 0.375, "feedback": 0.35, "mix": 0.3 }
+    },
+    {
+      "id": "reverb1",
+      "type": "reverb",
+      "position": { "x": 1600, "y": 200 },
+      "params": { "decay": 2.5, "mix": 0.25 }
+    },
+    {
+      "id": "output",
+      "type": "output",
+      "position": { "x": 1800, "y": 200 },
+      "params": { "gain": 0.6 }
+    }
+  ],
+  "connections": [
+    { "id": "c1", "from": { "nodeId": "clock1", "port": "output" }, "to": { "nodeId": "euclidean1", "port": "clock" } },
+    { "id": "c2", "from": { "nodeId": "clock1", "port": "output" }, "to": { "nodeId": "turing1", "port": "clock" } },
+    { "id": "c3", "from": { "nodeId": "euclidean1", "port": "output" }, "to": { "nodeId": "adsr1", "port": "trigger" } },
+    { "id": "c4", "from": { "nodeId": "turing1", "port": "output" }, "to": { "nodeId": "slew1", "port": "input" } },
+    { "id": "c5", "from": { "nodeId": "slew1", "port": "output" }, "to": { "nodeId": "quantizer1", "port": "input" } },
+    { "id": "c6", "from": { "nodeId": "quantizer1", "port": "output" }, "to": { "nodeId": "osc1", "port": "freq_mod" } },
+    { "id": "c7", "from": { "nodeId": "osc1", "port": "output" }, "to": { "nodeId": "filter1", "port": "input" } },
+    { "id": "c8", "from": { "nodeId": "adsr1", "port": "output" }, "to": { "nodeId": "vca1", "port": "gain_mod" } },
+    { "id": "c9", "from": { "nodeId": "adsr1", "port": "output" }, "to": { "nodeId": "filter1", "port": "cutoff_mod" } },
+    { "id": "c10", "from": { "nodeId": "filter1", "port": "output" }, "to": { "nodeId": "vca1", "port": "input" } },
+    { "id": "c11", "from": { "nodeId": "vca1", "port": "output" }, "to": { "nodeId": "delay1", "port": "input" } },
+    { "id": "c12", "from": { "nodeId": "delay1", "port": "output" }, "to": { "nodeId": "reverb1", "port": "input" } },
+    { "id": "c13", "from": { "nodeId": "reverb1", "port": "output" }, "to": { "nodeId": "output", "port": "input" } }
+  ],
+  "groups": []
+}

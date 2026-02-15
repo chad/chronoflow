@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type SampleHoldData = {
   rate: number;
@@ -16,7 +17,8 @@ export const SampleHoldNodeUI = memo(({ id, data, selected }: NodeProps<SampleHo
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="samplehold">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[120px] ${
         selected ? 'border-cyan-400' : 'border-lime-500'
       }`}
@@ -77,6 +79,7 @@ export const SampleHoldNodeUI = memo(({ id, data, selected }: NodeProps<SampleHo
         title="Sampled Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

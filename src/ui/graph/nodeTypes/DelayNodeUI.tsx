@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type DelayData = {
   time: number;
@@ -17,7 +18,8 @@ export const DelayNodeUI = memo(({ id, data, selected }: NodeProps<DelayNode>) =
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="delay">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-blue-500'
       }`}
@@ -92,6 +94,7 @@ export const DelayNodeUI = memo(({ id, data, selected }: NodeProps<DelayNode>) =
         className="!bg-blue-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

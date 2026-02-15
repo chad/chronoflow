@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type EuclideanData = {
   steps: number;
@@ -40,7 +41,8 @@ export const EuclideanNodeUI = memo(({ id, data, selected }: NodeProps<Euclidean
   const pattern = generatePattern(data.steps, data.hits, data.rotation);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="euclidean">
+      <div
       className={`bg-gray-900 border-2 rounded-lg p-3 min-w-[160px] ${
         selected ? 'border-cyan-400' : 'border-purple-500'
       }`}
@@ -113,6 +115,7 @@ export const EuclideanNodeUI = memo(({ id, data, selected }: NodeProps<Euclidean
         title="Trigger Out"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

@@ -84,13 +84,15 @@ export function Knob({
   const normalizedModValue = (toLinear(clampedModValue) - (logarithmic ? 0 : min)) / (logarithmic ? 1 : max - min);
   const modRotation = normalizedModValue * 270 - 135;
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
       e.preventDefault();
-      e.stopPropagation(); // Prevent React Flow from capturing the event
+      e.stopPropagation();
       setIsDragging(true);
       dragStartY.current = e.clientY;
       dragStartValue.current = safeValue;
+      // Capture pointer for touch/stylus support
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
     [safeValue]
   );
@@ -98,10 +100,10 @@ export function Knob({
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       const deltaY = dragStartY.current - e.clientY;
       const range = logarithmic ? 1 : max - min;
-      const sensitivity = range / 150; // 150 pixels for full range
+      const sensitivity = range / 150;
 
       let newValue: number;
       if (logarithmic) {
@@ -112,24 +114,47 @@ export function Knob({
         newValue = dragStartValue.current + deltaY * sensitivity;
       }
 
-      // Apply step and clamp
       newValue = Math.round(newValue / step) * step;
       newValue = Math.max(min, Math.min(max, newValue));
       onChange(newValue);
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsDragging(false);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
     };
   }, [isDragging, min, max, step, onChange, logarithmic, toLinear, fromLinear]);
+
+  // Scroll wheel support for fine adjustment without dragging
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const range = logarithmic ? 1 : max - min;
+      const delta = -e.deltaY * (range / 1000); // Small increments
+
+      let newValue: number;
+      if (logarithmic) {
+        const linear = toLinear(safeValue);
+        const newLinear = Math.max(0, Math.min(1, linear + delta));
+        newValue = fromLinear(newLinear);
+      } else {
+        newValue = safeValue + delta;
+      }
+
+      newValue = Math.round(newValue / step) * step;
+      newValue = Math.max(min, Math.min(max, newValue));
+      onChange(newValue);
+    },
+    [safeValue, min, max, step, onChange, logarithmic, toLinear, fromLinear]
+  );
 
   // Format display value
   const displayValue = safeValue >= 1000 ? `${(safeValue / 1000).toFixed(1)}k` : safeValue.toFixed(step < 1 ? 2 : 0);
@@ -173,7 +198,8 @@ export function Knob({
         className={`nodrag w-10 h-10 rounded-full bg-gray-800 border-2 border-gray-600 cursor-pointer select-none relative ${
           isDragging ? 'border-cyan-400' : 'hover:border-gray-500'
         }`}
-        onMouseDown={handleMouseDown}
+        onPointerDown={handlePointerDown}
+        onWheel={handleWheel}
         style={{ touchAction: 'none' }}
       >
         {/* Modulation arc (shows when modulated) */}

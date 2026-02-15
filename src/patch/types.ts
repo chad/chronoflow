@@ -1,6 +1,9 @@
 // Patch JSON types - the source of truth for synth state
 
-export type PatchNodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain';
+export type PatchNodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter';
+
+// Signal types for port validation / coloring
+export type PortSignalType = 'audio' | 'cv' | 'trigger' | 'gate';
 
 export interface PatchNodeParams {
   [key: string]: number | string | boolean;
@@ -11,6 +14,8 @@ export interface PatchNode {
   type: PatchNodeType;
   position: { x: number; y: number };
   params: PatchNodeParams;
+  muted?: boolean;
+  bypassed?: boolean;
 }
 
 export interface PatchConnection {

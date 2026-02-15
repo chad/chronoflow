@@ -4,6 +4,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 import { Knob } from '../../controls/Knob';
 import { usePatchStore } from '../../../patch/patchStore';
 import { ClickableHandle } from '../ClickableHandle';
+import { NodeWrapper } from '../NodeWrapper';
 
 type WavefolderData = {
   drive: number;
@@ -17,7 +18,8 @@ export const WavefolderNodeUI = memo(({ id, data, selected }: NodeProps<Wavefold
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
 
   return (
-    <div
+    <NodeWrapper nodeId={id} nodeType="wavefolder">
+      <div
       className={`relative bg-gray-900 border-2 rounded-lg p-3 min-w-[140px] ${
         selected ? 'border-cyan-400' : 'border-rose-500'
       }`}
@@ -81,6 +83,7 @@ export const WavefolderNodeUI = memo(({ id, data, selected }: NodeProps<Wavefold
         className="!bg-rose-400 !w-3 !h-3"
       />
     </div>
+    </NodeWrapper>
   );
 });
 

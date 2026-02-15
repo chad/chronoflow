@@ -25,3 +25,43 @@ body {
   width: 100%;
   height: 100vh;
 }
+
+/* Custom scrollbar for thin scrollbars */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 2px;
+}
+
+/* React Flow overrides for better dark theme */
+.react-flow__minimap {
+  background-color: #1f2937 !important;
+}
+.react-flow__controls button {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #d1d5db !important;
+}
+.react-flow__controls button:hover {
+  background-color: #4b5563 !important;
+}
+
+/* Prevent text selection during knob drag */
+.nodrag {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Touch target sizes for accessibility */
+@media (pointer: coarse) {
+  .react-flow__handle {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}

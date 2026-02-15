@@ -4,6 +4,7 @@ import { audioGraph } from '../audio/AudioGraph';
 import type { NodeType } from '../audio/AudioGraph';
 import { SynthSequencerNode } from '../audio/nodes';
 import { usePatchStore } from './patchStore';
+import { paramScheduler } from '../audio/ParamScheduler';
 import type { Patch, PatchNode, PatchConnection } from './types';
 
 // Set to true to enable debug logging
@@ -18,6 +19,11 @@ class PatchSyncer {
 
   async init(): Promise<void> {
     await audioGraph.init();
+
+    // Wire up param scheduler to flush batched updates to store
+    paramScheduler.setFlushCallback((updates) => {
+      usePatchStore.getState().batchUpdateParams(updates);
+    });
 
     // Subscribe to patch store changes
     this.unsubscribe = usePatchStore.subscribe((state) => {
@@ -166,6 +172,17 @@ class PatchSyncer {
     Object.entries(node.params).forEach(([param, value]) => {
       audioGraph.setNodeParam(node.id, param, value as number | string);
     });
+
+    // Handle mute state - set output gain to 0
+    const audioNode = audioGraph.getNode(node.id);
+    if (audioNode) {
+      const output = audioNode.getOutputNode();
+      if (output && 'gain' in output && output instanceof GainNode) {
+        if (node.muted) {
+          output.gain.setValueAtTime(0, 0);
+        }
+      }
+    }
   }
 
   private addAudioConnection(connection: PatchConnection, patch: Patch): void {

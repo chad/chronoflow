@@ -6,6 +6,7 @@ import { MidiClockPanel } from './ui/panels/MidiClockPanel';
 import { PatchManager } from './ui/panels/PatchManager';
 import { KeyboardInput } from './ui/panels/KeyboardInput';
 import { RecordingPanel } from './ui/panels/RecordingPanel';
+import { PianoKeyboard } from './ui/panels/PianoKeyboard';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { CommandPalette } from './ui/CommandPalette';
 import { patchSyncer } from './patch/patchSyncer';
@@ -17,12 +18,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isPianoCollapsed, setIsPianoCollapsed] = useState(true);
   const isAudioEnabled = usePatchStore((state) => state.isAudioEnabled);
   const setAudioEnabled = usePatchStore((state) => state.setAudioEnabled);
   const loadPatch = usePatchStore((state) => state.loadPatch);
   const audioInitializedRef = useRef(false);
 
-  // Initialize undo/redo (sets up Cmd+Z / Cmd+Shift+Z handlers)
   const { canUndo, canRedo, undo, redo } = useUndoRedo();
 
   // Command palette keyboard shortcut (Cmd+K / Ctrl+K)
@@ -31,6 +32,13 @@ function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen((open) => !open);
+      }
+      // Toggle piano with P key (when not in input)
+      if (e.key === 'p' && !e.metaKey && !e.ctrlKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+          setIsPianoCollapsed((c) => !c);
+        }
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -53,26 +61,23 @@ function App() {
   };
 
   useEffect(() => {
-    // Try to load saved patch
     loadPatch();
     setIsLoading(false);
 
-    // Auto-enable audio on first user interaction (browsers require user gesture)
-    // Use mouseup instead of click to avoid interfering with drag operations
     const enableOnInteraction = () => {
-      // Use setTimeout to defer audio init to after current event processing
       setTimeout(() => {
         handleEnableAudio();
       }, 0);
     };
 
-    // Only listen once
     document.addEventListener('mouseup', enableOnInteraction, { once: true });
     document.addEventListener('keydown', enableOnInteraction, { once: true });
+    document.addEventListener('touchstart', enableOnInteraction, { once: true });
 
     return () => {
       document.removeEventListener('mouseup', enableOnInteraction);
       document.removeEventListener('keydown', enableOnInteraction);
+      document.removeEventListener('touchstart', enableOnInteraction);
     };
   }, []);
 
@@ -90,7 +95,7 @@ function App() {
       <header className="h-12 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
         <h1 className="text-lg font-bold text-cyan-400">ChronoFlow</h1>
         <div className="flex items-center gap-4">
-          {/* Undo/Redo buttons */}
+          {/* Undo/Redo */}
           <div className="flex items-center gap-1">
             <button
               onClick={undo}
@@ -114,7 +119,7 @@ function App() {
             </button>
           </div>
 
-          {/* Command palette button */}
+          {/* Command palette */}
           <button
             onClick={() => setIsCommandPaletteOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded border border-gray-700 transition-colors"
@@ -124,6 +129,19 @@ function App() {
             </svg>
             <span>Search</span>
             <kbd className="px-1.5 py-0.5 text-xs bg-gray-700 rounded">⌘K</kbd>
+          </button>
+
+          {/* Piano toggle */}
+          <button
+            onClick={() => setIsPianoCollapsed((c) => !c)}
+            className={`px-2 py-1.5 text-sm rounded border transition-colors ${
+              isPianoCollapsed
+                ? 'bg-gray-800 hover:bg-gray-700 text-gray-400 border-gray-700'
+                : 'bg-cyan-900 hover:bg-cyan-800 text-cyan-300 border-cyan-700'
+            }`}
+            title="Toggle Piano (P)"
+          >
+            🎹
           </button>
 
           {!isAudioEnabled ? (
@@ -161,10 +179,18 @@ function App() {
         </aside>
 
         {/* Graph Editor */}
-        <main className="flex-1">
-          <ErrorBoundary>
-            <GraphCanvas />
-          </ErrorBoundary>
+        <main className="flex-1 flex flex-col">
+          <div className="flex-1">
+            <ErrorBoundary>
+              <GraphCanvas />
+            </ErrorBoundary>
+          </div>
+
+          {/* Piano Keyboard (docked at bottom) */}
+          <PianoKeyboard
+            isCollapsed={isPianoCollapsed}
+            onToggleCollapse={() => setIsPianoCollapsed((c) => !c)}
+          />
         </main>
       </div>
 
