@@ -45,3 +45,12 @@ export { SynthVocoderNode } from '../audio/nodes/VocoderNode';
 export { SynthGlitchNode } from '../audio/nodes/GlitchNode';
 export { SynthFreqShifterNode } from '../audio/nodes/FreqShifterNode';
 export { SynthCombFilterNode } from '../audio/nodes/CombFilterNode';
+export { SynthSendNode, SynthReturnNode } from '../audio/nodes/SendReturnNode';
+export { SynthStereoFieldNode } from '../audio/nodes/StereoFieldNode';
+export { SynthTapeDelayNode } from '../audio/nodes/TapeDelayNode';
+export { SynthDroneOscNode } from '../audio/nodes/DroneOscNode';
+export { SynthSpectralFreezeNode } from '../audio/nodes/SpectralFreezeNode';
+
+// Audio Analysis Bus - subscribe to real-time audio features for visuals
+export { audioAnalysisBus } from '../audio/AudioAnalysisBus';
+export type { SpectrumData } from '../audio/AudioAnalysisBus';

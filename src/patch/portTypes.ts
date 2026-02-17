@@ -166,6 +166,39 @@ const PORT_DEFS: Record<string, PortDef[]> = {
     { id: 'output', label: 'CV Out', direction: 'output', signal: 'cv' },
     { id: 'trigger', label: 'Trigger', direction: 'output', signal: 'trigger' },
   ],
+  send: [
+    { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
+    { id: 'output', label: 'Thru Out', direction: 'output', signal: 'audio' },
+    { id: 'amount_mod', label: 'Amount Mod', direction: 'input', signal: 'cv' },
+  ],
+  return: [
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'gain_mod', label: 'Gain Mod', direction: 'input', signal: 'cv' },
+  ],
+  stereofield: [
+    { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'pan_mod', label: 'Pan Mod', direction: 'input', signal: 'cv' },
+  ],
+  tapedelay: [
+    { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'time_mod', label: 'Time Mod', direction: 'input', signal: 'cv' },
+    { id: 'feedback_mod', label: 'Feedback Mod', direction: 'input', signal: 'cv' },
+    { id: 'mix_mod', label: 'Mix Mod', direction: 'input', signal: 'cv' },
+  ],
+  droneosc: [
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'freq_mod', label: 'Freq Mod', direction: 'input', signal: 'cv' },
+    { id: 'level_mod', label: 'Level Mod', direction: 'input', signal: 'cv' },
+  ],
+  spectralfreeze: [
+    { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'mix_mod', label: 'Mix Mod', direction: 'input', signal: 'cv' },
+    { id: 'feedback_mod', label: 'Feedback Mod', direction: 'input', signal: 'cv' },
+    { id: 'trigger', label: 'Freeze Toggle', direction: 'input', signal: 'trigger' },
+  ],
 };
 
 export function getPortDefs(nodeType: string): PortDef[] {

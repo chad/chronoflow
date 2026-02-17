@@ -160,6 +160,9 @@ class PatchSyncer {
       } else if (node.type === 'lfo') {
         // LFOs are always global, always start them
         audioGraph.startLFO(node.id);
+      } else if (node.type === 'droneosc') {
+        // Drone oscillators are always global, always start them
+        audioGraph.startDroneOsc(node.id);
       }
     }
   }

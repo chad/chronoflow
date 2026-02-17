@@ -141,6 +141,12 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   glitch: { rate: 8, size: 0.05, pitch: 1.0, pitchRamp: 0, reverse: false, probability: 1.0, mix: 1.0, active: false },
   freqshifter: { shiftHz: 0, mode: 'up', mix: 1.0 },
   combfilter: { frequency: 200, feedback: 0.8, damping: 0.3, mode: 'feedback', mix: 0.5 },
+  send: { bus: 'A', amount: 0.5, preFader: false },
+  return: { bus: 'A', gain: 1 },
+  stereofield: { pan: 0, width: 1, midSide: 0, haasDelay: 0, haasAmount: 0 },
+  tapedelay: { time: 0.375, feedback: 0.55, mix: 0.4, wow: 0.15, flutter: 0.1, saturation: 0.3, degradation: 0.4, tapeSpeed: 1, pingPong: false },
+  droneosc: { frequency: 110, voices: 4, spread: 15, drift: 0.3, driftRate: 0.08, waveform: 'sawtooth', mode: 'unison', subLevel: 0.3, subWaveform: 'sine', attack: 2, level: 0.5 },
+  spectralfreeze: { freeze: false, blur: 0.5, shift: 0, brightness: 0.7, feedback: 0.3, mix: 0.8, grainSize: 200 },
 };
 
 export const usePatchStore = create<PatchState>()(

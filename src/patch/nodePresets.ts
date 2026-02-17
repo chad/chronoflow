@@ -90,4 +90,20 @@ const FACTORY_PRESETS: Partial<Record<PatchNodeType, NodePreset[]>> = {
     { name: '🏭 Hall', params: { decay: 3.0, mix: 0.35 } },
     { name: '🏭 Cathedral', params: { decay: 6.0, mix: 0.5 } },
   ],
+  droneosc: [
+    { name: '🏭 Warm Pad', params: { frequency: 110, voices: 4, spread: 15, drift: 0.3, driftRate: 0.08, waveform: 'sawtooth', mode: 'unison', subLevel: 0.3, subWaveform: 'sine', attack: 2, level: 0.4 } },
+    { name: '🏭 Glass Harmonics', params: { frequency: 220, voices: 6, spread: 5, drift: 0.1, driftRate: 0.05, waveform: 'sine', mode: 'harmonics', subLevel: 0, subWaveform: 'sine', attack: 3, level: 0.3 } },
+    { name: '🏭 Cathedral Fifths', params: { frequency: 65, voices: 5, spread: 8, drift: 0.4, driftRate: 0.06, waveform: 'triangle', mode: 'fifths', subLevel: 0.5, subWaveform: 'sine', attack: 4, level: 0.35 } },
+    { name: '🏭 Deep Drone', params: { frequency: 55, voices: 6, spread: 25, drift: 0.5, driftRate: 0.03, waveform: 'sawtooth', mode: 'octaves', subLevel: 0.6, subWaveform: 'sine', attack: 5, level: 0.3 } },
+  ],
+  tapedelay: [
+    { name: '🏭 Tape Echo', params: { time: 0.375, feedback: 0.55, mix: 0.4, wow: 0.15, flutter: 0.1, saturation: 0.3, degradation: 0.4, tapeSpeed: 1, pingPong: false } },
+    { name: '🏭 Lo-Fi Space', params: { time: 0.5, feedback: 0.7, mix: 0.5, wow: 0.3, flutter: 0.2, saturation: 0.6, degradation: 0.7, tapeSpeed: 0.8, pingPong: false } },
+    { name: '🏭 Clean Slapback', params: { time: 0.12, feedback: 0.2, mix: 0.35, wow: 0.05, flutter: 0.02, saturation: 0.1, degradation: 0.2, tapeSpeed: 1, pingPong: false } },
+  ],
+  spectralfreeze: [
+    { name: '🏭 Frozen Pad', params: { freeze: true, blur: 0.6, shift: 0, brightness: 0.7, feedback: 0.3, mix: 0.9, grainSize: 200 } },
+    { name: '🏭 Shimmer Cloud', params: { freeze: true, blur: 0.8, shift: 12, brightness: 0.8, feedback: 0.5, mix: 0.7, grainSize: 150 } },
+    { name: '🏭 Dark Sustain', params: { freeze: true, blur: 0.9, shift: -12, brightness: 0.3, feedback: 0.4, mix: 0.8, grainSize: 300 } },
+  ],
 };

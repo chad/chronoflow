@@ -44,6 +44,12 @@ import { VocoderNodeUI } from './VocoderNodeUI';
 import { GlitchNodeUI } from './GlitchNodeUI';
 import { FreqShifterNodeUI } from './FreqShifterNodeUI';
 import { CombFilterNodeUI } from './CombFilterNodeUI';
+import { SendNodeUI } from './SendNodeUI';
+import { ReturnNodeUI } from './ReturnNodeUI';
+import { StereoFieldNodeUI } from './StereoFieldNodeUI';
+import { TapeDelayNodeUI } from './TapeDelayNodeUI';
+import { DroneOscNodeUI } from './DroneOscNodeUI';
+import { SpectralFreezeNodeUI } from './SpectralFreezeNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -92,4 +98,10 @@ export const nodeTypes = {
   glitch: GlitchNodeUI,
   freqshifter: FreqShifterNodeUI,
   combfilter: CombFilterNodeUI,
+  send: SendNodeUI,
+  return: ReturnNodeUI,
+  stereofield: StereoFieldNodeUI,
+  tapedelay: TapeDelayNodeUI,
+  droneosc: DroneOscNodeUI,
+  spectralfreeze: SpectralFreezeNodeUI,
 };

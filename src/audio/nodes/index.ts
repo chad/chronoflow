@@ -46,3 +46,8 @@ export * from './VocoderNode';
 export * from './GlitchNode';
 export * from './FreqShifterNode';
 export * from './CombFilterNode';
+export * from './SendReturnNode';
+export * from './StereoFieldNode';
+export * from './TapeDelayNode';
+export * from './DroneOscNode';
+export * from './SpectralFreezeNode';

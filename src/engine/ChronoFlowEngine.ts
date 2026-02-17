@@ -65,6 +65,12 @@ import {
   SynthGlitchNode,
   SynthFreqShifterNode,
   SynthCombFilterNode,
+  SynthSendNode,
+  SynthReturnNode,
+  SynthStereoFieldNode,
+  SynthTapeDelayNode,
+  SynthDroneOscNode,
+  SynthSpectralFreezeNode,
 } from '../audio/nodes';
 
 export interface ChronoFlowEngineOptions {
@@ -197,6 +203,8 @@ export class ChronoFlowEngine {
         (node as SynthOscillatorNode).start();
       } else if (node instanceof SynthLFONode) {
         (node as SynthLFONode).start();
+      } else if (node instanceof SynthDroneOscNode) {
+        (node as SynthDroneOscNode).start();
       }
     });
 
@@ -307,6 +315,12 @@ export class ChronoFlowEngine {
       case 'glitch': node = new SynthGlitchNode(ctx, id, params); break;
       case 'freqshifter': node = new SynthFreqShifterNode(ctx, id, params); break;
       case 'combfilter': node = new SynthCombFilterNode(ctx, id, params); break;
+      case 'send': node = new SynthSendNode(ctx, id, params); break;
+      case 'return': node = new SynthReturnNode(ctx, id, params); break;
+      case 'stereofield': node = new SynthStereoFieldNode(ctx, id, params); break;
+      case 'tapedelay': node = new SynthTapeDelayNode(ctx, id, params); break;
+      case 'droneosc': node = new SynthDroneOscNode(ctx, id, params); break;
+      case 'spectralfreeze': node = new SynthSpectralFreezeNode(ctx, id, params); break;
       case 'output': return this.outputNode;
       default:
         console.error(`ChronoFlowEngine: Unknown node type: ${type}`);

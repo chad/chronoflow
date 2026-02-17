@@ -23,6 +23,7 @@ const CATEGORIES: Category[] = [
     borderColor: 'border-l-orange-500',
     modules: [
       { type: 'oscillator', label: 'Oscillator', description: 'Audio oscillator with multiple waveforms' },
+      { type: 'droneosc', label: 'Drone Osc', description: 'Multi-voice drone/pad oscillator with drift' },
       { type: 'noise', label: 'Noise', description: 'White/pink noise generator' },
       { type: 'karplusstrong', label: 'Karplus-Strong', description: 'Plucked string synthesis' },
       { type: 'granular', label: 'Granular', description: 'Granular texture processor' },
@@ -102,11 +103,23 @@ const CATEGORIES: Category[] = [
     borderColor: 'border-l-blue-500',
     modules: [
       { type: 'delay', label: 'Delay', description: 'Stereo delay effect' },
+      { type: 'tapedelay', label: 'Tape Delay', description: 'Analog tape echo with wow, flutter & saturation' },
       { type: 'reverb', label: 'Reverb', description: 'Convolution reverb' },
       { type: 'shimmerreverb', label: 'Shimmer Reverb', description: 'Reverb with pitch-shifted feedback' },
+      { type: 'spectralfreeze', label: 'Spectral Freeze', description: 'FFT freeze/blur for infinite sustain textures' },
       { type: 'chorus', label: 'Chorus', description: 'Multi-voice ensemble effect' },
       { type: 'glitch', label: 'Glitch', description: 'Buffer stutter, reverse & pitch-ramp' },
+      { type: 'stereofield', label: 'Stereo Field', description: 'Pan, width, mid/side & Haas effect' },
       { type: 'mixer', label: 'Mixer', description: '4-channel audio mixer' },
+    ],
+  },
+  {
+    name: 'Routing',
+    color: 'bg-teal-900/50',
+    borderColor: 'border-l-teal-500',
+    modules: [
+      { type: 'send', label: 'Send', description: 'Aux send to named bus (parallel effects)' },
+      { type: 'return', label: 'Return', description: 'Receive from named bus' },
     ],
   },
 ];

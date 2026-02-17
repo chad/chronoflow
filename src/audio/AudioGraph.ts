@@ -55,17 +55,24 @@ import {
   SynthGlitchNode,
   SynthFreqShifterNode,
   SynthCombFilterNode,
+  SynthSendNode,
+  SynthReturnNode,
+  SynthStereoFieldNode,
+  SynthTapeDelayNode,
+  SynthDroneOscNode,
+  SynthSpectralFreezeNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
+import { audioAnalysisBus } from './AudioAnalysisBus';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter' | 'send' | 'return' | 'stereofield' | 'tapedelay' | 'droneosc' | 'spectralfreeze';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain', 'audioinput', 'pitchshifter', 'formantshifter', 'shimmerreverb', 'chorus', 'compressor', 'eq', 'bitcrusher', 'vocoder', 'glitch', 'freqshifter', 'combfilter'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain', 'audioinput', 'pitchshifter', 'formantshifter', 'shimmerreverb', 'chorus', 'compressor', 'eq', 'bitcrusher', 'vocoder', 'glitch', 'freqshifter', 'combfilter', 'send', 'return', 'stereofield', 'tapedelay', 'droneosc', 'spectralfreeze'];
 
 interface Connection {
   fromId: string;
@@ -92,6 +99,13 @@ class AudioGraph {
 
     // Create voice allocator
     this.voiceAllocator = new VoiceAllocator({ maxVoices: this.maxVoices });
+
+    // Initialize analysis bus for visuals integration
+    // Taps the master output so external JS can subscribe to audio features
+    const masterGain = audioEngine.getMasterGain();
+    if (masterGain) {
+      audioAnalysisBus.init(context, masterGain);
+    }
   }
 
   getContext(): AudioContext | null {
@@ -282,6 +296,24 @@ class AudioGraph {
         break;
       case 'combfilter':
         node = new SynthCombFilterNode(context, id, params);
+        break;
+      case 'send':
+        node = new SynthSendNode(context, id, params);
+        break;
+      case 'return':
+        node = new SynthReturnNode(context, id, params);
+        break;
+      case 'stereofield':
+        node = new SynthStereoFieldNode(context, id, params);
+        break;
+      case 'tapedelay':
+        node = new SynthTapeDelayNode(context, id, params);
+        break;
+      case 'droneosc':
+        node = new SynthDroneOscNode(context, id, params);
+        break;
+      case 'spectralfreeze':
+        node = new SynthSpectralFreezeNode(context, id, params);
         break;
       case 'output':
         // Output node is a singleton
@@ -680,6 +712,20 @@ class AudioGraph {
   stopLFO(id: string): void {
     const node = this.nodes.get(id);
     if (node instanceof SynthLFONode) {
+      node.stop();
+    }
+  }
+
+  startDroneOsc(id: string): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthDroneOscNode) {
+      node.start();
+    }
+  }
+
+  stopDroneOsc(id: string): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthDroneOscNode) {
       node.stop();
     }
   }
