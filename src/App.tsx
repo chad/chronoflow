@@ -119,6 +119,17 @@ function App() {
             </button>
           </div>
 
+          {/* Manual link */}
+          <a
+            href="https://chronoflow-manual.miren.club/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded border border-gray-700 transition-colors"
+            title="Open Manual"
+          >
+            📖
+          </a>
+
           {/* Command palette */}
           <button
             onClick={() => setIsCommandPaletteOpen(true)}
