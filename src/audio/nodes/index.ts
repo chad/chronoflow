@@ -51,3 +51,5 @@ export * from './StereoFieldNode';
 export * from './TapeDelayNode';
 export * from './DroneOscNode';
 export * from './SpectralFreezeNode';
+export * from './WavetableOscNode';
+export * from './ResonatorNode';

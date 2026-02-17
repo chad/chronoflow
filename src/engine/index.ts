@@ -50,6 +50,8 @@ export { SynthStereoFieldNode } from '../audio/nodes/StereoFieldNode';
 export { SynthTapeDelayNode } from '../audio/nodes/TapeDelayNode';
 export { SynthDroneOscNode } from '../audio/nodes/DroneOscNode';
 export { SynthSpectralFreezeNode } from '../audio/nodes/SpectralFreezeNode';
+export { SynthWavetableOscNode } from '../audio/nodes/WavetableOscNode';
+export { SynthResonatorNode } from '../audio/nodes/ResonatorNode';
 
 // Audio Analysis Bus - subscribe to real-time audio features for visuals
 export { audioAnalysisBus } from '../audio/AudioAnalysisBus';

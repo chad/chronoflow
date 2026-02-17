@@ -25,6 +25,11 @@ import {
   COSMIC_CATHEDRAL_PATCH,
   ETERNAL_GARDEN_PATCH,
 } from '../../patch/samplePatches';
+import {
+  SUBMERGED_CATHEDRAL_PATCH,
+  GLASS_RAIN_PATCH,
+  TIDAL_MEMORIES_PATCH,
+} from '../../patch/newDemoPatches';
 
 interface SamplePatch {
   key: string;
@@ -51,6 +56,9 @@ const PATCH_CATEGORIES: PatchCategory[] = [
   {
     name: 'Generative',
     patches: [
+      { key: 'submergedcathedral', name: '🌊 Submerged Cathedral', description: 'Drone + Resonator + Spectral Freeze + Send/Return', patch: SUBMERGED_CATHEDRAL_PATCH },
+      { key: 'glassrain', name: '🔔 Glass Rain', description: 'Karplus + Resonator + Wavetable + Tape Delay', patch: GLASS_RAIN_PATCH },
+      { key: 'tidalmemories', name: '🌅 Tidal Memories', description: 'Dual Drone + Granular + Spectral Freeze + Bus FX', patch: TIDAL_MEMORIES_PATCH },
       { key: 'eternalgarden', name: 'Eternal Garden', description: 'Scene Chain + Crossfade evolution', patch: ETERNAL_GARDEN_PATCH },
       { key: 'cosmiccathedral', name: 'Cosmic Cathedral', description: '6-layer generative masterpiece', patch: COSMIC_CATHEDRAL_PATCH },
       { key: 'evolvingmelody', name: 'Evolving Melody', description: 'Turing Machine + Slew + Euclidean', patch: EVOLVING_MELODY_PATCH },

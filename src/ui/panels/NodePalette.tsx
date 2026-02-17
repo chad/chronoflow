@@ -24,6 +24,7 @@ const CATEGORIES: Category[] = [
     modules: [
       { type: 'oscillator', label: 'Oscillator', description: 'Audio oscillator with multiple waveforms' },
       { type: 'droneosc', label: 'Drone Osc', description: 'Multi-voice drone/pad oscillator with drift' },
+      { type: 'wavetableosc', label: 'Wavetable', description: 'Morphable wavetable oscillator (8 tables)' },
       { type: 'noise', label: 'Noise', description: 'White/pink noise generator' },
       { type: 'karplusstrong', label: 'Karplus-Strong', description: 'Plucked string synthesis' },
       { type: 'granular', label: 'Granular', description: 'Granular texture processor' },
@@ -91,6 +92,7 @@ const CATEGORIES: Category[] = [
       { type: 'formantshifter', label: 'Formant Shifter', description: 'Shift vocal formants independently' },
       { type: 'freqshifter', label: 'Freq Shifter', description: 'Fixed Hz frequency shifting (Bode)' },
       { type: 'combfilter', label: 'Comb Filter', description: 'Resonant metallic comb filter' },
+      { type: 'resonator', label: 'Resonator', description: 'Bank of tuned resonant filters (bells, metals)' },
       { type: 'vocoder', label: 'Vocoder', description: 'Channel vocoder (voice + carrier)' },
       { type: 'eq', label: 'EQ', description: '3-band parametric equalizer' },
       { type: 'compressor', label: 'Compressor', description: 'Dynamics compressor with sidechain' },

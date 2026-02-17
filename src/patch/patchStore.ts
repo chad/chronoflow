@@ -147,6 +147,8 @@ const DEFAULT_PARAMS: Record<PatchNodeType, Record<string, number | string | boo
   tapedelay: { time: 0.375, feedback: 0.55, mix: 0.4, wow: 0.15, flutter: 0.1, saturation: 0.3, degradation: 0.4, tapeSpeed: 1, pingPong: false },
   droneosc: { frequency: 110, voices: 4, spread: 15, drift: 0.3, driftRate: 0.08, waveform: 'sawtooth', mode: 'unison', subLevel: 0.3, subWaveform: 'sine', attack: 2, level: 0.5 },
   spectralfreeze: { freeze: false, blur: 0.5, shift: 0, brightness: 0.7, feedback: 0.3, mix: 0.8, grainSize: 200 },
+  wavetableosc: { frequency: 220, detune: 0, morph: 0, level: 0.5 },
+  resonator: { frequency: 220, resonance: 30, mode: 'harmonic', partials: 6, spread: 0.3, brightness: 0.6, decay: 0.7, mix: 0.8 },
 };
 
 export const usePatchStore = create<PatchState>()(

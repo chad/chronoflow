@@ -192,6 +192,18 @@ const PORT_DEFS: Record<string, PortDef[]> = {
     { id: 'freq_mod', label: 'Freq Mod', direction: 'input', signal: 'cv' },
     { id: 'level_mod', label: 'Level Mod', direction: 'input', signal: 'cv' },
   ],
+  wavetableosc: [
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'freq_mod', label: 'Freq Mod', direction: 'input', signal: 'cv' },
+    { id: 'level_mod', label: 'Level Mod', direction: 'input', signal: 'cv' },
+  ],
+  resonator: [
+    { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
+    { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },
+    { id: 'trigger', label: 'Trigger (Strike)', direction: 'input', signal: 'trigger' },
+    { id: 'freq_mod', label: 'Freq Mod', direction: 'input', signal: 'cv' },
+    { id: 'mix_mod', label: 'Mix Mod', direction: 'input', signal: 'cv' },
+  ],
   spectralfreeze: [
     { id: 'input', label: 'Audio In', direction: 'input', signal: 'audio' },
     { id: 'output', label: 'Audio Out', direction: 'output', signal: 'audio' },

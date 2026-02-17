@@ -106,4 +106,16 @@ const FACTORY_PRESETS: Partial<Record<PatchNodeType, NodePreset[]>> = {
     { name: '🏭 Shimmer Cloud', params: { freeze: true, blur: 0.8, shift: 12, brightness: 0.8, feedback: 0.5, mix: 0.7, grainSize: 150 } },
     { name: '🏭 Dark Sustain', params: { freeze: true, blur: 0.9, shift: -12, brightness: 0.3, feedback: 0.4, mix: 0.8, grainSize: 300 } },
   ],
+  wavetableosc: [
+    { name: '🏭 Morphing Pad', params: { frequency: 110, detune: 0, morph: 0.3, level: 0.4 } },
+    { name: '🏭 Glass Bell', params: { frequency: 440, detune: 0, morph: 0.71, level: 0.5 } },
+    { name: '🏭 Digital Lead', params: { frequency: 330, detune: 7, morph: 1.0, level: 0.45 } },
+    { name: '🏭 Choir Drone', params: { frequency: 65, detune: 0, morph: 0.86, level: 0.35 } },
+  ],
+  resonator: [
+    { name: '🏭 Gamelan', params: { frequency: 440, resonance: 50, mode: 'inharm', partials: 8, spread: 0.4, brightness: 0.7, decay: 0.8, mix: 0.9 } },
+    { name: '🏭 Struck Bar', params: { frequency: 220, resonance: 40, mode: 'inharm', partials: 6, spread: 0.6, brightness: 0.5, decay: 0.6, mix: 0.85 } },
+    { name: '🏭 Sympathetic Strings', params: { frequency: 110, resonance: 60, mode: 'harmonic', partials: 10, spread: 0, brightness: 0.4, decay: 0.9, mix: 0.7 } },
+    { name: '🏭 Chord Resonance', params: { frequency: 165, resonance: 35, mode: 'chord', partials: 8, spread: 0.5, brightness: 0.6, decay: 0.7, mix: 0.8 } },
+  ],
 };

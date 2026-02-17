@@ -71,6 +71,8 @@ import {
   SynthTapeDelayNode,
   SynthDroneOscNode,
   SynthSpectralFreezeNode,
+  SynthWavetableOscNode,
+  SynthResonatorNode,
 } from '../audio/nodes';
 
 export interface ChronoFlowEngineOptions {
@@ -205,6 +207,8 @@ export class ChronoFlowEngine {
         (node as SynthLFONode).start();
       } else if (node instanceof SynthDroneOscNode) {
         (node as SynthDroneOscNode).start();
+      } else if (node instanceof SynthWavetableOscNode) {
+        (node as SynthWavetableOscNode).start();
       }
     });
 
@@ -321,6 +325,8 @@ export class ChronoFlowEngine {
       case 'tapedelay': node = new SynthTapeDelayNode(ctx, id, params); break;
       case 'droneosc': node = new SynthDroneOscNode(ctx, id, params); break;
       case 'spectralfreeze': node = new SynthSpectralFreezeNode(ctx, id, params); break;
+      case 'wavetableosc': node = new SynthWavetableOscNode(ctx, id, params); break;
+      case 'resonator': node = new SynthResonatorNode(ctx, id, params); break;
       case 'output': return this.outputNode;
       default:
         console.error(`ChronoFlowEngine: Unknown node type: ${type}`);

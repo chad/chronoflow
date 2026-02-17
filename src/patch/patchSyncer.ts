@@ -163,6 +163,8 @@ class PatchSyncer {
       } else if (node.type === 'droneosc') {
         // Drone oscillators are always global, always start them
         audioGraph.startDroneOsc(node.id);
+      } else if (node.type === 'wavetableosc') {
+        audioGraph.startWavetableOsc(node.id);
       }
     }
   }

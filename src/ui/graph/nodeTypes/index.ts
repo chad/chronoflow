@@ -50,6 +50,8 @@ import { StereoFieldNodeUI } from './StereoFieldNodeUI';
 import { TapeDelayNodeUI } from './TapeDelayNodeUI';
 import { DroneOscNodeUI } from './DroneOscNodeUI';
 import { SpectralFreezeNodeUI } from './SpectralFreezeNodeUI';
+import { WavetableOscNodeUI } from './WavetableOscNodeUI';
+import { ResonatorNodeUI } from './ResonatorNodeUI';
 
 export const nodeTypes = {
   oscillator: OscillatorNodeUI,
@@ -104,4 +106,6 @@ export const nodeTypes = {
   tapedelay: TapeDelayNodeUI,
   droneosc: DroneOscNodeUI,
   spectralfreeze: SpectralFreezeNodeUI,
+  wavetableosc: WavetableOscNodeUI,
+  resonator: ResonatorNodeUI,
 };

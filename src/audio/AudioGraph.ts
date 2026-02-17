@@ -61,18 +61,20 @@ import {
   SynthTapeDelayNode,
   SynthDroneOscNode,
   SynthSpectralFreezeNode,
+  SynthWavetableOscNode,
+  SynthResonatorNode,
 } from './nodes';
 import { VoiceAllocator } from './VoiceAllocator';
 import { audioAnalysisBus } from './AudioAnalysisBus';
 import type { PatchNode, PatchConnection } from '../patch/types';
 
-export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter' | 'send' | 'return' | 'stereofield' | 'tapedelay' | 'droneosc' | 'spectralfreeze';
+export type NodeType = 'oscillator' | 'filter' | 'vca' | 'lfo' | 'adsr' | 'delay' | 'reverb' | 'mixer' | 'sequencer' | 'attenuverter' | 'noise' | 'samplehold' | 'wavefolder' | 'ringmod' | 'quantizer' | 'clock' | 'clockdiv' | 'output' | 'smoothrandom' | 'karplusstrong' | 'granular' | 'euclidean' | 'slewlimiter' | 'turing' | 'envfollower' | 'probgate' | 'logic' | 'macro' | 'counter' | 'comparator' | 'switch' | 'crossfader' | 'sequencechain' | 'audioinput' | 'pitchshifter' | 'formantshifter' | 'shimmerreverb' | 'chorus' | 'compressor' | 'eq' | 'bitcrusher' | 'vocoder' | 'glitch' | 'freqshifter' | 'combfilter' | 'send' | 'return' | 'stereofield' | 'tapedelay' | 'droneosc' | 'spectralfreeze' | 'wavetableosc' | 'resonator';
 
 // Node types that are per-voice (duplicated for polyphony)
 const VOICE_NODE_TYPES: NodeType[] = ['oscillator', 'filter', 'vca', 'adsr', 'mixer', 'wavefolder', 'ringmod'];
 
 // Node types that are global (shared across all voices)
-const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain', 'audioinput', 'pitchshifter', 'formantshifter', 'shimmerreverb', 'chorus', 'compressor', 'eq', 'bitcrusher', 'vocoder', 'glitch', 'freqshifter', 'combfilter', 'send', 'return', 'stereofield', 'tapedelay', 'droneosc', 'spectralfreeze'];
+const GLOBAL_NODE_TYPES: NodeType[] = ['lfo', 'sequencer', 'attenuverter', 'noise', 'samplehold', 'quantizer', 'clock', 'clockdiv', 'delay', 'reverb', 'output', 'smoothrandom', 'karplusstrong', 'granular', 'euclidean', 'slewlimiter', 'turing', 'envfollower', 'probgate', 'logic', 'macro', 'counter', 'comparator', 'switch', 'crossfader', 'sequencechain', 'audioinput', 'pitchshifter', 'formantshifter', 'shimmerreverb', 'chorus', 'compressor', 'eq', 'bitcrusher', 'vocoder', 'glitch', 'freqshifter', 'combfilter', 'send', 'return', 'stereofield', 'tapedelay', 'droneosc', 'spectralfreeze', 'wavetableosc', 'resonator'];
 
 interface Connection {
   fromId: string;
@@ -315,6 +317,12 @@ class AudioGraph {
       case 'spectralfreeze':
         node = new SynthSpectralFreezeNode(context, id, params);
         break;
+      case 'wavetableosc':
+        node = new SynthWavetableOscNode(context, id, params);
+        break;
+      case 'resonator':
+        node = new SynthResonatorNode(context, id, params);
+        break;
       case 'output':
         // Output node is a singleton
         return this.outputNode;
@@ -462,6 +470,9 @@ class AudioGraph {
       // Special handling for Karplus-Strong trigger input
       const triggerInput = toNode.getTriggerInput();
       output.connect(triggerInput);
+    } else if (toPort === 'trigger' && toNode instanceof SynthResonatorNode) {
+      // Resonator trigger input (strike)
+      output.connect(toNode.getTriggerInput());
     } else if (toPort === 'trigger' && toNode instanceof SynthSampleHoldNode) {
       // Special handling for Sample & Hold trigger input
       const triggerInput = toNode.getTriggerInput();
@@ -641,6 +652,8 @@ class AudioGraph {
       // Special handling for Karplus-Strong trigger input
       const triggerInput = toNode.getTriggerInput();
       output.disconnect(triggerInput);
+    } else if (toPort === 'trigger' && toNode instanceof SynthResonatorNode) {
+      output.disconnect(toNode.getTriggerInput());
     } else if (toPort === 'trigger' && toNode instanceof SynthSampleHoldNode) {
       // Special handling for Sample & Hold trigger input
       const triggerInput = toNode.getTriggerInput();
@@ -712,6 +725,20 @@ class AudioGraph {
   stopLFO(id: string): void {
     const node = this.nodes.get(id);
     if (node instanceof SynthLFONode) {
+      node.stop();
+    }
+  }
+
+  startWavetableOsc(id: string): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthWavetableOscNode) {
+      node.start();
+    }
+  }
+
+  stopWavetableOsc(id: string): void {
+    const node = this.nodes.get(id);
+    if (node instanceof SynthWavetableOscNode) {
       node.stop();
     }
   }
