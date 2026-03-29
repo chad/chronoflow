@@ -1,0 +1,6 @@
+name = 'mosh-api'
+env = []
+include = ['dist', 'package.json', 'package-lock.json']
+
+[services.web]
+command = "npm start"

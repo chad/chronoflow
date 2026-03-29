@@ -126,7 +126,7 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-const STORAGE_KEY = 'chronoflow-palette-collapsed';
+const STORAGE_KEY = 'mosh-palette-collapsed';
 
 function loadCollapsedState(): Record<string, boolean> {
   try {

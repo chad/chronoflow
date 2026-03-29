@@ -107,7 +107,7 @@ export function MidiPanel() {
       {/* IAC Status Banner */}
       {iacConnected && (
         <div className="mb-2 px-2 py-1.5 bg-cyan-900/30 border border-cyan-800 rounded text-[10px] text-cyan-300">
-          <strong>GarageBand → ChronoFlow</strong> ready
+          <strong>GarageBand → Mosh</strong> ready
           {activeNotes > 0 && (
             <span className="ml-1 text-green-400">• {activeNotes} note{activeNotes !== 1 ? 's' : ''}</span>
           )}

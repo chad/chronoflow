@@ -1,9 +1,9 @@
-// ChronoFlowEngine - Standalone headless engine for running ChronoFlow patches
+// MoshEngine - Standalone headless engine for running Mosh patches
 //
 // Usage:
-//   import { ChronoFlowEngine } from '@chronoflow/engine';
+//   import { MoshEngine } from '@mosh/engine';
 //
-//   const engine = new ChronoFlowEngine();
+//   const engine = new MoshEngine();
 //   await engine.init();
 //   engine.loadPatch(patchJSON);
 //
@@ -75,7 +75,7 @@ import {
   SynthResonatorNode,
 } from '../audio/nodes';
 
-export interface ChronoFlowEngineOptions {
+export interface MoshEngineOptions {
   // Provide an existing AudioContext (e.g., shared with ElevenLabs, Tone.js, etc.)
   // If omitted, the engine creates its own.
   context?: AudioContext;
@@ -97,7 +97,7 @@ export interface EngineEvents {
   onConnectionRemoved?: (connection: PatchConnection) => void;
 }
 
-export class ChronoFlowEngine {
+export class MoshEngine {
   private context: AudioContext | null = null;
   private ownsContext: boolean = false;
   private masterGain: GainNode | null = null;
@@ -105,11 +105,11 @@ export class ChronoFlowEngine {
   private nodes: Map<string, SynthNode> = new Map();
   private connections: PatchConnection[] = [];
   private currentPatch: Patch | null = null;
-  private options: Required<ChronoFlowEngineOptions>;
+  private options: Required<MoshEngineOptions>;
   private events: EngineEvents = {};
   private initialized = false;
 
-  constructor(options?: ChronoFlowEngineOptions) {
+  constructor(options?: MoshEngineOptions) {
     this.options = {
       context: options?.context ?? undefined as unknown as AudioContext,
       masterVolume: options?.masterVolume ?? 0.7,
@@ -329,7 +329,7 @@ export class ChronoFlowEngine {
       case 'resonator': node = new SynthResonatorNode(ctx, id, params); break;
       case 'output': return this.outputNode;
       default:
-        console.error(`ChronoFlowEngine: Unknown node type: ${type}`);
+        console.error(`MoshEngine: Unknown node type: ${type}`);
         return null;
     }
 
@@ -363,7 +363,7 @@ export class ChronoFlowEngine {
   setParam(nodeId: string, param: string, value: number | string | boolean): void {
     const node = this.nodes.get(nodeId);
     if (!node) {
-      console.warn(`ChronoFlowEngine: Node not found: ${nodeId}`);
+      console.warn(`MoshEngine: Node not found: ${nodeId}`);
       return;
     }
     node.setParam(param, value as number | string);
@@ -583,7 +583,7 @@ export class ChronoFlowEngine {
 
   private ensureInitialized(): void {
     if (!this.initialized || !this.context) {
-      throw new Error('ChronoFlowEngine not initialized. Call init() first.');
+      throw new Error('MoshEngine not initialized. Call init() first.');
     }
   }
 
@@ -592,13 +592,13 @@ export class ChronoFlowEngine {
     const toNode = this.nodes.get(conn.to.nodeId);
 
     if (!fromNode || !toNode) {
-      console.warn(`ChronoFlowEngine: Cannot connect - node not found: ${conn.from.nodeId} -> ${conn.to.nodeId}`);
+      console.warn(`MoshEngine: Cannot connect - node not found: ${conn.from.nodeId} -> ${conn.to.nodeId}`);
       return false;
     }
 
     const output = this.getOutputForPort(fromNode, conn.from.port);
     if (!output) {
-      console.warn(`ChronoFlowEngine: Cannot connect - output port not found: ${conn.from.port}`);
+      console.warn(`MoshEngine: Cannot connect - output port not found: ${conn.from.port}`);
       return false;
     }
 
@@ -606,7 +606,7 @@ export class ChronoFlowEngine {
     if (conn.to.port.endsWith('_mod')) {
       const modTarget = this.getModulationTarget(toNode, conn.to.port);
       if (!modTarget) {
-        console.warn(`ChronoFlowEngine: Cannot connect - mod target not found: ${conn.to.port}`);
+        console.warn(`MoshEngine: Cannot connect - mod target not found: ${conn.to.port}`);
         return false;
       }
       try {
@@ -616,19 +616,19 @@ export class ChronoFlowEngine {
           output.connect(modTarget);
         }
       } catch (err) {
-        console.error('ChronoFlowEngine: Modulation connection failed', err);
+        console.error('MoshEngine: Modulation connection failed', err);
         return false;
       }
     } else {
       const input = this.getInputForPort(toNode, conn.to.port);
       if (!input) {
-        console.warn(`ChronoFlowEngine: Cannot connect - input port not found: ${conn.to.port}`);
+        console.warn(`MoshEngine: Cannot connect - input port not found: ${conn.to.port}`);
         return false;
       }
       try {
         output.connect(input);
       } catch (err) {
-        console.error('ChronoFlowEngine: Connection failed', err);
+        console.error('MoshEngine: Connection failed', err);
         return false;
       }
     }

@@ -1,6 +1,6 @@
 // AudioAnalysisBus - Real-time audio analysis exposed for visuals integration
 //
-// This is the bridge between ChronoFlow's audio and external JavaScript visuals.
+// This is the bridge between Mosh's audio and external JavaScript visuals.
 // It provides a pub/sub API for:
 //   - FFT spectrum data (frequency bands)
 //   - Waveform data (oscilloscope)
@@ -8,7 +8,7 @@
 //   - Per-band energy (bass, low-mid, mid, high-mid, treble)
 //
 // Usage from external code:
-//   import { audioAnalysisBus } from 'chronoflow';
+//   import { audioAnalysisBus } from 'mosh';
 //
 //   audioAnalysisBus.subscribe('spectrum', (data) => {
 //     // data.frequencies: Float32Array of frequency magnitudes

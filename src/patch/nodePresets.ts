@@ -2,7 +2,7 @@
 
 import type { PatchNodeType, PatchNodeParams } from './types';
 
-const STORAGE_KEY = 'chronoflow-node-presets';
+const STORAGE_KEY = 'mosh-node-presets';
 
 export interface NodePreset {
   name: string;
@@ -54,7 +54,7 @@ export function deletePreset(type: PatchNodeType, name: string): void {
   }
 }
 
-// Factory presets shipped with ChronoFlow
+// Factory presets shipped with Mosh
 const FACTORY_PRESETS: Partial<Record<PatchNodeType, NodePreset[]>> = {
   oscillator: [
     { name: '🏭 Sub Bass', params: { frequency: 55, detune: 0, waveform: 'sine' } },

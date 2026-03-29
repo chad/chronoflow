@@ -1,0 +1,12 @@
+{
+  "client_id": "https://mosh.miren.club/client-metadata.json",
+  "client_name": "Mosh",
+  "client_uri": "https://mosh.miren.club",
+  "redirect_uris": ["https://mosh.miren.club/"],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "scope": "atproto transition:generic",
+  "token_endpoint_auth_method": "none",
+  "application_type": "web",
+  "dpop_bound_access_tokens": true
+}

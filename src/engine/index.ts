@@ -1,22 +1,22 @@
-// ChronoFlow Engine - Headless audio engine for running patches without UI
+// Mosh Engine - Headless audio engine for running patches without UI
 //
-// Import this to use ChronoFlow's audio processing in any web project.
+// Import this to use Mosh's audio processing in any web project.
 // No React, no UI framework — just Web Audio API.
 //
 // IMPORTANT: If your patch uses PitchShifter, Bitcrusher, or Granular nodes,
-// copy the worklet files from chronoflow/public/worklets/ into your project's
+// copy the worklet files from mosh/public/worklets/ into your project's
 // public directory at /worklets/. These are loaded at runtime by the AudioWorklet API.
 //
 // Example:
-//   import { ChronoFlowEngine } from './engine';
+//   import { MoshEngine } from './engine';
 //
-//   const engine = new ChronoFlowEngine();
+//   const engine = new MoshEngine();
 //   await engine.init();
 //   engine.loadPatch(myPatch);
 //   engine.setParam('delay-1', 'mix', 0.6);
 
-export { ChronoFlowEngine } from './ChronoFlowEngine';
-export type { ChronoFlowEngineOptions, EngineEvents } from './ChronoFlowEngine';
+export { MoshEngine } from './MoshEngine';
+export type { MoshEngineOptions, EngineEvents } from './MoshEngine';
 
 // Re-export types needed for working with the engine
 export type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchNodeParams } from '../patch/types';

@@ -702,11 +702,11 @@ export const usePatchStore = create<PatchState>()(
 
   savePatch: () => {
     const state = get();
-    localStorage.setItem('chronoflow-patch', JSON.stringify(state.patch));
+    localStorage.setItem('mosh-patch', JSON.stringify(state.patch));
   },
 
   loadPatch: () => {
-    const saved = localStorage.getItem('chronoflow-patch');
+    const saved = localStorage.getItem('mosh-patch');
     if (saved) {
       try {
         const patch = JSON.parse(saved) as Patch;

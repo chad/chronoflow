@@ -185,7 +185,7 @@ export class SynthOutputNode implements SynthNode {
       extension = 'wav';
     }
 
-    const defaultFilename = `chronoflow-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.${extension}`;
+    const defaultFilename = `mosh-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.${extension}`;
     const finalFilename = filename || defaultFilename;
 
     // Create download link

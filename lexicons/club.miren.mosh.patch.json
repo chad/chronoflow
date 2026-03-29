@@ -1,0 +1,22 @@
+{
+  "lexicon": 1,
+  "id": "club.miren.mosh.patch",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name", "content", "createdAt"],
+        "properties": {
+          "name": { "type": "string", "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "content": { "type": "string", "maxLength": 100000 },
+          "tags": { "type": "array", "items": { "type": "string" }, "maxLength": 10 },
+          "nodeCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

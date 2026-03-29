@@ -2,6 +2,8 @@ import { useRef, useState, useMemo } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
 import { audioGraph } from '../../audio/AudioGraph';
 import { SearchInput } from '../components/SearchInput';
+import { useAuthStore } from '../../atproto/authStore';
+import { PublishDialog } from './PublishDialog';
 import {
   DEMO_PATCH,
   SIMPLE_PATCH,
@@ -110,9 +112,11 @@ export function PatchManager() {
   const autoLayoutNodes = usePatchStore((state) => state.autoLayoutNodes);
   const setPatch = usePatchStore((state) => state.setPatch);
 
+  const agent = useAuthStore((state) => state.agent);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showActions, setShowActions] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
@@ -246,6 +250,17 @@ export function PatchManager() {
               >
                 Import JSON
               </button>
+              {agent && (
+                <>
+                  <div className="border-t border-gray-700" />
+                  <button
+                    onClick={() => { setShowPublish(true); setShowActions(false); }}
+                    className="w-full text-left px-3 py-2 text-xs text-cyan-400 hover:bg-gray-700 transition-colors"
+                  >
+                    Publish
+                  </button>
+                </>
+              )}
               <div className="border-t border-gray-700" />
               <button
                 onClick={handleNew}
@@ -330,6 +345,8 @@ export function PatchManager() {
           </div>
         )}
       </div>
+
+      <PublishDialog isOpen={showPublish} onClose={() => setShowPublish(false)} />
     </div>
   );
 }

@@ -1,0 +1,20 @@
+{
+  "name": "mosh-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "hono": "^4",
+    "better-sqlite3": "^11",
+    "@hono/node-server": "^1"
+  },
+  "devDependencies": {
+    "tsx": "^4",
+    "typescript": "^5",
+    "@types/better-sqlite3": "^7"
+  }
+}

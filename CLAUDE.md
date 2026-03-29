@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ChronoFlow is a web-based modular synthesizer with hierarchical abstraction. Key differentiators:
+Mosh is a web-based modular synthesizer with hierarchical abstraction. Key differentiators:
 - **Hierarchical patches** — any group of nodes becomes a reusable module you can dive into
 - **Semantic zoom** — zoom out to see structure, zoom in to see detail
 - **Patch-as-code** — patches are structured JSON, enabling diffing, versioning, and future AI features

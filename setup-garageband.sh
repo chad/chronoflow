@@ -1,11 +1,11 @@
 #!/bin/bash
-# ChronoFlow + GarageBand MIDI Setup
+# Mosh + GarageBand MIDI Setup
 # This script configures IAC Driver and launches everything needed.
 
 set -e
 
 echo "═══════════════════════════════════════════"
-echo "  ChronoFlow + GarageBand MIDI Setup"
+echo "  Mosh + GarageBand MIDI Setup"
 echo "═══════════════════════════════════════════"
 echo ""
 
@@ -28,9 +28,9 @@ else
   echo "  ✓ IAC Driver already enabled"
 fi
 
-# 2. Start ChronoFlow dev server (if not running)
+# 2. Start Mosh dev server (if not running)
 echo ""
-echo "→ Starting ChronoFlow..."
+echo "→ Starting Mosh..."
 if lsof -i :5173 >/dev/null 2>&1; then
   echo "  ✓ Already running on http://localhost:5173"
 else
@@ -43,7 +43,7 @@ fi
 
 # 3. Open Chrome with MIDI permissions
 echo ""
-echo "→ Opening ChronoFlow in Chrome..."
+echo "→ Opening Mosh in Chrome..."
 open -a "Google Chrome" "http://localhost:5173"
 
 # 4. Open GarageBand
@@ -58,26 +58,26 @@ echo "════════════════════════�
 echo "  Setup Complete!"
 echo "═══════════════════════════════════════════"
 echo ""
-echo "  How to connect GarageBand → ChronoFlow:"
+echo "  How to connect GarageBand → Mosh:"
 echo ""
 echo "  1. In GarageBand, open Musical Typing:"
 echo "     Window → Show Musical Typing  (or ⌘K)"
 echo ""  
-echo "  2. In ChronoFlow (Chrome), check the MIDI"
+echo "  2. In Mosh (Chrome), check the MIDI"
 echo "     panel on the left sidebar — it should"
 echo "     show 'IAC ✓' with auto-connection."
 echo ""
 echo "  3. Play notes in GarageBand's Musical Typing"
-echo "     — you'll hear them through ChronoFlow!"
+echo "     — you'll hear them through Mosh!"
 echo ""
 echo "  Alternatively, if you have a MIDI keyboard:"
-echo "     - It will appear in ChronoFlow's MIDI Input"
+echo "     - It will appear in Mosh's MIDI Input"
 echo "       dropdown automatically via Web MIDI API"
 echo "     - Select it directly — no IAC needed for"
 echo "       hardware controllers"
 echo ""
-echo "  To record ChronoFlow audio in GarageBand:"
+echo "  To record Mosh audio in GarageBand:"
 echo "     - Install BlackHole (brew install --cask blackhole-2ch)"
-echo "     - Set BlackHole as ChronoFlow's audio output"  
+echo "     - Set BlackHole as Mosh's audio output"  
 echo "     - Set BlackHole as GarageBand's audio input"
 echo ""

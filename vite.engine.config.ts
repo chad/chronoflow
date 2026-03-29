@@ -5,8 +5,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/engine/index.ts'),
-      name: 'ChronoFlowEngine',
-      fileName: 'chronoflow-engine',
+      name: 'MoshEngine',
+      fileName: 'mosh-engine',
       formats: ['es'],
     },
     outDir: 'dist-engine',

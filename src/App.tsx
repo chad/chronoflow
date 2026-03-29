@@ -13,6 +13,9 @@ import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
 import { useUndoRedo } from './patch/useUndoRedo';
+import { useAuthStore } from './atproto/authStore';
+import { AuthButton } from './ui/components/AuthButton';
+import { CommunityBrowser } from './ui/panels/CommunityBrowser';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +28,11 @@ function App() {
   const audioInitializedRef = useRef(false);
 
   const { canUndo, canRedo, undo, redo } = useUndoRedo();
+  const initAuth = useAuthStore((state) => state.init);
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
   // Command palette keyboard shortcut (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -93,7 +101,7 @@ function App() {
     <div className="w-screen h-screen bg-gray-950 flex flex-col">
       {/* Header */}
       <header className="h-12 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
-        <h1 className="text-lg font-bold text-cyan-400">ChronoFlow</h1>
+        <h1 className="text-lg font-bold text-cyan-400">Mosh</h1>
         <div className="flex items-center gap-4">
           {/* Undo/Redo */}
           <div className="flex items-center gap-1">
@@ -121,7 +129,7 @@ function App() {
 
           {/* Manual link */}
           <a
-            href="https://chronoflow-manual.miren.club/"
+            href="https://mosh-manual.miren.club/"
             target="_blank"
             rel="noopener noreferrer"
             className="px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm rounded border border-gray-700 transition-colors"
@@ -129,6 +137,8 @@ function App() {
           >
             📖
           </a>
+
+          <AuthButton />
 
           {/* Command palette */}
           <button
@@ -187,6 +197,7 @@ function App() {
           <MidiClockPanel />
           <KeyboardInput />
           <PatchManager />
+          <CommunityBrowser />
         </aside>
 
         {/* Graph Editor */}

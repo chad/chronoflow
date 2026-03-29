@@ -1,17 +1,17 @@
-# ChronoFlow Engine — Standalone Usage
+# Mosh Engine — Standalone Usage
 
-The `ChronoFlowEngine` runs ChronoFlow patches headlessly (no UI required).
+The `MoshEngine` runs Mosh patches headlessly (no UI required).
 It wraps Web Audio API and reconstructs any patch JSON into a live audio graph.
 
 ## Basic Usage
 
 ```typescript
-import { ChronoFlowEngine } from './engine';
+import { MoshEngine } from './engine';
 
-const engine = new ChronoFlowEngine();
+const engine = new MoshEngine();
 await engine.init();
 
-// Load a patch designed in the ChronoFlow editor
+// Load a patch designed in the Mosh editor
 const patch = await fetch('/patches/voice-effects.json').then(r => r.json());
 engine.loadPatch(patch);
 ```
@@ -22,7 +22,7 @@ If your app already has an AudioContext (e.g., ElevenLabs, Tone.js, Web Audio),
 pass it in so everything shares the same audio thread:
 
 ```typescript
-const engine = new ChronoFlowEngine({
+const engine = new MoshEngine({
   context: existingAudioContext,
   autoConnect: true,   // connects to context.destination
   masterVolume: 0.7,
@@ -35,9 +35,9 @@ await engine.init();
 Use an `audioinput` node in your patch to bring in external audio:
 
 ```typescript
-import { ChronoFlowEngine, SynthAudioInputNode } from './engine';
+import { MoshEngine, SynthAudioInputNode } from './engine';
 
-const engine = new ChronoFlowEngine({ context: myContext });
+const engine = new MoshEngine({ context: myContext });
 await engine.init();
 engine.loadPatch(patch);
 
@@ -76,10 +76,10 @@ const mix = engine.getParam('delay-1', 'mix'); // 0.3
 
 ```typescript
 // Default: auto-connects to context.destination (speakers)
-const engine = new ChronoFlowEngine({ autoConnect: true });
+const engine = new MoshEngine({ autoConnect: true });
 
 // Manual routing: send output to your own gain node
-const engine = new ChronoFlowEngine({ autoConnect: false });
+const engine = new MoshEngine({ autoConnect: false });
 await engine.init();
 engine.loadPatch(patch);
 engine.routeTo(myGainNode);
@@ -103,9 +103,9 @@ engine.on({
 ## Building Patches Programmatically
 
 ```typescript
-import { ChronoFlowEngine, createEmptyPatch } from './engine';
+import { MoshEngine, createEmptyPatch } from './engine';
 
-const engine = new ChronoFlowEngine();
+const engine = new MoshEngine();
 await engine.init();
 
 // Start from empty
@@ -135,13 +135,13 @@ localStorage.setItem('my-patch', patchJson);
 ## Example: AI Avatar Voice Processing
 
 ```typescript
-import { ChronoFlowEngine, SynthAudioInputNode } from './engine';
+import { MoshEngine, SynthAudioInputNode } from './engine';
 
 // 1. Share the AudioContext with ElevenLabs
-const engine = new ChronoFlowEngine({ context: elevenLabsContext });
+const engine = new MoshEngine({ context: elevenLabsContext });
 await engine.init();
 
-// 2. Load the effects chain you designed in ChronoFlow's editor
+// 2. Load the effects chain you designed in Mosh's editor
 const patch = await fetch('/patches/avatar-voice.json').then(r => r.json());
 engine.loadPatch(patch);
 

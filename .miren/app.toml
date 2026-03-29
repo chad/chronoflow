@@ -1,4 +1,4 @@
-name = 'chronoflow'
+name = 'mosh'
 env = []
 include = ['dist']
 

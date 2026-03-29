@@ -1,4 +1,4 @@
-# ChronoFlow
+# Mosh
 
 A web-based modular synthesizer built entirely with the Web Audio API. Create generative music by connecting oscillators, filters, sequencers, and effects in a visual node-based interface.
 

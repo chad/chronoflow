@@ -1,15 +1,15 @@
-# Memo: Real-Time Voice Processing with ChronoFlow Engine
+# Memo: Real-Time Voice Processing with Mosh Engine
 
 **To:** Dev Team  
 **From:** Chad  
-**Re:** Using ChronoFlow as the audio effects layer for the AI speaking avatar  
+**Re:** Using Mosh as the audio effects layer for the AI speaking avatar  
 **Date:** February 2026
 
 ---
 
 ## TL;DR
 
-We have a standalone audio engine called ChronoFlow that runs entirely in the browser via Web Audio API. It has modules for pitch shifting, formant shifting, vocoding, glitch/stutter, frequency shifting, comb filtering, delay, reverb, shimmer reverb, EQ, compression, bitcrushing, and more — all modulatable in real time. We're going to pipe the ElevenLabs Conversational AI audio output through it before it hits the speakers. This replaces the BlackHole → Ableton chain entirely. Everything stays in-browser, zero added latency from round-tripping through virtual audio devices.
+We have a standalone audio engine called Mosh that runs entirely in the browser via Web Audio API. It has modules for pitch shifting, formant shifting, vocoding, glitch/stutter, frequency shifting, comb filtering, delay, reverb, shimmer reverb, EQ, compression, bitcrushing, and more — all modulatable in real time. We're going to pipe the ElevenLabs Conversational AI audio output through it before it hits the speakers. This replaces the BlackHole → Ableton chain entirely. Everything stays in-browser, zero added latency from round-tripping through virtual audio devices.
 
 The key creative goal: **oscillate between male and female vocal character in real time, with glitch artifacts, delay trails, and reverb textures that make the avatar sound otherworldly — not human, not purely synthetic, something in between.**
 
@@ -22,7 +22,7 @@ ElevenLabs Conversational AI
         │
         ▼ (MediaStream or AudioNode)
 ┌─────────────────────────────────────────────────────────┐
-│  ChronoFlowEngine (same AudioContext)                   │
+│  MoshEngine (same AudioContext)                   │
 │                                                         │
 │  AudioInput → EQ → Compressor → FormantShifter          │
 │                                     │                   │
@@ -56,7 +56,7 @@ You don't need to build this exact graph. The engine is modular — you wire up 
 
 ### 1. Install / Import
 
-ChronoFlow isn't published to npm yet. For now, copy or symlink the engine source into your project:
+Mosh isn't published to npm yet. For now, copy or symlink the engine source into your project:
 
 ```
 your-avatar-project/
@@ -77,16 +77,16 @@ The worklet files **must** be served from `/worklets/` on your domain. They're l
 Import:
 
 ```typescript
-import { ChronoFlowEngine, SynthAudioInputNode } from './chronoflow/engine';
+import { MoshEngine, SynthAudioInputNode } from './chronoflow/engine';
 ```
 
 ### 2. Share the AudioContext
 
-This is the single most important thing. ElevenLabs and ChronoFlow must share the same `AudioContext`. If they don't, you'll hear the raw ElevenLabs voice on one context and the processed voice on another — or worse, nothing at all.
+This is the single most important thing. ElevenLabs and Mosh must share the same `AudioContext`. If they don't, you'll hear the raw ElevenLabs voice on one context and the processed voice on another — or worse, nothing at all.
 
 ```typescript
 // If ElevenLabs exposes its AudioContext:
-const engine = new ChronoFlowEngine({
+const engine = new MoshEngine({
   context: elevenLabs.getAudioContext(),
   autoConnect: true,
   masterVolume: 0.8,
@@ -105,14 +105,14 @@ const elevenLabs = new ElevenLabsConversation({
   // ...
 });
 
-const engine = new ChronoFlowEngine({
+const engine = new MoshEngine({
   context: sharedContext,
   autoConnect: true,
 });
 await engine.init();
 ```
 
-### 3. Connect ElevenLabs Output to ChronoFlow Input
+### 3. Connect ElevenLabs Output to Mosh Input
 
 There are three ways depending on what ElevenLabs gives you:
 
@@ -145,7 +145,7 @@ input.connectAudioNode(source);
 
 ### 4. Load a Patch
 
-Design the effects chain in the ChronoFlow editor (run `npm run dev` in the chronoflow directory, open in browser, build your patch, export JSON). Then load it:
+Design the effects chain in the Mosh editor (run `npm run dev` in the chronoflow directory, open in browser, build your patch, export JSON). Then load it:
 
 ```typescript
 const patch = await fetch('/patches/avatar-voice.json').then(r => r.json());
@@ -156,12 +156,12 @@ Or build it programmatically (see Section 6 below).
 
 ### 5. Mute ElevenLabs Direct Output
 
-You need to intercept ElevenLabs' audio before it reaches the speakers. The processed signal comes out of ChronoFlow's output. If ElevenLabs is also sending audio to `context.destination`, you'll get double audio.
+You need to intercept ElevenLabs' audio before it reaches the speakers. The processed signal comes out of Mosh's output. If ElevenLabs is also sending audio to `context.destination`, you'll get double audio.
 
 ```typescript
 // If ElevenLabs gives you control over its output:
 elevenLabs.setOutputVolume(0); // Mute their direct output
-// ChronoFlow handles the output now
+// Mosh handles the output now
 
 // If they use an <audio> element:
 audioElement.volume = 0; // We're capturing via createMediaElementSource
@@ -309,9 +309,9 @@ function setFreqShift(hz: number) {
 If you'd rather build the effects chain in code instead of the visual editor:
 
 ```typescript
-import { ChronoFlowEngine, SynthAudioInputNode, createEmptyPatch } from './chronoflow/engine';
+import { MoshEngine, SynthAudioInputNode, createEmptyPatch } from './chronoflow/engine';
 
-const engine = new ChronoFlowEngine({ context: sharedContext });
+const engine = new MoshEngine({ context: sharedContext });
 await engine.init();
 engine.loadPatch(createEmptyPatch('Avatar Voice'));
 
@@ -584,7 +584,7 @@ source.start();
 
 2. **Presentation control interface:** How should the presenter trigger scene changes during the keynote? Options: keyboard shortcuts, MIDI controller, tablet companion app sending WebSocket messages, or a timeline that auto-advances. The engine's `setParam()` and `setParams()` calls are instant — we just need to decide what triggers them.
 
-3. **Visual editor during rehearsal?** The ChronoFlow editor UI is a React component. We could mount it as a floating panel in the avatar app for tweaking the chain during rehearsals, then hide it for the actual performance. Let me know if that's useful and I'll wire up the `<ChronoFlowEditor engine={engine} />` wrapper.
+3. **Visual editor during rehearsal?** The Mosh editor UI is a React component. We could mount it as a floating panel in the avatar app for tweaking the chain during rehearsals, then hide it for the actual performance. Let me know if that's useful and I'll wire up the `<MoshEditor engine={engine} />` wrapper.
 
 ---
 
@@ -594,7 +594,7 @@ source.start();
 chronoflow/
   src/
     engine/
-      ChronoFlowEngine.ts    ← The headless engine class
+      MoshEngine.ts    ← The headless engine class
       index.ts                ← Public API exports
       USAGE.md                ← API reference with code examples
     audio/nodes/              ← All audio processing modules
