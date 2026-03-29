@@ -29,6 +29,7 @@ import { usePatchStore } from '../../patch/patchStore';
 import type { PatchNode, PatchConnection, PatchGroup, PatchNodeType } from '../../patch/types';
 import { remapConnectionsForCollapsedGroup } from '../../layout/groupUtils';
 import { ConnectionProvider, useConnection } from './ConnectionContext';
+import { TraceProvider } from './TraceContext';
 import { ContextMenu, type ContextMenuState } from './ContextMenu';
 import { QuickAdd } from './QuickAdd';
 import { hasClipboard } from '../../patch/clipboard';
@@ -311,40 +312,55 @@ function GraphCanvasInner() {
     });
   }, [setOnConnectionComplete, addConnection, preConnectionViewport, setViewport, setPreConnectionViewport]);
 
-  // Snap target tracking
+  // Snap target tracking — throttled with rAF to avoid layout thrashing
   useEffect(() => {
     if (!isConnecting || !connectionSource) return;
 
-    const SNAP_DISTANCE = 50;
+    const SNAP_DISTANCE_SQ = 50 * 50; // Compare squared distances to avoid sqrt
+    let rafId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const handles = document.querySelectorAll('.react-flow__handle');
-      let closest: { nodeId: string; handleId: string; distance: number } | null = null;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (rafId !== null) return; // Already scheduled
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const handles = document.querySelectorAll('.react-flow__handle');
+        let closest: { nodeId: string; handleId: string; distance: number } | null = null;
 
-      handles.forEach((handle) => {
-        const rect = handle.getBoundingClientRect();
-        const hx = rect.left + rect.width / 2;
-        const hy = rect.top + rect.height / 2;
-        const dist = Math.sqrt(Math.pow(e.clientX - hx, 2) + Math.pow(e.clientY - hy, 2));
+        handles.forEach((handle) => {
+          const rect = handle.getBoundingClientRect();
+          const hx = rect.left + rect.width / 2;
+          const hy = rect.top + rect.height / 2;
+          const dx = lastX - hx;
+          const dy = lastY - hy;
+          const distSq = dx * dx + dy * dy;
 
-        const handleType = handle.classList.contains('source') ? 'source' : 'target';
-        const isValidType =
-          (connectionSource.handleType === 'source' && handleType === 'target') ||
-          (connectionSource.handleType === 'target' && handleType === 'source');
+          const handleType = handle.classList.contains('source') ? 'source' : 'target';
+          const isValidType =
+            (connectionSource.handleType === 'source' && handleType === 'target') ||
+            (connectionSource.handleType === 'target' && handleType === 'source');
 
-        const nodeId = handle.getAttribute('data-nodeid');
-        const handleId = handle.getAttribute('data-handleid');
+          const nodeId = handle.getAttribute('data-nodeid');
+          const handleId = handle.getAttribute('data-handleid');
 
-        if (nodeId && handleId && nodeId !== connectionSource.nodeId && isValidType && dist < SNAP_DISTANCE) {
-          if (!closest || dist < closest.distance) {
-            closest = { nodeId, handleId, distance: dist };
+          if (nodeId && handleId && nodeId !== connectionSource.nodeId && isValidType && distSq < SNAP_DISTANCE_SQ) {
+            if (!closest || distSq < closest.distance) {
+              closest = { nodeId, handleId, distance: distSq };
+            }
           }
-        }
+        });
+        setSnapTarget(closest);
       });
-      setSnapTarget(closest);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
-    return () => document.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [isConnecting, connectionSource, setSnapTarget]);
 
   // Pane click: connect snap target or cancel
@@ -599,6 +615,7 @@ function GraphCanvasInner() {
   );
 
   return (
+    <TraceProvider value={traceNodeIds}>
     <div className="w-full h-full" onContextMenu={handleContextMenu} onDoubleClick={handlePaneDoubleClick}>
       <ReactFlow
         nodes={nodes}
@@ -751,6 +768,7 @@ function GraphCanvasInner() {
         />
       )}
     </div>
+    </TraceProvider>
   );
 }
 

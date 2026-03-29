@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { audioGraph } from './AudioGraph';
 import { usePatchStore } from '../patch/patchStore';
 
+// Throttle modulation animation to ~15Hz instead of 60fps
+const MOD_TICK_INTERVAL = 66;
+
 interface ModulationInfo {
   isModulated: boolean;
   modulatedValue: number;
@@ -51,6 +54,8 @@ export function useModulationValue(
     ? nodes.find((n) => n.id === modConnection.from.nodeId)
     : null;
 
+  const lastTickRef = useRef<number>(0);
+
   const simulateModulation = useCallback(() => {
     if (!sourceNode) {
       setIsModulated(false);
@@ -62,6 +67,14 @@ export function useModulationValue(
 
     const animate = () => {
       const now = performance.now();
+
+      // Throttle to ~15Hz — modulation visuals don't need 60fps
+      if (now - lastTickRef.current < MOD_TICK_INTERVAL) {
+        rafRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastTickRef.current = now;
+
       const elapsed = (now - startTimeRef.current) / 1000; // seconds
 
       let modValue = baseValue;

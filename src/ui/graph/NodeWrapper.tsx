@@ -5,6 +5,7 @@ import { memo, useState, useCallback } from 'react';
 import { usePatchStore } from '../../patch/patchStore';
 import { SignalLED, MiniScope } from './SignalIndicator';
 import { getPresetsForType, savePreset, type NodePreset } from '../../patch/nodePresets';
+import { useTraceNodeIds } from './TraceContext';
 import type { PatchNodeType } from '../../patch/types';
 
 interface NodeWrapperProps {
@@ -17,13 +18,13 @@ interface NodeWrapperProps {
 
 export const NodeWrapper = memo(({ nodeId, nodeType, children }: NodeWrapperProps) => {
   const node = usePatchStore((state) => state.patch.nodes.find((n) => n.id === nodeId));
-  const tracingNodeId = usePatchStore((state) => state.tracingNodeId);
-  const getUpstreamNodes = usePatchStore((state) => state.getUpstreamNodes);
-  const getDownstreamNodes = usePatchStore((state) => state.getDownstreamNodes);
   const toggleMute = usePatchStore((state) => state.toggleMute);
   // toggleBypass available via context menu
   const updateNodeParam = usePatchStore((state) => state.updateNodeParam);
   const isAudioEnabled = usePatchStore((state) => state.isAudioEnabled);
+
+  // Use precomputed trace set from context (O(1) lookup instead of O(N) BFS per node)
+  const traceNodeIds = useTraceNodeIds();
 
   const [showPresets, setShowPresets] = useState(false);
   const [showScope, setShowScope] = useState(false);
@@ -32,14 +33,7 @@ export const NodeWrapper = memo(({ nodeId, nodeType, children }: NodeWrapperProp
   const isBypassed = node?.bypassed || false;
 
   // Signal tracing: dim nodes not in the trace path
-  let tracingOpacity = 1;
-  if (tracingNodeId && tracingNodeId !== nodeId) {
-    const upstream = getUpstreamNodes(tracingNodeId);
-    const downstream = getDownstreamNodes(tracingNodeId);
-    if (!upstream.has(nodeId) && !downstream.has(nodeId)) {
-      tracingOpacity = 0.2;
-    }
-  }
+  const tracingOpacity = traceNodeIds && !traceNodeIds.has(nodeId) ? 0.2 : 1;
 
   const handleLoadPreset = useCallback((preset: NodePreset) => {
     Object.entries(preset.params).forEach(([param, value]) => {

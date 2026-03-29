@@ -39,6 +39,9 @@ class PatchSyncer {
     try {
     if (DEBUG) console.log('[PatchSyncer] syncPatch called for:', patch.meta.name);
 
+    // Early exit: exact same state reference means nothing changed
+    if (patch === this.previousPatch) return;
+
     // Detect if this is a completely different patch (not just edits to current patch)
     // This happens when loading sample patches or importing patches
     const isPatchSwitch = this.previousPatch &&
@@ -61,12 +64,51 @@ class PatchSyncer {
       // Update sequencer connections
       this.updateSequencerConnections(patch);
 
-      this.previousPatch = JSON.parse(JSON.stringify(patch));
+      // Store reference (immutable state means this is safe - no deep clone needed)
+      this.previousPatch = patch;
       return;
     }
 
     const prevNodes = this.previousPatch?.nodes ?? [];
     const prevConnections = this.previousPatch?.connections ?? [];
+
+    // Fast path: if nodes and connections arrays are the same references,
+    // only non-audio state changed (e.g. meta timestamps). Skip entirely.
+    if (patch.nodes === prevNodes && patch.connections === prevConnections) {
+      this.previousPatch = patch;
+      return;
+    }
+
+    // Fast path: if only node references changed (param edits) but no structural changes,
+    // audio was already updated by updateNodeParam/paramScheduler — just snapshot and return.
+    // Structural changes require connections array to change or node count to differ.
+    const noStructuralChange =
+      patch.nodes.length === prevNodes.length &&
+      patch.connections === prevConnections;
+
+    if (noStructuralChange) {
+      // Check for mute/bypass changes that need audio handling
+      for (let i = 0; i < patch.nodes.length; i++) {
+        const node = patch.nodes[i];
+        const prev = prevNodes[i];
+        if (node !== prev && node.id === prev.id) {
+          // Check mute state changes
+          if (node.muted !== prev.muted) {
+            const audioNode = audioGraph.getNode(node.id);
+            if (audioNode) {
+              const output = audioNode.getOutputNode();
+              if (output && 'gain' in output && output instanceof GainNode) {
+                if (node.muted) {
+                  output.gain.setValueAtTime(0, 0);
+                }
+              }
+            }
+          }
+        }
+      }
+      this.previousPatch = patch;
+      return;
+    }
 
     // Find added nodes
     const addedNodes = patch.nodes.filter(
@@ -87,11 +129,12 @@ class PatchSyncer {
       audioGraph.panic();
     }
 
-    // Find modified nodes (params changed)
+    // Find modified nodes using reference comparison (O(1) per node)
+    // Works because Zustand immutable updates create new param objects for changed nodes
     const modifiedNodes = patch.nodes.filter((n) => {
       const prev = prevNodes.find((p) => p.id === n.id);
       if (!prev) return false;
-      return JSON.stringify(n.params) !== JSON.stringify(prev.params);
+      return n.params !== prev.params;
     });
 
     // Helper to compare connections by content (not just ID)
@@ -138,7 +181,8 @@ class PatchSyncer {
     // Update sequencer connection states
     this.updateSequencerConnections(patch);
 
-    this.previousPatch = JSON.parse(JSON.stringify(patch));
+    // Store reference (immutable state means this is safe - no deep clone needed)
+    this.previousPatch = patch;
     } catch (err) {
       console.error('[PatchSyncer] Error in syncPatch:', err);
     }

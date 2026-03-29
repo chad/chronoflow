@@ -6,6 +6,7 @@ import { createEmptyPatch } from './types';
 import { computeAutoLayout } from '../layout/autoLayout';
 import { detectExposedPorts, calculateGroupCenter, generatePortAlias } from '../layout/groupUtils';
 import { copyNodes, pasteNodes } from './clipboard';
+import { audioGraph } from '../audio/AudioGraph';
 
 
 interface PatchState {
@@ -210,12 +211,13 @@ export const usePatchStore = create<PatchState>()(
   },
 
   updateNodePosition: (id, position) => {
-    set((state) => ({
-      patch: {
-        ...state.patch,
-        nodes: state.patch.nodes.map((n) => (n.id === id ? { ...n, position } : n)),
-      },
-    }));
+    set((state) => {
+      const idx = state.patch.nodes.findIndex((n) => n.id === id);
+      if (idx === -1) return state;
+      const nodes = state.patch.nodes.slice();
+      nodes[idx] = { ...nodes[idx], position };
+      return { patch: { ...state.patch, nodes } };
+    });
   },
 
   updateNodeParam: (id, param, value) => {
@@ -223,6 +225,11 @@ export const usePatchStore = create<PatchState>()(
     if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) {
       console.warn(`[patchStore] Rejecting invalid value for ${id}.${param}:`, value);
       return;
+    }
+    // Immediately update audio graph for zero-latency response
+    // (patchSyncer will skip redundant audio updates for param-only changes)
+    if (typeof value === 'number' || typeof value === 'string') {
+      audioGraph.setNodeParam(id, param, value);
     }
     set((state) => ({
       patch: {
@@ -252,20 +259,28 @@ export const usePatchStore = create<PatchState>()(
 
   clearSelection: () => set({ selectedNodeIds: [], selectedNodeId: null }),
 
-  // Batch param updates (from ParamScheduler)
+  // Batch param updates (from ParamScheduler) - single pass over nodes array
   batchUpdateParams: (updates) => {
     set((state) => {
-      let nodes = state.patch.nodes;
+      // Build a map of nodeId -> accumulated param changes for single-pass update
+      const changesByNode = new Map<string, Record<string, number | string | boolean>>();
       for (const { nodeId, param, value } of updates) {
         if (typeof value === 'number' && (isNaN(value) || !isFinite(value))) continue;
-        nodes = nodes.map((n) =>
-          n.id === nodeId ? { ...n, params: { ...n.params, [param]: value } } : n
-        );
+        let changes = changesByNode.get(nodeId);
+        if (!changes) {
+          changes = {};
+          changesByNode.set(nodeId, changes);
+        }
+        changes[param] = value;
       }
       return {
         patch: {
           ...state.patch,
-          nodes,
+          nodes: state.patch.nodes.map((n) => {
+            const changes = changesByNode.get(n.id);
+            if (!changes) return n; // unchanged — same reference
+            return { ...n, params: { ...n.params, ...changes } };
+          }),
           meta: { ...state.patch.meta, modified: new Date().toISOString() },
         },
       };
@@ -733,8 +748,27 @@ export const usePatchStore = create<PatchState>()(
       // Limit history to 100 entries
       limit: 100,
       // Equality function to prevent duplicate history entries
-      equality: (pastState, currentState) =>
-        JSON.stringify(pastState.patch) === JSON.stringify(currentState.patch),
+      // Use reference comparison (O(n) cheap) instead of JSON.stringify (O(json_size) expensive)
+      // Works because Zustand immutable updates create new references for changed objects
+      equality: (pastState, currentState) => {
+        const p = pastState.patch;
+        const c = currentState.patch;
+        if (p === c) return true;
+        if (p.nodes.length !== c.nodes.length) return false;
+        if (p.connections.length !== c.connections.length) return false;
+        if (p.groups.length !== c.groups.length) return false;
+        if (p.nodes === c.nodes && p.connections === c.connections && p.groups === c.groups) return true;
+        for (let i = 0; i < p.nodes.length; i++) {
+          if (p.nodes[i] !== c.nodes[i]) return false;
+        }
+        for (let i = 0; i < p.connections.length; i++) {
+          if (p.connections[i] !== c.connections[i]) return false;
+        }
+        for (let i = 0; i < p.groups.length; i++) {
+          if (p.groups[i] !== c.groups[i]) return false;
+        }
+        return true;
+      },
     }
   )
 );

@@ -9,6 +9,7 @@ export function SignalLED({ nodeId }: { nodeId: string }) {
   const [level, setLevel] = useState(0);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
 
   useEffect(() => {
     const node = audioGraph.getNode(nodeId);
@@ -28,15 +29,21 @@ export function SignalLED({ nodeId }: { nodeId: string }) {
       return;
     }
 
+    // Throttle to ~10Hz (100ms) instead of 60fps — LED doesn't need high refresh
+    const TICK_INTERVAL = 100;
     const tick = () => {
-      if (analyserRef.current) {
-        analyserRef.current.getFloatTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          sum += data[i] * data[i];
+      const now = performance.now();
+      if (now - lastTickRef.current >= TICK_INTERVAL) {
+        lastTickRef.current = now;
+        if (analyserRef.current) {
+          analyserRef.current.getFloatTimeDomainData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            sum += data[i] * data[i];
+          }
+          const rms = Math.sqrt(sum / data.length);
+          setLevel(Math.min(1, rms * 5));
         }
-        const rms = Math.sqrt(sum / data.length);
-        setLevel(Math.min(1, rms * 5));
       }
       rafRef.current = requestAnimationFrame(tick);
     };

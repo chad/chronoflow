@@ -23,12 +23,15 @@ import {
   POLYRHYTHMIC_TRIGGERS_PATCH,
   MACRO_DRONE_PATCH,
   COSMIC_CATHEDRAL_PATCH,
-  ETERNAL_GARDEN_PATCH,
 } from '../../patch/samplePatches';
 import {
   SUBMERGED_CATHEDRAL_PATCH,
   GLASS_RAIN_PATCH,
   TIDAL_MEMORIES_PATCH,
+  UTOPIA_PATCH,
+  NEON_RAIN_PATCH,
+  STRANGE_IOT_PATCH,
+  BASIC_BEAT_PATCH,
 } from '../../patch/newDemoPatches';
 
 interface SamplePatch {
@@ -59,8 +62,11 @@ const PATCH_CATEGORIES: PatchCategory[] = [
       { key: 'submergedcathedral', name: '🌊 Submerged Cathedral', description: 'Drone + Resonator + Spectral Freeze + Send/Return', patch: SUBMERGED_CATHEDRAL_PATCH },
       { key: 'glassrain', name: '🔔 Glass Rain', description: 'Karplus + Resonator + Wavetable + Tape Delay', patch: GLASS_RAIN_PATCH },
       { key: 'tidalmemories', name: '🌅 Tidal Memories', description: 'Dual Drone + Granular + Spectral Freeze + Bus FX', patch: TIDAL_MEMORIES_PATCH },
-      { key: 'eternalgarden', name: 'Eternal Garden', description: 'Scene Chain + Crossfade evolution', patch: ETERNAL_GARDEN_PATCH },
-      { key: 'cosmiccathedral', name: 'Cosmic Cathedral', description: '6-layer generative masterpiece', patch: COSMIC_CATHEDRAL_PATCH },
+      { key: 'utopia', name: '🌿 Utopia', description: 'F minor pentatonic — 5 layers of rhythmic generative beauty', patch: UTOPIA_PATCH },
+      { key: 'neonrain', name: '🌧️ Neon Rain', description: 'Dance beat + blooming ambient — kick/hat/snare/bass + lush layers', patch: NEON_RAIN_PATCH },
+      { key: 'strangeiot', name: '👾 Strange IoT', description: 'Dark ambient — pulsing arpeggio, deep drone, spectral ghosts, frozen atmosphere', patch: STRANGE_IOT_PATCH },
+      { key: 'basicbeat', name: '🥁 Basic Beat', description: 'Kick/snare/hat at 120 BPM — drum test', patch: BASIC_BEAT_PATCH },
+{ key: 'cosmiccathedral', name: 'Cosmic Cathedral', description: '6-layer generative masterpiece', patch: COSMIC_CATHEDRAL_PATCH },
       { key: 'evolvingmelody', name: 'Evolving Melody', description: 'Turing Machine + Slew + Euclidean', patch: EVOLVING_MELODY_PATCH },
       { key: 'polyrhythmictriggers', name: 'Polyrhythmic Triggers', description: '3x Euclidean + Logic XOR', patch: POLYRHYTHMIC_TRIGGERS_PATCH },
       { key: 'macrodrone', name: 'Macro Drone', description: 'Macro Controller + Env Follower', patch: MACRO_DRONE_PATCH },
@@ -85,6 +91,15 @@ const PATCH_CATEGORIES: PatchCategory[] = [
   },
 ];
 
+/** Find a sample patch by its key across all categories */
+export function findSamplePatchByKey(key: string): SamplePatch | undefined {
+  for (const cat of PATCH_CATEGORIES) {
+    const found = cat.patches.find((p) => p.key === key);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 export function PatchManager() {
   const patch = usePatchStore((state) => state.patch);
   const savePatch = usePatchStore((state) => state.savePatch);
@@ -101,7 +116,7 @@ export function PatchManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
-  const loadSamplePatch = (samplePatch: typeof DEMO_PATCH) => {
+  const loadSamplePatch = (samplePatch: typeof DEMO_PATCH, key?: string) => {
     audioGraph.panic();
     setPatch({
       ...samplePatch,
@@ -112,6 +127,12 @@ export function PatchManager() {
       },
     });
     setTimeout(() => autoLayoutNodes(), 0);
+    // Update URL with patch key for deep linking
+    if (key) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('patch', key);
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   const handleExport = () => {
@@ -283,7 +304,7 @@ export function PatchManager() {
                         {category.patches.map((p) => (
                           <button
                             key={p.key}
-                            onClick={() => loadSamplePatch(p.patch)}
+                            onClick={() => loadSamplePatch(p.patch, p.key)}
                             className="w-full text-left px-2 py-1.5 bg-gray-800/50 hover:bg-gray-700/50 rounded transition-colors"
                           >
                             <div className="text-xs font-medium text-gray-200">

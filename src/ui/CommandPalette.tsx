@@ -22,7 +22,6 @@ import {
   POLYRHYTHMIC_TRIGGERS_PATCH,
   MACRO_DRONE_PATCH,
   COSMIC_CATHEDRAL_PATCH,
-  ETERNAL_GARDEN_PATCH,
 } from '../patch/samplePatches';
 import type { Patch } from '../patch/types';
 
@@ -100,7 +99,6 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       ['Polyrhythmic Triggers', POLYRHYTHMIC_TRIGGERS_PATCH],
       ['Macro Drone', MACRO_DRONE_PATCH],
       ['Cosmic Cathedral', COSMIC_CATHEDRAL_PATCH],
-      ['Eternal Garden', ETERNAL_GARDEN_PATCH],
     ];
 
     const nodeTypes: [string, string, string][] = [
