@@ -766,3 +766,47 @@ export const TIDAL_MEMORIES_PATCH: Patch = {
   ],
   groups: [],
 };
+
+// =============================================================================
+// PATCH 4: "Utopia" — placeholder
+// =============================================================================
+export const UTOPIA_PATCH: Patch = {
+  version: '1.0',
+  meta: { name: 'Utopia', created: '2025-01-01T00:00:00.000Z', modified: '2025-01-01T00:00:00.000Z' },
+  nodes: [{ id: 'output', type: 'output', position: { x: 600, y: 200 }, params: { gain: 0.7 } }],
+  connections: [],
+  groups: [],
+};
+
+// =============================================================================
+// PATCH 5: "Neon Rain" — placeholder
+// =============================================================================
+export const NEON_RAIN_PATCH: Patch = {
+  version: '1.0',
+  meta: { name: 'Neon Rain', created: '2025-01-01T00:00:00.000Z', modified: '2025-01-01T00:00:00.000Z' },
+  nodes: [{ id: 'output', type: 'output', position: { x: 600, y: 200 }, params: { gain: 0.7 } }],
+  connections: [],
+  groups: [],
+};
+
+// =============================================================================
+// PATCH 6: "Strange IoT" — placeholder
+// =============================================================================
+export const STRANGE_IOT_PATCH: Patch = {
+  version: '1.0',
+  meta: { name: 'Strange IoT', created: '2025-01-01T00:00:00.000Z', modified: '2025-01-01T00:00:00.000Z' },
+  nodes: [{ id: 'output', type: 'output', position: { x: 600, y: 200 }, params: { gain: 0.7 } }],
+  connections: [],
+  groups: [],
+};
+
+// =============================================================================
+// PATCH 7: "Basic Beat" — placeholder
+// =============================================================================
+export const BASIC_BEAT_PATCH: Patch = {
+  version: '1.0',
+  meta: { name: 'Basic Beat', created: '2025-01-01T00:00:00.000Z', modified: '2025-01-01T00:00:00.000Z' },
+  nodes: [{ id: 'output', type: 'output', position: { x: 600, y: 200 }, params: { gain: 0.7 } }],
+  connections: [],
+  groups: [],
+};

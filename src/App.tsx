@@ -9,6 +9,7 @@ import { RecordingPanel } from './ui/panels/RecordingPanel';
 import { PianoKeyboard } from './ui/panels/PianoKeyboard';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { CommandPalette } from './ui/CommandPalette';
+import { MacroBoardModal } from './ui/macroboard/MacroBoardModal';
 import { patchSyncer } from './patch/patchSyncer';
 import { midiRouter } from './midi/MidiRouter';
 import { usePatchStore } from './patch/patchStore';
@@ -22,6 +23,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isPianoCollapsed, setIsPianoCollapsed] = useState(true);
+  const [isMacroBoardOpen, setIsMacroBoardOpen] = useState(false);
   const isAudioEnabled = usePatchStore((state) => state.isAudioEnabled);
   const setAudioEnabled = usePatchStore((state) => state.setAudioEnabled);
   const loadPatch = usePatchStore((state) => state.loadPatch);
@@ -46,6 +48,13 @@ function App() {
         const target = e.target as HTMLElement;
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
           setIsPianoCollapsed((c) => !c);
+        }
+      }
+      // Toggle macro board with M key (when not in input)
+      if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+          setIsMacroBoardOpen((open) => !open);
         }
       }
     };
@@ -152,6 +161,21 @@ function App() {
             <kbd className="px-1.5 py-0.5 text-xs bg-gray-700 rounded">⌘K</kbd>
           </button>
 
+          {/* Macro Board toggle */}
+          <button
+            onClick={() => setIsMacroBoardOpen(true)}
+            className={`px-2 py-1.5 text-sm rounded border transition-colors ${
+              isMacroBoardOpen
+                ? 'bg-fuchsia-900 hover:bg-fuchsia-800 text-fuchsia-300 border-fuchsia-700'
+                : 'bg-gray-800 hover:bg-gray-700 text-gray-400 border-gray-700'
+            }`}
+            title="Macro Board (M)"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+          </button>
+
           {/* Piano toggle */}
           <button
             onClick={() => setIsPianoCollapsed((c) => !c)}
@@ -220,6 +244,12 @@ function App() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
+      />
+
+      {/* Macro Board */}
+      <MacroBoardModal
+        isOpen={isMacroBoardOpen}
+        onClose={() => setIsMacroBoardOpen(false)}
       />
     </div>
   );

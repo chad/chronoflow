@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { nanoid } from 'nanoid';
-import type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchGroup, ExposedPort } from './types';
+import type { Patch, PatchNode, PatchConnection, PatchNodeType, PatchGroup, ExposedPort, MacroBoardControl, MacroBoard, MacroMapping } from './types';
 import { createEmptyPatch } from './types';
 import { computeAutoLayout } from '../layout/autoLayout';
 import { detectExposedPorts, calculateGroupCenter, generatePortAlias } from '../layout/groupUtils';
@@ -76,6 +76,13 @@ interface PatchState {
   ) => void;
   unexposePort: (groupId: string, alias: string) => void;
   duplicateGroup: (groupId: string, position: { x: number; y: number }) => string | null;
+
+  // Macro Board
+  initMacroBoard: () => void;
+  addMacroBoardControl: (control: MacroBoardControl) => void;
+  updateMacroBoardControl: (controlId: string, updates: Partial<MacroBoardControl>) => void;
+  removeMacroBoardControl: (controlId: string) => void;
+  setMacroBoardControlValue: (controlId: string, value: number, axis?: 'x' | 'y') => void;
 
   // Persistence
   savePatch: () => void;
@@ -197,6 +204,9 @@ export const usePatchStore = create<PatchState>()(
   removeNode: (id) => {
     if (id === 'output') return; // Can't remove output node
 
+    const stripMappings = (mappings: MacroMapping[]) =>
+      mappings.filter((m) => m.nodeId !== id);
+
     set((state) => ({
       patch: {
         ...state.patch,
@@ -204,6 +214,17 @@ export const usePatchStore = create<PatchState>()(
         connections: state.patch.connections.filter(
           (c) => c.from.nodeId !== id && c.to.nodeId !== id
         ),
+        macroBoard: state.patch.macroBoard
+          ? {
+              ...state.patch.macroBoard,
+              controls: state.patch.macroBoard.controls.map((c) => {
+                if (c.type === 'xypad') {
+                  return { ...c, xMappings: stripMappings(c.xMappings), yMappings: stripMappings(c.yMappings) };
+                }
+                return { ...c, mappings: stripMappings((c as any).mappings) };
+              }),
+            }
+          : undefined,
         meta: { ...state.patch.meta, modified: new Date().toISOString() },
       },
       selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
@@ -698,6 +719,134 @@ export const usePatchStore = create<PatchState>()(
     }));
 
     return newGroupId;
+  },
+
+  // Macro Board operations
+  initMacroBoard: () => {
+    set((state) => {
+      if (state.patch.macroBoard) return state;
+      return {
+        patch: {
+          ...state.patch,
+          macroBoard: { cols: 8, rows: 6, controls: [] },
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
+  },
+
+  addMacroBoardControl: (control) => {
+    set((state) => {
+      const board = state.patch.macroBoard || { cols: 8, rows: 6, controls: [] };
+      return {
+        patch: {
+          ...state.patch,
+          macroBoard: { ...board, controls: [...board.controls, control] },
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
+  },
+
+  updateMacroBoardControl: (controlId, updates) => {
+    set((state) => {
+      if (!state.patch.macroBoard) return state;
+      return {
+        patch: {
+          ...state.patch,
+          macroBoard: {
+            ...state.patch.macroBoard,
+            controls: state.patch.macroBoard.controls.map((c) =>
+              c.id === controlId ? { ...c, ...updates } as MacroBoardControl : c
+            ),
+          },
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
+  },
+
+  removeMacroBoardControl: (controlId) => {
+    set((state) => {
+      if (!state.patch.macroBoard) return state;
+      return {
+        patch: {
+          ...state.patch,
+          macroBoard: {
+            ...state.patch.macroBoard,
+            controls: state.patch.macroBoard.controls.filter((c) => c.id !== controlId),
+          },
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
+  },
+
+  setMacroBoardControlValue: (controlId, value, axis) => {
+    const state = get();
+    const board = state.patch.macroBoard;
+    if (!board) return;
+
+    const control = board.controls.find((c) => c.id === controlId);
+    if (!control) return;
+
+    // Build param updates from mappings
+    const updates: { nodeId: string; param: string; value: number }[] = [];
+
+    if (control.type === 'xypad') {
+      const mappings = axis === 'y' ? control.yMappings : control.xMappings;
+      for (const m of mappings) {
+        updates.push({ nodeId: m.nodeId, param: m.param, value: m.min + value * (m.max - m.min) });
+      }
+    } else if ('mappings' in control) {
+      for (const m of control.mappings) {
+        updates.push({ nodeId: m.nodeId, param: m.param, value: m.min + value * (m.max - m.min) });
+      }
+    }
+
+    // Direct audio writes for zero-latency response
+    for (const u of updates) {
+      audioGraph.setNodeParam(u.nodeId, u.param, u.value);
+    }
+
+    // Update store: control value + node params in one set call
+    set((state) => {
+      const board = state.patch.macroBoard;
+      if (!board) return state;
+
+      // Build param changes map
+      const changesByNode = new Map<string, Record<string, number>>();
+      for (const u of updates) {
+        let changes = changesByNode.get(u.nodeId);
+        if (!changes) { changes = {}; changesByNode.set(u.nodeId, changes); }
+        changes[u.param] = u.value;
+      }
+
+      return {
+        patch: {
+          ...state.patch,
+          macroBoard: {
+            ...board,
+            controls: board.controls.map((c) => {
+              if (c.id !== controlId) return c;
+              if (c.type === 'xypad') {
+                return { ...c, [axis || 'x']: value };
+              }
+              if (c.type === 'button') {
+                return { ...c, pressed: value > 0.5 };
+              }
+              return { ...c, value };
+            }),
+          },
+          nodes: state.patch.nodes.map((n) => {
+            const changes = changesByNode.get(n.id);
+            if (!changes) return n;
+            return { ...n, params: { ...n.params, ...changes } };
+          }),
+          meta: { ...state.patch.meta, modified: new Date().toISOString() },
+        },
+      };
+    });
   },
 
   savePatch: () => {

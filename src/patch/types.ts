@@ -58,12 +58,86 @@ export interface PatchMeta {
   modified: string;
 }
 
+// ── Macro Board types ──
+
+export type MacroBoardControlType = 'knob' | 'fader' | 'button' | 'xypad' | 'ribbon';
+export type MacroBoardButtonMode = 'momentary' | 'toggle';
+
+export interface MacroMapping {
+  nodeId: string;
+  param: string;
+  min: number;
+  max: number;
+}
+
+interface MacroBoardControlBase {
+  id: string;
+  type: MacroBoardControlType;
+  label: string;
+  color: string;
+  gridCol: number;
+  gridRow: number;
+  colSpan: number;
+  rowSpan: number;
+}
+
+export interface MacroBoardKnob extends MacroBoardControlBase {
+  type: 'knob';
+  value: number;
+  mappings: MacroMapping[];
+}
+
+export interface MacroBoardFader extends MacroBoardControlBase {
+  type: 'fader';
+  value: number;
+  mappings: MacroMapping[];
+}
+
+export interface MacroBoardButton extends MacroBoardControlBase {
+  type: 'button';
+  mode: MacroBoardButtonMode;
+  pressed: boolean;
+  onValue: number;
+  offValue: number;
+  mappings: MacroMapping[];
+}
+
+export interface MacroBoardXYPad extends MacroBoardControlBase {
+  type: 'xypad';
+  x: number;
+  y: number;
+  xMappings: MacroMapping[];
+  yMappings: MacroMapping[];
+}
+
+export interface MacroBoardRibbon extends MacroBoardControlBase {
+  type: 'ribbon';
+  value: number;
+  springBack: boolean;
+  centerValue: number;
+  mappings: MacroMapping[];
+}
+
+export type MacroBoardControl =
+  | MacroBoardKnob
+  | MacroBoardFader
+  | MacroBoardButton
+  | MacroBoardXYPad
+  | MacroBoardRibbon;
+
+export interface MacroBoard {
+  cols: number;
+  rows: number;
+  controls: MacroBoardControl[];
+}
+
 export interface Patch {
   version: string;
   meta: PatchMeta;
   nodes: PatchNode[];
   connections: PatchConnection[];
   groups: PatchGroup[];
+  macroBoard?: MacroBoard;
 }
 
 export function createEmptyPatch(name: string = 'Untitled'): Patch {
